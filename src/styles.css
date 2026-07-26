@@ -210,7 +210,19 @@
       hsl(var(--background));
     background-attachment: fixed;
   }
+  /* Lorsque la vidéo IA/perso est active, on rend le body transparent
+     pour que la vidéo (insérée en fond fixe) soit réellement visible. */
+  html.has-bg-video body {
+    background: transparent !important;
+  }
+  html.has-bg-video #root,
+  html.has-bg-video body > #root {
+    background: transparent !important;
+    position: relative;
+    z-index: 1;
+  }
 }
+
 
 @layer base {
   * {
