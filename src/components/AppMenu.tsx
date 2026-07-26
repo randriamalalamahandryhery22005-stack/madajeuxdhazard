@@ -828,6 +828,54 @@ function ThemePanel() {
           </div>
         </div>
 
+        {videoPreview && (
+          <div className="mt-4 rounded-xl border border-emerald-400/40 bg-emerald-500/5 p-3 space-y-3">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="font-semibold text-emerald-200">Prévisualisation</span>
+              <span className="truncate pl-2 text-slate-400 max-w-[60%]">{videoPreview.name}</span>
+            </div>
+            <div className="rounded-lg overflow-hidden border border-white/10 bg-black">
+              <video
+                key={videoPreview.url}
+                src={videoPreview.url}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                className="w-full h-40 object-cover"
+              />
+            </div>
+            {"note" in videoPreview && videoPreview.note && (
+              <p className="text-[11px] text-slate-400 italic">{videoPreview.note}</p>
+            )}
+            <p className="text-[11px] text-slate-400">
+              Cette vidéo n'est pas encore le fond de l'application. Confirmez pour remplacer l'arrière-plan actuel.
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-9 flex-1 text-xs"
+                onClick={cancelPreview}
+                disabled={videoBusy}
+              >
+                Annuler
+              </Button>
+              <Button
+                size="sm"
+                className="h-9 flex-1 text-xs"
+                onClick={() => void confirmPreview()}
+                disabled={videoBusy}
+              >
+                {videoBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Appliquer"}
+              </Button>
+            </div>
+          </div>
+        )}
+
+
+
 
 
         {p.bgVideoSource && (
