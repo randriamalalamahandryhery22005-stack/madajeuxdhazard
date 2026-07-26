@@ -770,7 +770,7 @@ function ThemePanel() {
             placeholder="ou collez un lien .mp4 / .webm"
             className="flex-1 h-9 rounded-lg bg-black/30 border border-white/10 px-3 text-xs outline-none focus:border-emerald-500/50"
           />
-          <Button size="sm" variant="secondary" className="h-9" onClick={applyRemoteVideo}>Appliquer</Button>
+          <Button size="sm" variant="secondary" className="h-9" onClick={stageRemoteVideo}>Prévisualiser</Button>
         </div>
 
         {/* Fond d'écran par IA */}
