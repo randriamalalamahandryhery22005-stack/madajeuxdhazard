@@ -807,7 +807,7 @@ function ThemePanel() {
                 <button
                   key={w.id}
                   type="button"
-                  onClick={() => { applyAiWallpaper(w); toast.success(`Fond vidéo « ${w.label} » appliqué`); }}
+                  onClick={() => { previewAiWallpaper(w); toast.success("Prévisualisation prête — appuyez sur « Appliquer »"); }}
                   className={`relative rounded-lg overflow-hidden border text-left transition-colors ${
                     active ? "border-amber-400" : "border-white/10 hover:border-amber-400/50"
                   }`}
