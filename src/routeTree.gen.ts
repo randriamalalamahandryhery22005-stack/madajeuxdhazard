@@ -9,38 +9,519 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PremiumSelectRouteImport } from './routes/premium-select'
+import { Route as PremiumRouteImport } from './routes/premium'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as JetxRouteImport } from './routes/jetx'
+import { Route as GenStoreRouteImport } from './routes/gen-store'
+import { Route as GamesRouteImport } from './routes/games'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as CosmoxRouteImport } from './routes/cosmox'
+import { Route as ChatRouteImport } from './routes/chat'
+import { Route as AviatorStudioRouteImport } from './routes/aviator-studio'
+import { Route as AviatorSpribeRouteImport } from './routes/aviator-spribe'
+import { Route as AviatorPremiumRouteImport } from './routes/aviator-premium'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as SplatRouteImport } from './routes/$'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as IndexIndexRouteImport } from './routes/index.index'
+import { Route as AviatorIndexRouteImport } from './routes/aviator.index'
+import { Route as CustomSlugRouteImport } from './routes/custom.$slug'
+import { Route as AviatorProRouteImport } from './routes/aviator.pro'
+import { Route as AviatorBasicRouteImport } from './routes/aviator.basic'
+import { Route as ApiAiVideoRouteImport } from './routes/api/ai-video'
+import { Route as ApiAiPaletteRouteImport } from './routes/api/ai-palette'
+import { Route as ApiAiBackgroundRouteImport } from './routes/api/ai-background'
+import { Route as AnalyseGameRouteImport } from './routes/analyse.$game'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PremiumSelectRoute = PremiumSelectRouteImport.update({
+  id: '/premium-select',
+  path: '/premium-select',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PremiumRoute = PremiumRouteImport.update({
+  id: '/premium',
+  path: '/premium',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JetxRoute = JetxRouteImport.update({
+  id: '/jetx',
+  path: '/jetx',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GenStoreRoute = GenStoreRouteImport.update({
+  id: '/gen-store',
+  path: '/gen-store',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CosmoxRoute = CosmoxRouteImport.update({
+  id: '/cosmox',
+  path: '/cosmox',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatRoute = ChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AviatorStudioRoute = AviatorStudioRouteImport.update({
+  id: '/aviator-studio',
+  path: '/aviator-studio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AviatorSpribeRoute = AviatorSpribeRouteImport.update({
+  id: '/aviator-spribe',
+  path: '/aviator-spribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AviatorPremiumRoute = AviatorPremiumRouteImport.update({
+  id: '/aviator-premium',
+  path: '/aviator-premium',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SplatRoute = SplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IndexIndexRoute = IndexIndexRouteImport.update({
+  id: '/index/',
+  path: '/index/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AviatorIndexRoute = AviatorIndexRouteImport.update({
+  id: '/aviator/',
+  path: '/aviator/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomSlugRoute = CustomSlugRouteImport.update({
+  id: '/custom/$slug',
+  path: '/custom/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AviatorProRoute = AviatorProRouteImport.update({
+  id: '/aviator/pro',
+  path: '/aviator/pro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AviatorBasicRoute = AviatorBasicRouteImport.update({
+  id: '/aviator/basic',
+  path: '/aviator/basic',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiVideoRoute = ApiAiVideoRouteImport.update({
+  id: '/api/ai-video',
+  path: '/api/ai-video',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiPaletteRoute = ApiAiPaletteRouteImport.update({
+  id: '/api/ai-palette',
+  path: '/api/ai-palette',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiBackgroundRoute = ApiAiBackgroundRouteImport.update({
+  id: '/api/ai-background',
+  path: '/api/ai-background',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyseGameRoute = AnalyseGameRouteImport.update({
+  id: '/analyse/$game',
+  path: '/analyse/$game',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
+  '/admin': typeof AdminRoute
+  '/aviator-premium': typeof AviatorPremiumRoute
+  '/aviator-spribe': typeof AviatorSpribeRoute
+  '/aviator-studio': typeof AviatorStudioRoute
+  '/chat': typeof ChatRoute
+  '/cosmox': typeof CosmoxRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/games': typeof GamesRoute
+  '/gen-store': typeof GenStoreRoute
+  '/jetx': typeof JetxRoute
+  '/login': typeof LoginRoute
+  '/premium': typeof PremiumRoute
+  '/premium-select': typeof PremiumSelectRoute
+  '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/analyse/$game': typeof AnalyseGameRoute
+  '/api/ai-background': typeof ApiAiBackgroundRoute
+  '/api/ai-palette': typeof ApiAiPaletteRoute
+  '/api/ai-video': typeof ApiAiVideoRoute
+  '/aviator/basic': typeof AviatorBasicRoute
+  '/aviator/pro': typeof AviatorProRoute
+  '/custom/$slug': typeof CustomSlugRoute
+  '/aviator/': typeof AviatorIndexRoute
+  '/index/': typeof IndexIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
+  '/admin': typeof AdminRoute
+  '/aviator-premium': typeof AviatorPremiumRoute
+  '/aviator-spribe': typeof AviatorSpribeRoute
+  '/aviator-studio': typeof AviatorStudioRoute
+  '/chat': typeof ChatRoute
+  '/cosmox': typeof CosmoxRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/games': typeof GamesRoute
+  '/gen-store': typeof GenStoreRoute
+  '/jetx': typeof JetxRoute
+  '/login': typeof LoginRoute
+  '/premium': typeof PremiumRoute
+  '/premium-select': typeof PremiumSelectRoute
+  '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/analyse/$game': typeof AnalyseGameRoute
+  '/api/ai-background': typeof ApiAiBackgroundRoute
+  '/api/ai-palette': typeof ApiAiPaletteRoute
+  '/api/ai-video': typeof ApiAiVideoRoute
+  '/aviator/basic': typeof AviatorBasicRoute
+  '/aviator/pro': typeof AviatorProRoute
+  '/custom/$slug': typeof CustomSlugRoute
+  '/aviator': typeof AviatorIndexRoute
+  '/index': typeof IndexIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
+  '/admin': typeof AdminRoute
+  '/aviator-premium': typeof AviatorPremiumRoute
+  '/aviator-spribe': typeof AviatorSpribeRoute
+  '/aviator-studio': typeof AviatorStudioRoute
+  '/chat': typeof ChatRoute
+  '/cosmox': typeof CosmoxRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/games': typeof GamesRoute
+  '/gen-store': typeof GenStoreRoute
+  '/jetx': typeof JetxRoute
+  '/login': typeof LoginRoute
+  '/premium': typeof PremiumRoute
+  '/premium-select': typeof PremiumSelectRoute
+  '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/analyse/$game': typeof AnalyseGameRoute
+  '/api/ai-background': typeof ApiAiBackgroundRoute
+  '/api/ai-palette': typeof ApiAiPaletteRoute
+  '/api/ai-video': typeof ApiAiVideoRoute
+  '/aviator/basic': typeof AviatorBasicRoute
+  '/aviator/pro': typeof AviatorProRoute
+  '/custom/$slug': typeof CustomSlugRoute
+  '/aviator/': typeof AviatorIndexRoute
+  '/index/': typeof IndexIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/$'
+    | '/admin'
+    | '/aviator-premium'
+    | '/aviator-spribe'
+    | '/aviator-studio'
+    | '/chat'
+    | '/cosmox'
+    | '/forgot-password'
+    | '/games'
+    | '/gen-store'
+    | '/jetx'
+    | '/login'
+    | '/premium'
+    | '/premium-select'
+    | '/profile'
+    | '/reset-password'
+    | '/signup'
+    | '/sitemap.xml'
+    | '/analyse/$game'
+    | '/api/ai-background'
+    | '/api/ai-palette'
+    | '/api/ai-video'
+    | '/aviator/basic'
+    | '/aviator/pro'
+    | '/custom/$slug'
+    | '/aviator/'
+    | '/index/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/$'
+    | '/admin'
+    | '/aviator-premium'
+    | '/aviator-spribe'
+    | '/aviator-studio'
+    | '/chat'
+    | '/cosmox'
+    | '/forgot-password'
+    | '/games'
+    | '/gen-store'
+    | '/jetx'
+    | '/login'
+    | '/premium'
+    | '/premium-select'
+    | '/profile'
+    | '/reset-password'
+    | '/signup'
+    | '/sitemap.xml'
+    | '/analyse/$game'
+    | '/api/ai-background'
+    | '/api/ai-palette'
+    | '/api/ai-video'
+    | '/aviator/basic'
+    | '/aviator/pro'
+    | '/custom/$slug'
+    | '/aviator'
+    | '/index'
+  id:
+    | '__root__'
+    | '/'
+    | '/$'
+    | '/admin'
+    | '/aviator-premium'
+    | '/aviator-spribe'
+    | '/aviator-studio'
+    | '/chat'
+    | '/cosmox'
+    | '/forgot-password'
+    | '/games'
+    | '/gen-store'
+    | '/jetx'
+    | '/login'
+    | '/premium'
+    | '/premium-select'
+    | '/profile'
+    | '/reset-password'
+    | '/signup'
+    | '/sitemap.xml'
+    | '/analyse/$game'
+    | '/api/ai-background'
+    | '/api/ai-palette'
+    | '/api/ai-video'
+    | '/aviator/basic'
+    | '/aviator/pro'
+    | '/custom/$slug'
+    | '/aviator/'
+    | '/index/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SplatRoute: typeof SplatRoute
+  AdminRoute: typeof AdminRoute
+  AviatorPremiumRoute: typeof AviatorPremiumRoute
+  AviatorSpribeRoute: typeof AviatorSpribeRoute
+  AviatorStudioRoute: typeof AviatorStudioRoute
+  ChatRoute: typeof ChatRoute
+  CosmoxRoute: typeof CosmoxRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  GamesRoute: typeof GamesRoute
+  GenStoreRoute: typeof GenStoreRoute
+  JetxRoute: typeof JetxRoute
+  LoginRoute: typeof LoginRoute
+  PremiumRoute: typeof PremiumRoute
+  PremiumSelectRoute: typeof PremiumSelectRoute
+  ProfileRoute: typeof ProfileRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SignupRoute: typeof SignupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  AnalyseGameRoute: typeof AnalyseGameRoute
+  ApiAiBackgroundRoute: typeof ApiAiBackgroundRoute
+  ApiAiPaletteRoute: typeof ApiAiPaletteRoute
+  ApiAiVideoRoute: typeof ApiAiVideoRoute
+  AviatorBasicRoute: typeof AviatorBasicRoute
+  AviatorProRoute: typeof AviatorProRoute
+  CustomSlugRoute: typeof CustomSlugRoute
+  AviatorIndexRoute: typeof AviatorIndexRoute
+  IndexIndexRoute: typeof IndexIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/premium-select': {
+      id: '/premium-select'
+      path: '/premium-select'
+      fullPath: '/premium-select'
+      preLoaderRoute: typeof PremiumSelectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/premium': {
+      id: '/premium'
+      path: '/premium'
+      fullPath: '/premium'
+      preLoaderRoute: typeof PremiumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jetx': {
+      id: '/jetx'
+      path: '/jetx'
+      fullPath: '/jetx'
+      preLoaderRoute: typeof JetxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gen-store': {
+      id: '/gen-store'
+      path: '/gen-store'
+      fullPath: '/gen-store'
+      preLoaderRoute: typeof GenStoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cosmox': {
+      id: '/cosmox'
+      path: '/cosmox'
+      fullPath: '/cosmox'
+      preLoaderRoute: typeof CosmoxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat': {
+      id: '/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aviator-studio': {
+      id: '/aviator-studio'
+      path: '/aviator-studio'
+      fullPath: '/aviator-studio'
+      preLoaderRoute: typeof AviatorStudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aviator-spribe': {
+      id: '/aviator-spribe'
+      path: '/aviator-spribe'
+      fullPath: '/aviator-spribe'
+      preLoaderRoute: typeof AviatorSpribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aviator-premium': {
+      id: '/aviator-premium'
+      path: '/aviator-premium'
+      fullPath: '/aviator-premium'
+      preLoaderRoute: typeof AviatorPremiumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$': {
+      id: '/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +529,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/index/': {
+      id: '/index/'
+      path: '/index'
+      fullPath: '/index/'
+      preLoaderRoute: typeof IndexIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aviator/': {
+      id: '/aviator/'
+      path: '/aviator'
+      fullPath: '/aviator/'
+      preLoaderRoute: typeof AviatorIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/custom/$slug': {
+      id: '/custom/$slug'
+      path: '/custom/$slug'
+      fullPath: '/custom/$slug'
+      preLoaderRoute: typeof CustomSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aviator/pro': {
+      id: '/aviator/pro'
+      path: '/aviator/pro'
+      fullPath: '/aviator/pro'
+      preLoaderRoute: typeof AviatorProRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aviator/basic': {
+      id: '/aviator/basic'
+      path: '/aviator/basic'
+      fullPath: '/aviator/basic'
+      preLoaderRoute: typeof AviatorBasicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai-video': {
+      id: '/api/ai-video'
+      path: '/api/ai-video'
+      fullPath: '/api/ai-video'
+      preLoaderRoute: typeof ApiAiVideoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai-palette': {
+      id: '/api/ai-palette'
+      path: '/api/ai-palette'
+      fullPath: '/api/ai-palette'
+      preLoaderRoute: typeof ApiAiPaletteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai-background': {
+      id: '/api/ai-background'
+      path: '/api/ai-background'
+      fullPath: '/api/ai-background'
+      preLoaderRoute: typeof ApiAiBackgroundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analyse/$game': {
+      id: '/analyse/$game'
+      path: '/analyse/$game'
+      fullPath: '/analyse/$game'
+      preLoaderRoute: typeof AnalyseGameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SplatRoute: SplatRoute,
+  AdminRoute: AdminRoute,
+  AviatorPremiumRoute: AviatorPremiumRoute,
+  AviatorSpribeRoute: AviatorSpribeRoute,
+  AviatorStudioRoute: AviatorStudioRoute,
+  ChatRoute: ChatRoute,
+  CosmoxRoute: CosmoxRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  GamesRoute: GamesRoute,
+  GenStoreRoute: GenStoreRoute,
+  JetxRoute: JetxRoute,
+  LoginRoute: LoginRoute,
+  PremiumRoute: PremiumRoute,
+  PremiumSelectRoute: PremiumSelectRoute,
+  ProfileRoute: ProfileRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SignupRoute: SignupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  AnalyseGameRoute: AnalyseGameRoute,
+  ApiAiBackgroundRoute: ApiAiBackgroundRoute,
+  ApiAiPaletteRoute: ApiAiPaletteRoute,
+  ApiAiVideoRoute: ApiAiVideoRoute,
+  AviatorBasicRoute: AviatorBasicRoute,
+  AviatorProRoute: AviatorProRoute,
+  CustomSlugRoute: CustomSlugRoute,
+  AviatorIndexRoute: AviatorIndexRoute,
+  IndexIndexRoute: IndexIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
