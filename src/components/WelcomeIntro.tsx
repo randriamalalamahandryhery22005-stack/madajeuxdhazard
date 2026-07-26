@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import jhLogo from "@/assets/jh-logo.png";
-import welcomeMusic from "@/assets/welcome-theme-v6.mp3.asset.json";
+import welcomeMusic from "@/assets/bienvenue.mp3.asset.json";
 import { takeWelcomeAudio, fadeAudio } from "@/lib/introAudio";
 
 /**
