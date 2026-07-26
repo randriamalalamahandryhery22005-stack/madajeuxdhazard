@@ -104,6 +104,7 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
   const existing = document.getElementById(ELEMENT_ID) as HTMLDivElement | null;
   if (!src) {
     existing?.remove();
+    document.documentElement.classList.remove("has-bg-video");
     if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
     return;
   }
@@ -115,9 +116,10 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
     Object.assign(wrapper.style, {
       position: "fixed",
       inset: "0",
-      zIndex: "-2",
+      zIndex: "0",
       pointerEvents: "none",
       overflow: "hidden",
+      background: "#000",
     } as CSSStyleDeclaration);
 
     video = document.createElement("video");
@@ -126,10 +128,13 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
     video.muted = true;
     video.playsInline = true;
     video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+    video.setAttribute("preload", "auto");
     Object.assign(video.style, {
       width: "100%",
       height: "100%",
       objectFit: "cover",
+      display: "block",
     } as CSSStyleDeclaration);
     wrapper.appendChild(video);
 
@@ -138,13 +143,21 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
     Object.assign(veil.style, {
       position: "absolute",
       inset: "0",
-      background: "linear-gradient(hsl(var(--background)/0.62), hsl(var(--background)/0.82))",
+      pointerEvents: "none",
+      background: "linear-gradient(hsl(var(--background)/0.55), hsl(var(--background)/0.75))",
     } as CSSStyleDeclaration);
     wrapper.appendChild(veil);
-    document.body.appendChild(wrapper);
+    // Insérer en tout premier enfant de <body> pour rester derrière l'app.
+    document.body.insertBefore(wrapper, document.body.firstChild);
   }
+  document.documentElement.classList.add("has-bg-video");
   if (!video) return;
-  if (video.src !== src) video.src = src;
+  // Ne pas ré-affecter src si identique (évite un reload/flash noir).
+  const currentSrc = video.currentSrc || video.src;
+  if (currentSrc !== src) {
+    video.src = src;
+    try { video.load(); } catch { /* noop */ }
+  }
 
   const wantSound = opts.muted === false;
   video.muted = !wantSound;
@@ -157,16 +170,18 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
     return;
   }
 
-  const p = video.play();
-  if (p && typeof p.then === "function") {
-    p.catch(() => {
-      // Lecture sonore refusée : on repasse en muet pour garder le visuel,
-      // puis on rétablit le son au premier geste utilisateur.
-      video!.muted = true;
-      void video!.play().catch(() => { /* noop */ });
-      if (wantSound) armSoundGesture(video!);
-    });
-  }
+  const tryPlay = () => {
+    const p = video!.play();
+    if (p && typeof p.then === "function") {
+      p.catch(() => {
+        video!.muted = true;
+        void video!.play().catch(() => { /* noop */ });
+        if (wantSound) armSoundGesture(video!);
+      });
+    }
+  };
+  if (video.readyState >= 2) tryPlay();
+  else video.addEventListener("loadeddata", tryPlay, { once: true });
   if (wantSound && video.muted) armSoundGesture(video);
 }
 
