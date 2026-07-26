@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import jhLogo from "@/assets/jh-logo.png";
-import splashTheme from "@/assets/splash-theme-v6.mp3.asset.json";
-import welcomeTheme from "@/assets/welcome-theme-v6.mp3.asset.json";
+import splashTheme from "@/assets/splash-screen.mp3.asset.json";
+import welcomeTheme from "@/assets/bienvenue.mp3.asset.json";
 import { preloadWelcomeAudio } from "@/lib/introAudio";
 
 interface SplashScreenProps {
