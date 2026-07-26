@@ -25,7 +25,7 @@ export default function AppPersonalizationRoot() {
       const opts = {
         opacity: p.bgVideoOpacity ?? 1,
         blur: p.bgVideoBlur ?? 0,
-        muted: p.bgVideoMuted === true,
+        muted: p.bgVideoMuted !== false,
         volume: p.bgVideoVolume ?? 0.7,
         paused: p.bgVideoPaused === true,
       };
