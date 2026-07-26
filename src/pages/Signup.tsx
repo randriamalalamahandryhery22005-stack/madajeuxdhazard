@@ -230,14 +230,25 @@ const Signup = () => {
         return r.success ? null : r.error.issues[0]?.message ?? "Données invalides";
       }
       case 2: {
+        // Auto-remplit le téléphone profil quand l'inscription est faite par téléphone.
+        const inferredPhone =
+          formData.profilePhone?.trim() ||
+          (signupMethod === "phone" ? normalizePhone(formData.phone) : "");
+        if (inferredPhone && inferredPhone !== formData.profilePhone) {
+          setFormData((p) => ({ ...p, profilePhone: inferredPhone }));
+        }
         const r = profileSchema.safeParse({
           fullName: formData.fullName,
           country: formData.country,
           birthDate: formData.birthDate,
           gender: formData.gender || undefined,
-          profilePhone: formData.profilePhone || (signupMethod === "phone" ? formData.phone : ""),
+          profilePhone: inferredPhone || undefined,
         });
-        return r.success ? null : r.error.issues[0]?.message ?? "Données invalides";
+        if (r.success) return null;
+        const issue = r.error.issues[0];
+        const field = issue?.path?.[0] as string | undefined;
+        const label = field ? FIELD_LABELS[field] : undefined;
+        return label ? `${label} : ${issue.message}` : issue?.message ?? "Données invalides";
       }
       case 3:
         if (!formData.profilePhoto) return "Photo de profil requise";
