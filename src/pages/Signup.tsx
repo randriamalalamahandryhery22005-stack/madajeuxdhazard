@@ -71,7 +71,14 @@ const profileSchema = z
     country: z.string().min(1, "Pays requis"),
     birthDate: z.string().min(1, "Date de naissance requise"),
     gender: z.enum(["male", "female", "other"], { message: "Sexe requis" }),
-    profilePhone: z.string().trim().regex(/^\+?\d[\d\s().-]{6,20}$/, "Numéro invalide"),
+    // Téléphone de profil : facultatif, mais si renseigné doit être valide.
+    profilePhone: z
+      .string()
+      .trim()
+      .optional()
+      .refine((v) => !v || /^\+?\d[\d\s().-]{6,20}$/.test(v), {
+        message: "Numéro invalide (ex: +261340000000)",
+      }),
   })
   .refine(
     (v) => {
@@ -82,6 +89,14 @@ const profileSchema = z
     },
     { message: "Vous devez avoir 18 ans ou plus", path: ["birthDate"] }
   );
+
+const FIELD_LABELS: Record<string, string> = {
+  fullName: "Nom complet",
+  country: "Pays",
+  birthDate: "Date de naissance",
+  gender: "Sexe",
+  profilePhone: "Téléphone",
+};
 
 /* ------------------------------------------------------------------ */
 /*  Password strength helper                                          */
