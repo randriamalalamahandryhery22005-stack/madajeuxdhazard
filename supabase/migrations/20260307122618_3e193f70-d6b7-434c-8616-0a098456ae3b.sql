@@ -1,0 +1,1 @@
+UPDATE public.app_settings SET value = 'Team KLS' WHERE key = 'validation_code';
