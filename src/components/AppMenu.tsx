@@ -624,14 +624,28 @@ function ThemePanel() {
   const [aiVideoPrompt, setAiVideoPrompt] = useState("");
   const [aiVideoBusy, setAiVideoBusy] = useState(false);
 
-  /** Applique un fond vidéo IA (URL CDN) et le mémorise. */
-  const applyAiWallpaper = (w: { id: string; label: string; url: string }) => {
-    writePersonalization({
-      bgVideoSource: "remote",
-      bgVideoUrl: w.url,
-      bgVideoName: `IA · ${w.label}`,
-    });
-    applyBackgroundVideo(w.url, videoOpts());
+  // Prévisualisation avant application : l'utilisateur voit la vidéo dans le
+  // menu et confirme via "Appliquer" avant de remplacer le fond actif.
+  type VideoPreview =
+    | { kind: "remote"; url: string; name: string; note?: string }
+    | { kind: "local"; url: string; name: string; file: File };
+  const [videoPreview, setVideoPreview] = useState<VideoPreview | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
+
+  const setPreview = (next: VideoPreview | null) => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+    if (next?.kind === "local") previewUrlRef.current = next.url;
+    setVideoPreview(next);
+  };
+  useEffect(() => () => {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+  }, []);
+
+  const previewAiWallpaper = (w: { id: string; label: string; url: string }, note?: string) => {
+    setPreview({ kind: "remote", url: w.url, name: `IA · ${w.label}`, note });
   };
 
   const generateAiVideo = async () => {
@@ -649,36 +663,50 @@ function ThemePanel() {
         wallpaper: { id: string; label: string; url: string };
         reason?: string;
       };
-      applyAiWallpaper(wallpaper);
-      toast.success(`Fond vidéo IA appliqué : ${wallpaper.label}`, { description: reason });
+      previewAiWallpaper(wallpaper, reason);
+      toast.success("Prévisualisation prête — appuyez sur « Appliquer »");
     } catch (e: any) {
       toast.error("Échec de la génération", { description: e?.message?.slice(0, 120) });
     } finally { setAiVideoBusy(false); }
   };
 
 
-  const pickVideo = async (file?: File | null) => {
+  const pickVideo = (file?: File | null) => {
     if (!file) return;
     if (!file.type.startsWith("video/")) { toast.error("Choisissez un fichier vidéo"); return; }
     if (file.size > 60 * 1024 * 1024) { toast.error("Vidéo trop lourde (60 Mo max)"); return; }
-    setVideoBusy(true);
-    try {
-      await saveVideoBlob(file);
-      writePersonalization({ bgVideoSource: "local", bgVideoUrl: null, bgVideoName: file.name });
-      await applyStoredVideoBackground(videoOpts());
-      toast.success("Vidéo appliquée en fond d'écran");
-    } catch (e: any) {
-      toast.error("Échec", { description: e?.message?.slice(0, 120) });
-    } finally { setVideoBusy(false); }
+    const url = URL.createObjectURL(file);
+    setPreview({ kind: "local", url, name: file.name, file });
+    toast.success("Prévisualisation prête — appuyez sur « Appliquer »");
   };
 
-  const applyRemoteVideo = () => {
+  const stageRemoteVideo = () => {
     const url = remoteVideo.trim();
     if (!url) { toast.error("Collez un lien vidéo (mp4, webm…)"); return; }
-    writePersonalization({ bgVideoSource: "remote", bgVideoUrl: url, bgVideoName: url.split("/").pop() || "vidéo" });
-    applyBackgroundVideo(url, videoOpts());
+    setPreview({ kind: "remote", url, name: url.split("/").pop() || "vidéo" });
     setRemoteVideo("");
-    toast.success("Vidéo appliquée en fond d'écran");
+    toast.success("Prévisualisation prête — appuyez sur « Appliquer »");
+  };
+
+  const cancelPreview = () => setPreview(null);
+
+  const confirmPreview = async () => {
+    if (!videoPreview) return;
+    setVideoBusy(true);
+    try {
+      if (videoPreview.kind === "local") {
+        await saveVideoBlob(videoPreview.file);
+        writePersonalization({ bgVideoSource: "local", bgVideoUrl: null, bgVideoName: videoPreview.name });
+        await applyStoredVideoBackground(videoOpts());
+      } else {
+        writePersonalization({ bgVideoSource: "remote", bgVideoUrl: videoPreview.url, bgVideoName: videoPreview.name });
+        applyBackgroundVideo(videoPreview.url, videoOpts());
+      }
+      setPreview(null);
+      toast.success("Fond vidéo appliqué");
+    } catch (e: any) {
+      toast.error("Échec de l'application", { description: e?.message?.slice(0, 120) });
+    } finally { setVideoBusy(false); }
   };
 
   const removeVideo = async () => {
