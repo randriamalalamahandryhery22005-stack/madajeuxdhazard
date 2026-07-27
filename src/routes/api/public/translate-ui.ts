@@ -102,7 +102,7 @@ function fallbackTranslate(targetLanguage: string, texts: string[]) {
   return Object.fromEntries(texts.map((text) => [text, dict[text] || text]));
 }
 
-export const Route = createFileRoute("/api/translate-ui")({
+export const Route = createFileRoute("/api/public/translate-ui")({
   server: {
     handlers: {
       POST: async ({ request }) => {

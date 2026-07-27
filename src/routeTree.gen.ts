@@ -33,11 +33,11 @@ import { Route as AviatorIndexRouteImport } from './routes/aviator.index'
 import { Route as CustomSlugRouteImport } from './routes/custom.$slug'
 import { Route as AviatorProRouteImport } from './routes/aviator.pro'
 import { Route as AviatorBasicRouteImport } from './routes/aviator.basic'
-import { Route as ApiTranslateUiRouteImport } from './routes/api/translate-ui'
 import { Route as ApiAiVideoRouteImport } from './routes/api/ai-video'
 import { Route as ApiAiPaletteRouteImport } from './routes/api/ai-palette'
 import { Route as ApiAiBackgroundRouteImport } from './routes/api/ai-background'
 import { Route as AnalyseGameRouteImport } from './routes/analyse.$game'
+import { Route as ApiPublicTranslateUiRouteImport } from './routes/api/public/translate-ui'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -159,11 +159,6 @@ const AviatorBasicRoute = AviatorBasicRouteImport.update({
   path: '/aviator/basic',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTranslateUiRoute = ApiTranslateUiRouteImport.update({
-  id: '/api/translate-ui',
-  path: '/api/translate-ui',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiAiVideoRoute = ApiAiVideoRouteImport.update({
   id: '/api/ai-video',
   path: '/api/ai-video',
@@ -182,6 +177,11 @@ const ApiAiBackgroundRoute = ApiAiBackgroundRouteImport.update({
 const AnalyseGameRoute = AnalyseGameRouteImport.update({
   id: '/analyse/$game',
   path: '/analyse/$game',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTranslateUiRoute = ApiPublicTranslateUiRouteImport.update({
+  id: '/api/public/translate-ui',
+  path: '/api/public/translate-ui',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -209,12 +209,12 @@ export interface FileRoutesByFullPath {
   '/api/ai-background': typeof ApiAiBackgroundRoute
   '/api/ai-palette': typeof ApiAiPaletteRoute
   '/api/ai-video': typeof ApiAiVideoRoute
-  '/api/translate-ui': typeof ApiTranslateUiRoute
   '/aviator/basic': typeof AviatorBasicRoute
   '/aviator/pro': typeof AviatorProRoute
   '/custom/$slug': typeof CustomSlugRoute
   '/aviator/': typeof AviatorIndexRoute
   '/index/': typeof IndexIndexRoute
+  '/api/public/translate-ui': typeof ApiPublicTranslateUiRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -240,12 +240,12 @@ export interface FileRoutesByTo {
   '/api/ai-background': typeof ApiAiBackgroundRoute
   '/api/ai-palette': typeof ApiAiPaletteRoute
   '/api/ai-video': typeof ApiAiVideoRoute
-  '/api/translate-ui': typeof ApiTranslateUiRoute
   '/aviator/basic': typeof AviatorBasicRoute
   '/aviator/pro': typeof AviatorProRoute
   '/custom/$slug': typeof CustomSlugRoute
   '/aviator': typeof AviatorIndexRoute
   '/index': typeof IndexIndexRoute
+  '/api/public/translate-ui': typeof ApiPublicTranslateUiRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -272,12 +272,12 @@ export interface FileRoutesById {
   '/api/ai-background': typeof ApiAiBackgroundRoute
   '/api/ai-palette': typeof ApiAiPaletteRoute
   '/api/ai-video': typeof ApiAiVideoRoute
-  '/api/translate-ui': typeof ApiTranslateUiRoute
   '/aviator/basic': typeof AviatorBasicRoute
   '/aviator/pro': typeof AviatorProRoute
   '/custom/$slug': typeof CustomSlugRoute
   '/aviator/': typeof AviatorIndexRoute
   '/index/': typeof IndexIndexRoute
+  '/api/public/translate-ui': typeof ApiPublicTranslateUiRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -305,12 +305,12 @@ export interface FileRouteTypes {
     | '/api/ai-background'
     | '/api/ai-palette'
     | '/api/ai-video'
-    | '/api/translate-ui'
     | '/aviator/basic'
     | '/aviator/pro'
     | '/custom/$slug'
     | '/aviator/'
     | '/index/'
+    | '/api/public/translate-ui'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -336,12 +336,12 @@ export interface FileRouteTypes {
     | '/api/ai-background'
     | '/api/ai-palette'
     | '/api/ai-video'
-    | '/api/translate-ui'
     | '/aviator/basic'
     | '/aviator/pro'
     | '/custom/$slug'
     | '/aviator'
     | '/index'
+    | '/api/public/translate-ui'
   id:
     | '__root__'
     | '/'
@@ -367,12 +367,12 @@ export interface FileRouteTypes {
     | '/api/ai-background'
     | '/api/ai-palette'
     | '/api/ai-video'
-    | '/api/translate-ui'
     | '/aviator/basic'
     | '/aviator/pro'
     | '/custom/$slug'
     | '/aviator/'
     | '/index/'
+    | '/api/public/translate-ui'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -399,12 +399,12 @@ export interface RootRouteChildren {
   ApiAiBackgroundRoute: typeof ApiAiBackgroundRoute
   ApiAiPaletteRoute: typeof ApiAiPaletteRoute
   ApiAiVideoRoute: typeof ApiAiVideoRoute
-  ApiTranslateUiRoute: typeof ApiTranslateUiRoute
   AviatorBasicRoute: typeof AviatorBasicRoute
   AviatorProRoute: typeof AviatorProRoute
   CustomSlugRoute: typeof CustomSlugRoute
   AviatorIndexRoute: typeof AviatorIndexRoute
   IndexIndexRoute: typeof IndexIndexRoute
+  ApiPublicTranslateUiRoute: typeof ApiPublicTranslateUiRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -577,13 +577,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AviatorBasicRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/translate-ui': {
-      id: '/api/translate-ui'
-      path: '/api/translate-ui'
-      fullPath: '/api/translate-ui'
-      preLoaderRoute: typeof ApiTranslateUiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/ai-video': {
       id: '/api/ai-video'
       path: '/api/ai-video'
@@ -610,6 +603,13 @@ declare module '@tanstack/react-router' {
       path: '/analyse/$game'
       fullPath: '/analyse/$game'
       preLoaderRoute: typeof AnalyseGameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/translate-ui': {
+      id: '/api/public/translate-ui'
+      path: '/api/public/translate-ui'
+      fullPath: '/api/public/translate-ui'
+      preLoaderRoute: typeof ApiPublicTranslateUiRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -639,12 +639,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiBackgroundRoute: ApiAiBackgroundRoute,
   ApiAiPaletteRoute: ApiAiPaletteRoute,
   ApiAiVideoRoute: ApiAiVideoRoute,
-  ApiTranslateUiRoute: ApiTranslateUiRoute,
   AviatorBasicRoute: AviatorBasicRoute,
   AviatorProRoute: AviatorProRoute,
   CustomSlugRoute: CustomSlugRoute,
   AviatorIndexRoute: AviatorIndexRoute,
   IndexIndexRoute: IndexIndexRoute,
+  ApiPublicTranslateUiRoute: ApiPublicTranslateUiRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
