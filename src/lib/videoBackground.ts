@@ -118,6 +118,7 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
   }
   let wrapper = existing;
   let video = wrapper?.querySelector("video") as HTMLVideoElement | null;
+  let fallback = wrapper?.querySelector("[data-video-fallback='1']") as HTMLDivElement | null;
   if (!wrapper) {
     wrapper = document.createElement("div");
     wrapper.id = ELEMENT_ID;
@@ -149,6 +150,18 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
       display: "block",
     } as CSSStyleDeclaration);
     wrapper.appendChild(video);
+
+    fallback = document.createElement("div");
+    fallback.dataset.videoFallback = "1";
+    fallback.className = "jh-bg-video-fallback";
+    Object.assign(fallback.style, {
+      position: "absolute",
+      inset: "0",
+      opacity: "0",
+      transition: "opacity 420ms ease",
+      pointerEvents: "none",
+    } as CSSStyleDeclaration);
+    wrapper.appendChild(fallback);
 
     const veil = document.createElement("div");
     veil.dataset.veil = "1";
@@ -185,6 +198,8 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
 
   const tryPlay = () => {
     if (wrapper) wrapper.style.opacity = "1";
+    if (video) video.style.display = "block";
+    if (fallback) fallback.style.opacity = "0";
     const p = video!.play();
     if (p && typeof p.then === "function") {
       p.catch(() => {
@@ -195,10 +210,14 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
     }
   };
   video.onerror = () => {
-    if (wrapper) wrapper.style.opacity = "0";
+    if (wrapper) wrapper.style.opacity = "1";
+    if (video) video.style.display = "none";
+    if (fallback) fallback.style.opacity = "1";
   };
   video.oncanplay = () => {
     if (wrapper) wrapper.style.opacity = "1";
+    if (video) video.style.display = "block";
+    if (fallback) fallback.style.opacity = "0";
   };
   if (video.readyState >= 2) tryPlay();
   else video.addEventListener("loadeddata", tryPlay, { once: true });

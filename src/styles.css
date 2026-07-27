@@ -735,3 +735,18 @@
   max-width: 100vw;
   max-height: 100dvh;
 }
+
+.jh-bg-video-fallback {
+  background:
+    radial-gradient(circle at 20% 20%, hsl(var(--primary) / 0.35), transparent 32%),
+    radial-gradient(circle at 80% 18%, hsl(var(--accent) / 0.24), transparent 34%),
+    radial-gradient(circle at 52% 82%, hsl(var(--gold) / 0.24), transparent 38%),
+    linear-gradient(135deg, hsl(var(--background)), hsl(var(--card)) 58%, hsl(var(--background)));
+  background-size: 160% 160%;
+  animation: jh-bg-drift 16s ease-in-out infinite alternate;
+}
+
+@keyframes jh-bg-drift {
+  0% { background-position: 0% 18%; transform: scale(1); }
+  100% { background-position: 100% 82%; transform: scale(1.04); }
+}
