@@ -11,6 +11,7 @@ import {
   applyBackgroundVideo,
   applyStoredVideoBackground,
 } from "@/lib/videoBackground";
+import { applyAppLanguage, startAppTranslation } from "@/lib/appTranslation";
 
 /**
  * Mounts once at the root: applies the current AI-generated background &
@@ -42,6 +43,8 @@ export default function AppPersonalizationRoot() {
     syncVideo(p);
     if (p.darkMode === false) document.documentElement.classList.remove("dark");
     else document.documentElement.classList.add("dark");
+    applyAppLanguage(p.language || "fr");
+    const stopTranslation = startAppTranslation();
 
     const unsub = subscribePersonalization((next) => {
       applyPalette(next.palette);
@@ -49,8 +52,12 @@ export default function AppPersonalizationRoot() {
       syncVideo(next);
       if (next.darkMode === false) document.documentElement.classList.remove("dark");
       else document.documentElement.classList.add("dark");
+      applyAppLanguage(next.language || "fr");
     });
-    return unsub;
+    return () => {
+      unsub();
+      stopTranslation();
+    };
   }, []);
 
   useEffect(() => {
