@@ -64,6 +64,13 @@ const ELEMENT_ID = "jh-custom-bg-video";
 let currentObjectUrl: string | null = null;
 let gestureArmed = false;
 
+function refreshMediaClass() {
+  if (typeof document === "undefined") return;
+  const hasVideo = Boolean(document.getElementById(ELEMENT_ID));
+  const hasImage = Boolean(document.getElementById("jh-custom-bg"));
+  document.documentElement.classList.toggle("has-custom-media", hasVideo || hasImage);
+}
+
 export interface VideoBgOptions {
   opacity?: number; // 0..1
   blur?: number;    // px
@@ -105,21 +112,27 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
   if (!src) {
     existing?.remove();
     document.documentElement.classList.remove("has-bg-video");
+    refreshMediaClass();
     if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
     return;
   }
   let wrapper = existing;
   let video = wrapper?.querySelector("video") as HTMLVideoElement | null;
+  let fallback = wrapper?.querySelector("[data-video-fallback='1']") as HTMLDivElement | null;
   if (!wrapper) {
     wrapper = document.createElement("div");
     wrapper.id = ELEMENT_ID;
+    wrapper.setAttribute("aria-hidden", "true");
     Object.assign(wrapper.style, {
       position: "fixed",
       inset: "0",
       zIndex: "0",
       pointerEvents: "none",
       overflow: "hidden",
-      background: "#000",
+      background: "hsl(var(--background))",
+      opacity: "0",
+      transition: "opacity 420ms ease",
+      transform: "translateZ(0)",
     } as CSSStyleDeclaration);
 
     video = document.createElement("video");
@@ -131,6 +144,8 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
     video.setAttribute("webkit-playsinline", "");
     video.setAttribute("preload", "auto");
     Object.assign(video.style, {
+      position: "absolute",
+      inset: "0",
       width: "100%",
       height: "100%",
       objectFit: "cover",
@@ -138,23 +153,39 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
     } as CSSStyleDeclaration);
     wrapper.appendChild(video);
 
+    fallback = document.createElement("div");
+    fallback.dataset.videoFallback = "1";
+    fallback.className = "jh-bg-video-fallback";
+    Object.assign(fallback.style, {
+      position: "absolute",
+      inset: "0",
+      opacity: "0",
+      transition: "opacity 420ms ease",
+      pointerEvents: "none",
+    } as CSSStyleDeclaration);
+    wrapper.appendChild(fallback);
+
     const veil = document.createElement("div");
     veil.dataset.veil = "1";
     Object.assign(veil.style, {
       position: "absolute",
       inset: "0",
       pointerEvents: "none",
-      background: "linear-gradient(hsl(var(--background)/0.55), hsl(var(--background)/0.75))",
+      background: "linear-gradient(hsl(var(--background) / 0.50), hsl(var(--background) / 0.76))",
     } as CSSStyleDeclaration);
     wrapper.appendChild(veil);
     // Insérer en tout premier enfant de <body> pour rester derrière l'app.
     document.body.insertBefore(wrapper, document.body.firstChild);
   }
   document.documentElement.classList.add("has-bg-video");
+  refreshMediaClass();
   if (!video) return;
   // Ne pas ré-affecter src si identique (évite un reload/flash noir).
-  const currentSrc = video.currentSrc || video.src;
+  const currentSrc = video.getAttribute("src") || "";
   if (currentSrc !== src) {
+    if (wrapper) wrapper.style.opacity = "0";
+    if (fallback) fallback.style.opacity = "0";
+    video.style.display = "block";
     video.src = src;
     try { video.load(); } catch { /* noop */ }
   }
@@ -165,12 +196,18 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
   video.style.opacity = String(opts.opacity ?? 1);
   video.style.filter = opts.blur ? `blur(${opts.blur}px)` : "none";
 
-  if (opts.paused) {
-    try { video.pause(); } catch { /* noop */ }
-    return;
-  }
+  const revealVideo = () => {
+    if (wrapper) wrapper.style.opacity = "1";
+    if (video) video.style.display = "block";
+    if (fallback) fallback.style.opacity = "0";
+  };
 
   const tryPlay = () => {
+    revealVideo();
+    if (opts.paused) {
+      try { video!.pause(); } catch { /* noop */ }
+      return;
+    }
     const p = video!.play();
     if (p && typeof p.then === "function") {
       p.catch(() => {
@@ -179,6 +216,14 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
         if (wantSound) armSoundGesture(video!);
       });
     }
+  };
+  video.onerror = () => {
+    if (wrapper) wrapper.style.opacity = "1";
+    if (video) video.style.display = "none";
+    if (fallback) fallback.style.opacity = "1";
+  };
+  video.oncanplay = () => {
+    revealVideo();
   };
   if (video.readyState >= 2) tryPlay();
   else video.addEventListener("loadeddata", tryPlay, { once: true });

@@ -210,11 +210,14 @@
       hsl(var(--background));
     background-attachment: fixed;
   }
-  /* Lorsque la vidéo IA/perso est active, on rend le body transparent
-     pour que la vidéo (insérée en fond fixe) soit réellement visible. */
+  /* Lorsque le fond IA/perso est actif, les couches fixes restent visibles
+     derrière toute l'application sans bloquer les interactions. */
+  html.has-custom-media body,
   html.has-bg-video body {
     background: transparent !important;
   }
+  html.has-custom-media #root,
+  html.has-custom-media body > #root,
   html.has-bg-video #root,
   html.has-bg-video body > #root {
     background: transparent !important;
@@ -724,4 +727,26 @@
   transform: translateZ(0);
   will-change: transform;
   backface-visibility: hidden;
+}
+
+#jh-custom-bg-video,
+#jh-custom-bg {
+  contain: paint;
+  max-width: 100vw;
+  max-height: 100dvh;
+}
+
+.jh-bg-video-fallback {
+  background:
+    radial-gradient(circle at 20% 20%, hsl(var(--primary) / 0.35), transparent 32%),
+    radial-gradient(circle at 80% 18%, hsl(var(--accent) / 0.24), transparent 34%),
+    radial-gradient(circle at 52% 82%, hsl(var(--gold) / 0.24), transparent 38%),
+    linear-gradient(135deg, hsl(var(--background)), hsl(var(--card)) 58%, hsl(var(--background)));
+  background-size: 160% 160%;
+  animation: jh-bg-drift 16s ease-in-out infinite alternate;
+}
+
+@keyframes jh-bg-drift {
+  0% { background-position: 0% 18%; transform: scale(1); }
+  100% { background-position: 100% 82%; transform: scale(1.04); }
 }

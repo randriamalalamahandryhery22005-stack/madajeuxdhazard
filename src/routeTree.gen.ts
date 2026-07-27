@@ -37,6 +37,7 @@ import { Route as ApiAiVideoRouteImport } from './routes/api/ai-video'
 import { Route as ApiAiPaletteRouteImport } from './routes/api/ai-palette'
 import { Route as ApiAiBackgroundRouteImport } from './routes/api/ai-background'
 import { Route as AnalyseGameRouteImport } from './routes/analyse.$game'
+import { Route as ApiPublicTranslateUiRouteImport } from './routes/api/public/translate-ui'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -178,6 +179,11 @@ const AnalyseGameRoute = AnalyseGameRouteImport.update({
   path: '/analyse/$game',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTranslateUiRoute = ApiPublicTranslateUiRouteImport.update({
+  id: '/api/public/translate-ui',
+  path: '/api/public/translate-ui',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/custom/$slug': typeof CustomSlugRoute
   '/aviator/': typeof AviatorIndexRoute
   '/index/': typeof IndexIndexRoute
+  '/api/public/translate-ui': typeof ApiPublicTranslateUiRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -238,6 +245,7 @@ export interface FileRoutesByTo {
   '/custom/$slug': typeof CustomSlugRoute
   '/aviator': typeof AviatorIndexRoute
   '/index': typeof IndexIndexRoute
+  '/api/public/translate-ui': typeof ApiPublicTranslateUiRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -269,6 +277,7 @@ export interface FileRoutesById {
   '/custom/$slug': typeof CustomSlugRoute
   '/aviator/': typeof AviatorIndexRoute
   '/index/': typeof IndexIndexRoute
+  '/api/public/translate-ui': typeof ApiPublicTranslateUiRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -301,6 +310,7 @@ export interface FileRouteTypes {
     | '/custom/$slug'
     | '/aviator/'
     | '/index/'
+    | '/api/public/translate-ui'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -331,6 +341,7 @@ export interface FileRouteTypes {
     | '/custom/$slug'
     | '/aviator'
     | '/index'
+    | '/api/public/translate-ui'
   id:
     | '__root__'
     | '/'
@@ -361,6 +372,7 @@ export interface FileRouteTypes {
     | '/custom/$slug'
     | '/aviator/'
     | '/index/'
+    | '/api/public/translate-ui'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -392,6 +404,7 @@ export interface RootRouteChildren {
   CustomSlugRoute: typeof CustomSlugRoute
   AviatorIndexRoute: typeof AviatorIndexRoute
   IndexIndexRoute: typeof IndexIndexRoute
+  ApiPublicTranslateUiRoute: typeof ApiPublicTranslateUiRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -592,6 +605,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalyseGameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/translate-ui': {
+      id: '/api/public/translate-ui'
+      path: '/api/public/translate-ui'
+      fullPath: '/api/public/translate-ui'
+      preLoaderRoute: typeof ApiPublicTranslateUiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -624,17 +644,8 @@ const rootRouteChildren: RootRouteChildren = {
   CustomSlugRoute: CustomSlugRoute,
   AviatorIndexRoute: AviatorIndexRoute,
   IndexIndexRoute: IndexIndexRoute,
+  ApiPublicTranslateUiRoute: ApiPublicTranslateUiRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

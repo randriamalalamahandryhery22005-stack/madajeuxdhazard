@@ -57,6 +57,7 @@ import {
   applyBackgroundVideo,
 } from "@/lib/videoBackground";
 import { AI_WALLPAPERS } from "@/lib/aiVideoWallpapers";
+import { APP_LANGUAGES, applyAppLanguage } from "@/lib/appTranslation";
 
 const WHATSAPP_LINK = "https://wa.me/261379594257";
 const EMAIL_LINK = "mailto:jeuxdhazardmada@gmail.com";
@@ -471,43 +472,8 @@ function FavoritesPanel({ onClose }: { onClose: () => void }) {
 }
 
 /* ------------------- Language ------------------- */
-const LANGUAGES: Array<{ code: string; label: string; native: string; flag: string; rtl?: boolean }> = [
-  { code: "fr", label: "French", native: "Français", flag: "🇫🇷" },
-  { code: "en", label: "English", native: "English", flag: "🇬🇧" },
-  { code: "es", label: "Spanish", native: "Español", flag: "🇪🇸" },
-  { code: "pt", label: "Portuguese", native: "Português", flag: "🇵🇹" },
-  { code: "de", label: "German", native: "Deutsch", flag: "🇩🇪" },
-  { code: "it", label: "Italian", native: "Italiano", flag: "🇮🇹" },
-  { code: "nl", label: "Dutch", native: "Nederlands", flag: "🇳🇱" },
-  { code: "ru", label: "Russian", native: "Русский", flag: "🇷🇺" },
-  { code: "uk", label: "Ukrainian", native: "Українська", flag: "🇺🇦" },
-  { code: "pl", label: "Polish", native: "Polski", flag: "🇵🇱" },
-  { code: "tr", label: "Turkish", native: "Türkçe", flag: "🇹🇷" },
-  { code: "ar", label: "Arabic", native: "العربية", flag: "🇸🇦", rtl: true },
-  { code: "he", label: "Hebrew", native: "עברית", flag: "🇮🇱", rtl: true },
-  { code: "fa", label: "Persian", native: "فارسی", flag: "🇮🇷", rtl: true },
-  { code: "ur", label: "Urdu", native: "اردو", flag: "🇵🇰", rtl: true },
-  { code: "hi", label: "Hindi", native: "हिन्दी", flag: "🇮🇳" },
-  { code: "bn", label: "Bengali", native: "বাংলা", flag: "🇧🇩" },
-  { code: "zh", label: "Chinese", native: "中文", flag: "🇨🇳" },
-  { code: "ja", label: "Japanese", native: "日本語", flag: "🇯🇵" },
-  { code: "ko", label: "Korean", native: "한국어", flag: "🇰🇷" },
-  { code: "vi", label: "Vietnamese", native: "Tiếng Việt", flag: "🇻🇳" },
-  { code: "th", label: "Thai", native: "ไทย", flag: "🇹🇭" },
-  { code: "id", label: "Indonesian", native: "Bahasa Indonesia", flag: "🇮🇩" },
-  { code: "ms", label: "Malay", native: "Bahasa Melayu", flag: "🇲🇾" },
-  { code: "sw", label: "Swahili", native: "Kiswahili", flag: "🇰🇪" },
-  { code: "mg", label: "Malagasy", native: "Malagasy", flag: "🇲🇬" },
-  { code: "am", label: "Amharic", native: "አማርኛ", flag: "🇪🇹" },
-  { code: "el", label: "Greek", native: "Ελληνικά", flag: "🇬🇷" },
-  { code: "cs", label: "Czech", native: "Čeština", flag: "🇨🇿" },
-  { code: "sv", label: "Swedish", native: "Svenska", flag: "🇸🇪" },
-  { code: "no", label: "Norwegian", native: "Norsk", flag: "🇳🇴" },
-  { code: "da", label: "Danish", native: "Dansk", flag: "🇩🇰" },
-  { code: "fi", label: "Finnish", native: "Suomi", flag: "🇫🇮" },
-  { code: "ro", label: "Romanian", native: "Română", flag: "🇷🇴" },
-  { code: "hu", label: "Hungarian", native: "Magyar", flag: "🇭🇺" },
-];
+const LANGUAGES = APP_LANGUAGES;
+
 
 function LanguagePanel() {
   const [p, setP] = useState<Personalization>(() => readPersonalization());
@@ -517,14 +483,12 @@ function LanguagePanel() {
   const set = (code: string) => {
     const l = LANGUAGES.find((x) => x.code === code);
     writePersonalization({ language: code });
-    document.documentElement.lang = code;
-    document.documentElement.dir = l?.rtl ? "rtl" : "ltr";
+    applyAppLanguage(code);
     toast.success(`${l?.native ?? code} ✓`);
   };
   useEffect(() => {
     const l = LANGUAGES.find((x) => x.code === current);
-    document.documentElement.lang = current;
-    document.documentElement.dir = l?.rtl ? "rtl" : "ltr";
+    applyAppLanguage(current);
   }, [current]);
   const filtered = LANGUAGES.filter((l) => {
     const s = q.trim().toLowerCase();
