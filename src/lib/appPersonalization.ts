@@ -31,6 +31,14 @@ export type Personalization = {
 
 const KEY = "jh.personalization.v1";
 const EVT = "app-personalization-changed";
+const BG_ID = "jh-custom-bg";
+
+function refreshMediaClass() {
+  if (typeof document === "undefined") return;
+  const hasImage = Boolean(document.getElementById(BG_ID));
+  const hasVideo = Boolean(document.getElementById("jh-custom-bg-video"));
+  document.documentElement.classList.toggle("has-custom-media", hasImage || hasVideo);
+}
 
 export function readPersonalization(): Personalization {
   if (typeof window === "undefined") return {};
@@ -77,30 +85,45 @@ export function applyPalette(p?: Palette | null) {
 
 export function applyBackground(url?: string | null) {
   if (typeof document === "undefined") return;
-  const id = "jh-custom-bg";
-  let el = document.getElementById(id) as HTMLDivElement | null;
+  let el = document.getElementById(BG_ID) as HTMLDivElement | null;
   if (!url) {
     if (el) el.remove();
+    refreshMediaClass();
     return;
   }
   if (!el) {
     el = document.createElement("div");
-    el.id = id;
+    el.id = BG_ID;
+    el.setAttribute("aria-hidden", "true");
     Object.assign(el.style, {
       position: "fixed",
       inset: "0",
-      zIndex: "-1",
+      zIndex: "0",
       pointerEvents: "none",
       backgroundSize: "cover",
       backgroundPosition: "center",
       backgroundRepeat: "no-repeat",
       transition: "opacity 400ms ease",
       opacity: "0",
+      transform: "translateZ(0)",
     } as CSSStyleDeclaration);
-    document.body.appendChild(el);
+    document.body.insertBefore(el, document.body.firstChild);
   }
-  el.style.backgroundImage = `linear-gradient(hsl(var(--background)/0.65), hsl(var(--background)/0.85)), url("${url}")`;
+  const img = new Image();
+  img.decoding = "async";
+  img.onload = () => {
+    if (!el) return;
+    el.style.backgroundImage = `linear-gradient(hsl(var(--background) / 0.60), hsl(var(--background) / 0.82)), url("${url}")`;
+    requestAnimationFrame(() => { if (el) el.style.opacity = "1"; });
+    refreshMediaClass();
+  };
+  img.onerror = () => {
+    if (el) el.style.opacity = "0";
+    refreshMediaClass();
+  };
+  img.src = url;
   requestAnimationFrame(() => { if (el) el.style.opacity = "1"; });
+  refreshMediaClass();
 }
 
 export function toggleFavorite(path: string): string[] {

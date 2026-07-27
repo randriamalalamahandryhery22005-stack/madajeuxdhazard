@@ -33,16 +33,19 @@ export default function AppPersonalizationRoot() {
       else if (p.bgVideoSource === "local") void applyStoredVideoBackground(opts);
       else applyBackgroundVideo(null);
     };
+    const hasVideo = (p: ReturnType<typeof readPersonalization>) =>
+      p.bgVideoSource === "remote" || p.bgVideoSource === "local";
+
     const p = readPersonalization();
     applyPalette(p.palette);
-    applyBackground(p.bgUrl);
+    applyBackground(hasVideo(p) ? null : p.bgUrl);
     syncVideo(p);
     if (p.darkMode === false) document.documentElement.classList.remove("dark");
     else document.documentElement.classList.add("dark");
 
     const unsub = subscribePersonalization((next) => {
       applyPalette(next.palette);
-      applyBackground(next.bgUrl);
+      applyBackground(hasVideo(next) ? null : next.bgUrl);
       syncVideo(next);
       if (next.darkMode === false) document.documentElement.classList.remove("dark");
       else document.documentElement.classList.add("dark");
