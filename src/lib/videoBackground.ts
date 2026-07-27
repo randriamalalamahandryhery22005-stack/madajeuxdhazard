@@ -129,7 +129,7 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
       zIndex: "0",
       pointerEvents: "none",
       overflow: "hidden",
-      background: "#000",
+      background: "hsl(var(--background))",
       opacity: "0",
       transition: "opacity 420ms ease",
       transform: "translateZ(0)",
@@ -144,6 +144,8 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
     video.setAttribute("webkit-playsinline", "");
     video.setAttribute("preload", "auto");
     Object.assign(video.style, {
+      position: "absolute",
+      inset: "0",
       width: "100%",
       height: "100%",
       objectFit: "cover",
@@ -179,8 +181,11 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
   refreshMediaClass();
   if (!video) return;
   // Ne pas ré-affecter src si identique (évite un reload/flash noir).
-  const currentSrc = video.currentSrc || video.src;
+  const currentSrc = video.getAttribute("src") || "";
   if (currentSrc !== src) {
+    if (wrapper) wrapper.style.opacity = "0";
+    if (fallback) fallback.style.opacity = "0";
+    video.style.display = "block";
     video.src = src;
     try { video.load(); } catch { /* noop */ }
   }
@@ -191,15 +196,18 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
   video.style.opacity = String(opts.opacity ?? 1);
   video.style.filter = opts.blur ? `blur(${opts.blur}px)` : "none";
 
-  if (opts.paused) {
-    try { video.pause(); } catch { /* noop */ }
-    return;
-  }
-
-  const tryPlay = () => {
+  const revealVideo = () => {
     if (wrapper) wrapper.style.opacity = "1";
     if (video) video.style.display = "block";
     if (fallback) fallback.style.opacity = "0";
+  };
+
+  const tryPlay = () => {
+    revealVideo();
+    if (opts.paused) {
+      try { video!.pause(); } catch { /* noop */ }
+      return;
+    }
     const p = video!.play();
     if (p && typeof p.then === "function") {
       p.catch(() => {
@@ -215,9 +223,7 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
     if (fallback) fallback.style.opacity = "1";
   };
   video.oncanplay = () => {
-    if (wrapper) wrapper.style.opacity = "1";
-    if (video) video.style.display = "block";
-    if (fallback) fallback.style.opacity = "0";
+    revealVideo();
   };
   if (video.readyState >= 2) tryPlay();
   else video.addEventListener("loadeddata", tryPlay, { once: true });
