@@ -183,7 +183,7 @@ function restore(root: ParentNode) {
 }
 
 async function requestTranslations(lang: string, texts: string[]) {
-  const res = await fetch("/api/translate-ui", {
+  const res = await fetch("/api/public/translate-ui", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ targetLanguage: lang, texts }),
