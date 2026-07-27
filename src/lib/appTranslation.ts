@@ -102,7 +102,23 @@ function textNodes(root: ParentNode) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       if (isSkippableNode(node)) return NodeFilter.FILTER_REJECT;
+      if (ORIGINAL_TEXT.has(node as Text)) return NodeFilter.FILTER_ACCEPT;
       return shouldTranslate(node.textContent || "") ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    },
+  });
+  let next = walker.nextNode();
+  while (next) {
+    out.push(next as Text);
+    next = walker.nextNode();
+  }
+  return out;
+}
+
+function allTextNodes(root: ParentNode) {
+  const out: Text[] = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      return isSkippableNode(node) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
     },
   });
   let next = walker.nextNode();
@@ -154,7 +170,7 @@ function collect(root: ParentNode, lang: string) {
 }
 
 function restore(root: ParentNode) {
-  for (const node of textNodes(root)) {
+  for (const node of allTextNodes(root)) {
     const original = ORIGINAL_TEXT.get(node);
     if (original !== undefined) node.textContent = original;
   }
