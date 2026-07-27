@@ -143,7 +143,18 @@ function collect(root: ParentNode, lang: string) {
   const pending = new Set<string>();
 
   for (const node of textNodes(root)) {
-    const original = ORIGINAL_TEXT.get(node) || node.textContent || "";
+    const current = node.textContent || "";
+    let original = ORIGINAL_TEXT.get(node) || current;
+    const previousTranslation = cache[normalise(original)];
+    if (
+      ORIGINAL_TEXT.has(node) &&
+      normalise(current) !== normalise(original) &&
+      normalise(current) !== normalise(previousTranslation || "") &&
+      shouldTranslate(current)
+    ) {
+      original = current;
+      ORIGINAL_TEXT.set(node, original);
+    }
     if (!ORIGINAL_TEXT.has(node)) ORIGINAL_TEXT.set(node, original);
     const key = normalise(original);
     if (!shouldTranslate(key)) continue;
@@ -157,7 +168,17 @@ function collect(root: ParentNode, lang: string) {
     for (const attr of TRANSLATABLE_ATTRS) {
       const current = el.getAttribute(attr);
       if (!current) continue;
-      const existing = ORIGINAL_ATTR.get(el)?.get(attr) || current;
+      let existing = ORIGINAL_ATTR.get(el)?.get(attr) || current;
+      const previousTranslation = cache[normalise(existing)];
+      if (
+        ORIGINAL_ATTR.get(el)?.has(attr) &&
+        normalise(current) !== normalise(existing) &&
+        normalise(current) !== normalise(previousTranslation || "") &&
+        shouldTranslate(current)
+      ) {
+        existing = current;
+        ORIGINAL_ATTR.get(el)?.set(attr, existing);
+      }
       rememberAttr(el, attr, existing);
       const key = normalise(existing);
       if (!shouldTranslate(key)) continue;
