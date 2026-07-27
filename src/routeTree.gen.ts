@@ -33,6 +33,7 @@ import { Route as AviatorIndexRouteImport } from './routes/aviator.index'
 import { Route as CustomSlugRouteImport } from './routes/custom.$slug'
 import { Route as AviatorProRouteImport } from './routes/aviator.pro'
 import { Route as AviatorBasicRouteImport } from './routes/aviator.basic'
+import { Route as ApiTranslateUiRouteImport } from './routes/api/translate-ui'
 import { Route as ApiAiVideoRouteImport } from './routes/api/ai-video'
 import { Route as ApiAiPaletteRouteImport } from './routes/api/ai-palette'
 import { Route as ApiAiBackgroundRouteImport } from './routes/api/ai-background'
@@ -158,6 +159,11 @@ const AviatorBasicRoute = AviatorBasicRouteImport.update({
   path: '/aviator/basic',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTranslateUiRoute = ApiTranslateUiRouteImport.update({
+  id: '/api/translate-ui',
+  path: '/api/translate-ui',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAiVideoRoute = ApiAiVideoRouteImport.update({
   id: '/api/ai-video',
   path: '/api/ai-video',
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/api/ai-background': typeof ApiAiBackgroundRoute
   '/api/ai-palette': typeof ApiAiPaletteRoute
   '/api/ai-video': typeof ApiAiVideoRoute
+  '/api/translate-ui': typeof ApiTranslateUiRoute
   '/aviator/basic': typeof AviatorBasicRoute
   '/aviator/pro': typeof AviatorProRoute
   '/custom/$slug': typeof CustomSlugRoute
@@ -233,6 +240,7 @@ export interface FileRoutesByTo {
   '/api/ai-background': typeof ApiAiBackgroundRoute
   '/api/ai-palette': typeof ApiAiPaletteRoute
   '/api/ai-video': typeof ApiAiVideoRoute
+  '/api/translate-ui': typeof ApiTranslateUiRoute
   '/aviator/basic': typeof AviatorBasicRoute
   '/aviator/pro': typeof AviatorProRoute
   '/custom/$slug': typeof CustomSlugRoute
@@ -264,6 +272,7 @@ export interface FileRoutesById {
   '/api/ai-background': typeof ApiAiBackgroundRoute
   '/api/ai-palette': typeof ApiAiPaletteRoute
   '/api/ai-video': typeof ApiAiVideoRoute
+  '/api/translate-ui': typeof ApiTranslateUiRoute
   '/aviator/basic': typeof AviatorBasicRoute
   '/aviator/pro': typeof AviatorProRoute
   '/custom/$slug': typeof CustomSlugRoute
@@ -296,6 +305,7 @@ export interface FileRouteTypes {
     | '/api/ai-background'
     | '/api/ai-palette'
     | '/api/ai-video'
+    | '/api/translate-ui'
     | '/aviator/basic'
     | '/aviator/pro'
     | '/custom/$slug'
@@ -326,6 +336,7 @@ export interface FileRouteTypes {
     | '/api/ai-background'
     | '/api/ai-palette'
     | '/api/ai-video'
+    | '/api/translate-ui'
     | '/aviator/basic'
     | '/aviator/pro'
     | '/custom/$slug'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/api/ai-background'
     | '/api/ai-palette'
     | '/api/ai-video'
+    | '/api/translate-ui'
     | '/aviator/basic'
     | '/aviator/pro'
     | '/custom/$slug'
@@ -387,6 +399,7 @@ export interface RootRouteChildren {
   ApiAiBackgroundRoute: typeof ApiAiBackgroundRoute
   ApiAiPaletteRoute: typeof ApiAiPaletteRoute
   ApiAiVideoRoute: typeof ApiAiVideoRoute
+  ApiTranslateUiRoute: typeof ApiTranslateUiRoute
   AviatorBasicRoute: typeof AviatorBasicRoute
   AviatorProRoute: typeof AviatorProRoute
   CustomSlugRoute: typeof CustomSlugRoute
@@ -564,6 +577,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AviatorBasicRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/translate-ui': {
+      id: '/api/translate-ui'
+      path: '/api/translate-ui'
+      fullPath: '/api/translate-ui'
+      preLoaderRoute: typeof ApiTranslateUiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ai-video': {
       id: '/api/ai-video'
       path: '/api/ai-video'
@@ -619,6 +639,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiBackgroundRoute: ApiAiBackgroundRoute,
   ApiAiPaletteRoute: ApiAiPaletteRoute,
   ApiAiVideoRoute: ApiAiVideoRoute,
+  ApiTranslateUiRoute: ApiTranslateUiRoute,
   AviatorBasicRoute: AviatorBasicRoute,
   AviatorProRoute: AviatorProRoute,
   CustomSlugRoute: CustomSlugRoute,
@@ -628,3 +649,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
