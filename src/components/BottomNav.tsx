@@ -65,6 +65,7 @@ const BottomNav = () => {
   const { isAdmin, user, profile, signOut } = useAuth();
   const unreadChats = useUnreadChats(user?.id ?? null);
   const { count: unreadStore } = useUnreadStore(user?.id ?? null);
+  const unreadNotifs = useUnreadNotifications(user?.id ?? null);
   const [ripple, setRipple] = useState<{ id: string; x: number; y: number } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -119,6 +120,7 @@ const BottomNav = () => {
     { label: "Accueil", icon: Home, path: "/games" },
     { label: "Chat", icon: MessageCircle, path: "/chat" },
     { label: "Boutique", icon: ShoppingBag, path: "/gen-store" },
+    { label: "Notifs", icon: Bell, path: "/notifications" },
     { label: "Premium", icon: Crown, path: "/premium" },
     ...(isAdmin ? [{ label: "Admin", icon: Shield, path: "/admin" }] : []),
   ];
