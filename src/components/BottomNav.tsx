@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
 import {
   Home,
   ShoppingBag,

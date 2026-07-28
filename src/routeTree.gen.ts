@@ -15,6 +15,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PremiumSelectRouteImport } from './routes/premium-select'
 import { Route as PremiumRouteImport } from './routes/premium'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JetxRouteImport } from './routes/jetx'
 import { Route as GenStoreRouteImport } from './routes/gen-store'
@@ -65,6 +66,11 @@ const PremiumSelectRoute = PremiumSelectRouteImport.update({
 const PremiumRoute = PremiumRouteImport.update({
   id: '/premium',
   path: '/premium',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/gen-store': typeof GenStoreRoute
   '/jetx': typeof JetxRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/premium': typeof PremiumRoute
   '/premium-select': typeof PremiumSelectRoute
   '/profile': typeof ProfileRoute
@@ -216,6 +223,7 @@ export interface FileRoutesByTo {
   '/gen-store': typeof GenStoreRoute
   '/jetx': typeof JetxRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/premium': typeof PremiumRoute
   '/premium-select': typeof PremiumSelectRoute
   '/profile': typeof ProfileRoute
@@ -246,6 +254,7 @@ export interface FileRoutesById {
   '/gen-store': typeof GenStoreRoute
   '/jetx': typeof JetxRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/premium': typeof PremiumRoute
   '/premium-select': typeof PremiumSelectRoute
   '/profile': typeof ProfileRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/gen-store'
     | '/jetx'
     | '/login'
+    | '/notifications'
     | '/premium'
     | '/premium-select'
     | '/profile'
@@ -306,6 +316,7 @@ export interface FileRouteTypes {
     | '/gen-store'
     | '/jetx'
     | '/login'
+    | '/notifications'
     | '/premium'
     | '/premium-select'
     | '/profile'
@@ -335,6 +346,7 @@ export interface FileRouteTypes {
     | '/gen-store'
     | '/jetx'
     | '/login'
+    | '/notifications'
     | '/premium'
     | '/premium-select'
     | '/profile'
@@ -365,6 +377,7 @@ export interface RootRouteChildren {
   GenStoreRoute: typeof GenStoreRoute
   JetxRoute: typeof JetxRoute
   LoginRoute: typeof LoginRoute
+  NotificationsRoute: typeof NotificationsRoute
   PremiumRoute: typeof PremiumRoute
   PremiumSelectRoute: typeof PremiumSelectRoute
   ProfileRoute: typeof ProfileRoute
@@ -423,6 +436,13 @@ declare module '@tanstack/react-router' {
       path: '/premium'
       fullPath: '/premium'
       preLoaderRoute: typeof PremiumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -589,6 +609,7 @@ const rootRouteChildren: RootRouteChildren = {
   GenStoreRoute: GenStoreRoute,
   JetxRoute: JetxRoute,
   LoginRoute: LoginRoute,
+  NotificationsRoute: NotificationsRoute,
   PremiumRoute: PremiumRoute,
   PremiumSelectRoute: PremiumSelectRoute,
   ProfileRoute: ProfileRoute,
