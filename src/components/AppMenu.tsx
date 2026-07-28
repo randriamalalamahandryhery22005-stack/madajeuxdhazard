@@ -79,7 +79,7 @@ type PanelKey =
   | "notifications"
   | "history"
   | "favorites"
-  | "language"
+  
   | "theme"
   | "privacy"
   | "help"
@@ -111,7 +111,7 @@ export default function AppMenu({
             {panel === "notifications" && <NotificationsPanel />}
             {panel === "history" && <HistoryPanel onClose={() => onOpenChange(false)} />}
             {panel === "favorites" && <FavoritesPanel onClose={() => onOpenChange(false)} />}
-            {panel === "language" && <LanguagePanel />}
+            
             {panel === "theme" && <ThemePanel />}
             {panel === "privacy" && <PrivacyPanel />}
             {panel === "help" && <HelpPanel />}
@@ -131,7 +131,7 @@ const PANEL_TITLES: Record<PanelKey, string> = {
   notifications: "Notifications",
   history: "Historique",
   favorites: "Favoris",
-  language: "Langue",
+  
   theme: "Thème",
   privacy: "Confidentialité",
   help: "Aide",
@@ -294,7 +294,7 @@ function RootPanel({
       </Group>
 
       <Group title="Application">
-        <Row icon={<Globe className="w-[18px] h-[18px] text-sky-300" />} label="Langue & région" sublabel="Choisir la langue de l'application" onClick={() => goto("language")} />
+        
         <Row icon={<Store className="w-[18px] h-[18px] text-amber-300" />} label="J&H Store" sublabel="Contenus et publications" onClick={() => { onClose(); navigate("/gen-store"); }} />
         <Row icon={<Crown className="w-[18px] h-[18px] text-yellow-300" />} label="Abonnement Premium" sublabel="Gérer votre accès premium" onClick={() => { onClose(); navigate("/premium"); }} />
         <Row icon={<Gamepad2 className="w-[18px] h-[18px] text-emerald-300" />} label="Jeux & prédictions" sublabel="Accéder au hub des jeux" onClick={() => { onClose(); navigate("/games"); }} />
@@ -525,36 +525,6 @@ function FavoritesPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-/* ------------------- Language ------------------- */
-function LanguagePanel() {
-  const [p, setP] = useState<Personalization>(() => readPersonalization());
-  useEffect(() => subscribePersonalization(setP), []);
-  const set = (lang: "fr" | "en") => {
-    writePersonalization({ language: lang });
-    document.documentElement.lang = lang;
-    toast.success(lang === "fr" ? "Français activé" : "English enabled");
-  };
-  return (
-    <div className="space-y-2">
-      {[
-        { code: "fr" as const, label: "Français", flag: "🇫🇷" },
-        { code: "en" as const, label: "English", flag: "🇬🇧" },
-      ].map((l) => (
-        <button
-          key={l.code}
-          onClick={() => set(l.code)}
-          className={`w-full flex items-center gap-3 rounded-2xl border p-4 transition ${p.language === l.code || (!p.language && l.code === "fr") ? "border-amber-400/50 bg-amber-500/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}
-        >
-          <span className="text-2xl">{l.flag}</span>
-          <span className="flex-1 text-left font-semibold">{l.label}</span>
-          {(p.language === l.code || (!p.language && l.code === "fr")) && (
-            <span className="text-xs text-amber-300">Actif</span>
-          )}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 /* ------------------- Theme (AI background + AI palette) ------------------- */
 function ThemePanel() {

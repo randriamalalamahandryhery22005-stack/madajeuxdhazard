@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
 import {
   Home,
   ShoppingBag,
@@ -64,6 +65,7 @@ const BottomNav = () => {
   const { isAdmin, user, profile, signOut } = useAuth();
   const unreadChats = useUnreadChats(user?.id ?? null);
   const { count: unreadStore } = useUnreadStore(user?.id ?? null);
+  const unreadNotifs = useUnreadNotifications(user?.id ?? null);
   const [ripple, setRipple] = useState<{ id: string; x: number; y: number } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -118,6 +120,7 @@ const BottomNav = () => {
     { label: "Accueil", icon: Home, path: "/games" },
     { label: "Chat", icon: MessageCircle, path: "/chat" },
     { label: "Boutique", icon: ShoppingBag, path: "/gen-store" },
+    { label: "Notifs", icon: Bell, path: "/notifications" },
     { label: "Premium", icon: Crown, path: "/premium" },
     ...(isAdmin ? [{ label: "Admin", icon: Shield, path: "/admin" }] : []),
   ];
@@ -207,6 +210,14 @@ const BottomNav = () => {
                       aria-label={`${unreadStore} nouvelles publications`}
                     >
                       {unreadStore > 99 ? "99+" : unreadStore}
+                    </span>
+                  )}
+                  {item.path === "/notifications" && unreadNotifs > 0 && (
+                    <span
+                      className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[9px] font-bold text-white bg-gradient-to-br from-rose-500 to-rose-600 ring-2 ring-slate-900 shadow-[0_0_10px_rgba(244,63,94,0.6)] animate-[scale-in_0.25s_ease-out]"
+                      aria-label={`${unreadNotifs} notifications non lues`}
+                    >
+                      {unreadNotifs > 99 ? "99+" : unreadNotifs}
                     </span>
                   )}
                 </div>
