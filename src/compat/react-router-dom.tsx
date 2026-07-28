@@ -159,9 +159,13 @@ export function Navigate({
   state?: unknown;
 }) {
   const navigate = useNavigate();
+  // NOTE: `state` intentionally excluded from deps — callers frequently pass a
+  // fresh object literal (e.g. `state={{ from: pathname }}`) which would cause
+  // this effect to fire on every render and loop the router.
   React.useEffect(() => {
     navigate(to, { replace, state });
-  }, [to, replace, state, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [to, replace, navigate]);
   return null;
 }
 

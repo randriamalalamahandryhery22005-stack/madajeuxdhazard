@@ -9,7 +9,10 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "build:netlify": "NITRO_PRESET=netlify vite build",
+    "build:static": "NITRO_PRESET=static vite build",
+    "build:edgeone": "NITRO_PRESET=static vite build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

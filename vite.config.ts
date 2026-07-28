@@ -8,6 +8,12 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import path from "node:path";
 
 export default defineConfig({
+  // Deployment target. Inside Lovable the preset is always Cloudflare; on an
+  // external CI (Netlify, EdgeOne, …) set NITRO_PRESET to pick the target,
+  // e.g. NITRO_PRESET=netlify or NITRO_PRESET=static.
+  nitro: process.env.NITRO_PRESET
+    ? { preset: process.env.NITRO_PRESET }
+    : true,
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this

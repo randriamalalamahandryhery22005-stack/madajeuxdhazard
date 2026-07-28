@@ -14,8 +14,7 @@ export type AnalysisVariant =
   | "spribe"
   | "cosmox"
   | "jetx"
-  | "penalty"
-  | "virtuel";
+  | "penalty";
 
 interface Preset {
   title: string;
@@ -158,27 +157,6 @@ const PRESETS: Record<AnalysisVariant, Preset> = {
       "Simulation Monte-Carlo (5 tirs)",
       "Calcul du taux de conversion",
       "Compilation des prédictions",
-    ],
-  },
-  virtuel: {
-    title: "Analyse Virtuel",
-    subtitle: "Simulation tactique du match",
-    accent: "#3b82f6",
-    accentSoft: "59,130,246",
-    gradient: "from-blue-500/25 via-indigo-500/10 to-slate-900/10",
-    ring: "border-blue-500/40",
-    text: "text-blue-300",
-    chip: "bg-blue-500/15 border-blue-500/40 text-blue-300",
-    bar: "from-blue-400 via-indigo-300 to-sky-300",
-    Icon: Trophy,
-    visual: "pitch",
-    badge: "MATCH",
-    steps: [
-      "Chargement des données d'équipes",
-      "Pondération des cotes",
-      "Simulation des 90 minutes",
-      "Estimation du score attendu",
-      "Compilation du pronostic",
     ],
   },
 };

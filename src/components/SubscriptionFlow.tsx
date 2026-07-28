@@ -76,15 +76,6 @@ const SubscriptionFlow = ({ gameMode, gameName, onAccessGranted, onCancel, fixed
       glowClass: "shadow-emerald-500/40",
       perks: ["Prédictions tireur/gardien", "Statistiques équipes", "Mode multi-match", "Alertes en direct"],
     };
-    if (m.includes("virtuel") || m.includes("virtual")) return {
-      label: "Édition Stade",
-      tagline: "8 ligues virtuelles maîtrisées",
-      icon: Star,
-      accent: "from-amber-400 via-amber-500 to-amber-500",
-      ring: "ring-amber-500/40",
-      glowClass: "shadow-amber-500/40",
-      perks: ["8 ligues couvertes", "Pondération avancée", "Calendrier en direct", "Conseils pré-match"],
-    };
     return {
       label: "Édition Pro",
       tagline: "Débloquez la pleine puissance",

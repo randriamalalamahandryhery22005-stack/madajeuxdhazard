@@ -89,7 +89,7 @@ const HeroResult = ({ result, title, onBack, theme: t }: { result: PredictionRes
   const riskTone = `${riskT.text} ${riskT.bg} ${riskT.border}`;
 
   return (
-    <div className="space-y-4" style={{ animation: "fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
+    <div className="space-y-4" style={{ animation: "result-pop 0.72s cubic-bezier(0.22, 1, 0.36, 1) forwards" }}>
       {/* Header pill */}
       <div className={`flex items-center justify-between gap-2 p-3 rounded-2xl border ${t.ring} ${t.accentBg} backdrop-blur-sm`}>
         <div className="flex items-center gap-2.5 min-w-0">
@@ -289,7 +289,7 @@ const ConfidenceBar = ({ value, gradient, label, labelColor }: { value: number; 
 
 // ===== BASIC =====
 const BasicResult = ({ results, title, onBack }: { results: PredictionResult[]; title: string; onBack: () => void }) => (
-  <div className="space-y-3" style={{ animation: "fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
+  <div className="space-y-3" style={{ animation: "result-pop 0.72s cubic-bezier(0.22, 1, 0.36, 1) forwards" }}>
     <div className="flex items-center justify-between p-3 rounded-xl bg-blue-500/5 border border-blue-500/20 gap-2 min-w-0">
       <div className="flex items-center gap-2 min-w-0">
         <BarChart3 className="w-4 h-4 text-blue-400 flex-shrink-0" />
@@ -300,7 +300,7 @@ const BasicResult = ({ results, title, onBack }: { results: PredictionResult[]; 
     <div className="grid grid-cols-2 gap-2.5">
     {results.map((r, i) => (
       <div key={i} className="rounded-xl bg-card/80 border border-blue-500/20 overflow-hidden flex flex-col"
-        style={{ animation: `fade-up 0.4s ease ${i * 60}ms forwards`, opacity: 0 }}>
+        style={{ animation: `result-pop 0.6s cubic-bezier(0.22, 1, 0.36, 1) ${i * 60}ms forwards`, opacity: 0 }}>
         <CardHeader
           index={i}
           time={r.time}
@@ -327,7 +327,7 @@ const BasicResult = ({ results, title, onBack }: { results: PredictionResult[]; 
 
 // ===== PRO =====
 const ProResult = ({ results, title, onBack }: { results: PredictionResult[]; title: string; onBack: () => void }) => (
-  <div className="space-y-4" style={{ animation: "fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
+  <div className="space-y-4" style={{ animation: "result-pop 0.72s cubic-bezier(0.22, 1, 0.36, 1) forwards" }}>
     <div className="p-4 rounded-2xl bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-transparent border border-violet-500/25">
       <div className="flex items-center gap-2.5 min-w-0">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
@@ -342,7 +342,7 @@ const ProResult = ({ results, title, onBack }: { results: PredictionResult[]; ti
     <div className="grid grid-cols-2 gap-2.5">
     {results.map((r, i) => (
       <div key={i} className="rounded-2xl bg-card/90 border border-violet-500/25 overflow-hidden backdrop-blur-sm flex flex-col"
-        style={{ animation: `fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${i * 80}ms forwards`, opacity: 0 }}>
+        style={{ animation: `result-pop 0.72s cubic-bezier(0.22, 1, 0.36, 1) ${i * 80}ms forwards`, opacity: 0 }}>
         <CardHeader
           index={i}
           time={r.time}
@@ -368,7 +368,7 @@ const ProResult = ({ results, title, onBack }: { results: PredictionResult[]; ti
 
 // ===== REALTIME =====
 const RealtimeResult = ({ results, title, onBack }: { results: PredictionResult[]; title: string; onBack: () => void }) => (
-  <div className="space-y-4" style={{ animation: "fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
+  <div className="space-y-4" style={{ animation: "result-pop 0.72s cubic-bezier(0.22, 1, 0.36, 1) forwards" }}>
     <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/25">
       <div className="flex items-center gap-2.5 min-w-0">
         <div className="relative flex-shrink-0">
@@ -388,7 +388,7 @@ const RealtimeResult = ({ results, title, onBack }: { results: PredictionResult[
     <div className="grid grid-cols-2 gap-2.5">
     {results.map((r, i) => (
       <div key={i} className="rounded-2xl overflow-hidden border border-emerald-500/25 bg-gradient-to-br from-card/90 via-card/80 to-emerald-500/5 flex flex-col"
-        style={{ animation: `fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${i * 100}ms forwards`, opacity: 0 }}>
+        style={{ animation: `result-pop 0.72s cubic-bezier(0.22, 1, 0.36, 1) ${i * 100}ms forwards`, opacity: 0 }}>
         <CardHeader
           index={i}
           time={r.time}
@@ -416,7 +416,7 @@ const RealtimeResult = ({ results, title, onBack }: { results: PredictionResult[
 
 // ===== BALANCED =====
 const BalancedResult = ({ results, title, onBack }: { results: PredictionResult[]; title: string; onBack: () => void }) => (
-  <div className="space-y-4" style={{ animation: "fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
+  <div className="space-y-4" style={{ animation: "result-pop 0.72s cubic-bezier(0.22, 1, 0.36, 1) forwards" }}>
     <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/25">
       <div className="flex items-center gap-2.5 min-w-0">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg flex-shrink-0">
@@ -431,7 +431,7 @@ const BalancedResult = ({ results, title, onBack }: { results: PredictionResult[
     <div className="grid grid-cols-2 gap-2.5">
     {results.map((r, i) => (
       <div key={i} className="rounded-2xl bg-card/90 border border-amber-500/25 overflow-hidden flex flex-col"
-        style={{ animation: `fade-up 0.5s ease ${i * 70}ms forwards`, opacity: 0 }}>
+        style={{ animation: `result-pop 0.68s cubic-bezier(0.22, 1, 0.36, 1) ${i * 70}ms forwards`, opacity: 0 }}>
         <CardHeader
           index={i}
           time={r.time}
@@ -471,7 +471,7 @@ const BalancedResult = ({ results, title, onBack }: { results: PredictionResult[
 
 // ===== PREMIUM =====
 const PremiumResult = ({ results, title, onBack }: { results: PredictionResult[]; title: string; onBack: () => void }) => (
-  <div className="space-y-4" style={{ animation: "fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
+  <div className="space-y-4" style={{ animation: "result-pop 0.72s cubic-bezier(0.22, 1, 0.36, 1) forwards" }}>
     <div className="p-4 rounded-2xl bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border border-primary/25 glow-gold">
       <div className="flex items-center gap-2.5 min-w-0">
         <div className="w-9 h-9 rounded-xl gold-gradient flex items-center justify-center shadow-lg flex-shrink-0">
@@ -486,7 +486,7 @@ const PremiumResult = ({ results, title, onBack }: { results: PredictionResult[]
     <div className="grid grid-cols-2 gap-2.5">
     {results.map((r, i) => (
       <div key={i} className="rounded-2xl bg-card/90 border border-primary/25 overflow-hidden glow-gold backdrop-blur-sm flex flex-col"
-        style={{ animation: `fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${i * 80}ms forwards`, opacity: 0 }}>
+        style={{ animation: `result-pop 0.72s cubic-bezier(0.22, 1, 0.36, 1) ${i * 80}ms forwards`, opacity: 0 }}>
         <CardHeader
           index={i}
           time={r.time}
@@ -512,7 +512,7 @@ const PremiumResult = ({ results, title, onBack }: { results: PredictionResult[]
 
 // ===== COSMOX =====
 const CosmoXResult = ({ results, title, onBack }: { results: PredictionResult[]; title: string; onBack: () => void }) => (
-  <div className="space-y-4" style={{ animation: "fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
+  <div className="space-y-4" style={{ animation: "result-pop 0.72s cubic-bezier(0.22, 1, 0.36, 1) forwards" }}>
     <div className="p-4 rounded-2xl border border-cyan-500/25" style={{ background: "linear-gradient(135deg, rgba(6,182,212,0.1), rgba(20,184,166,0.05), transparent)" }}>
       <div className="flex items-center gap-2.5 min-w-0">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0" style={{ background: "linear-gradient(135deg, #06b6d4, #14b8a6)" }}>
@@ -527,7 +527,7 @@ const CosmoXResult = ({ results, title, onBack }: { results: PredictionResult[];
     <div className="grid grid-cols-2 gap-2.5">
     {results.map((r, i) => (
       <div key={i} className="rounded-2xl overflow-hidden border border-cyan-500/25 flex flex-col"
-        style={{ animation: `fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${i * 90}ms forwards`, opacity: 0, background: "linear-gradient(180deg, hsl(var(--card)/0.9), hsl(var(--card)/0.7), rgba(6,182,212,0.03))" }}>
+        style={{ animation: `result-pop 0.72s cubic-bezier(0.22, 1, 0.36, 1) ${i * 90}ms forwards`, opacity: 0, background: "linear-gradient(180deg, hsl(var(--card)/0.9), hsl(var(--card)/0.7), rgba(6,182,212,0.03))" }}>
         <CardHeader
           index={i}
           time={r.time}
@@ -558,7 +558,7 @@ const CosmoXResult = ({ results, title, onBack }: { results: PredictionResult[];
 
 // ===== JETX =====
 const JetXResult = ({ results, title, onBack }: { results: PredictionResult[]; title: string; onBack: () => void }) => (
-  <div className="space-y-4" style={{ animation: "fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
+  <div className="space-y-4" style={{ animation: "result-pop 0.72s cubic-bezier(0.22, 1, 0.36, 1) forwards" }}>
     <div className="p-4 rounded-2xl border border-orange-500/25" style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.1), rgba(239,68,68,0.05), transparent)" }}>
       <div className="flex items-center gap-2.5 min-w-0">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0" style={{ background: "linear-gradient(135deg, #f97316, #ef4444)" }}>
@@ -573,7 +573,7 @@ const JetXResult = ({ results, title, onBack }: { results: PredictionResult[]; t
     <div className="grid grid-cols-2 gap-2.5">
     {results.map((r, i) => (
       <div key={i} className="rounded-2xl overflow-hidden border border-orange-500/25 flex flex-col"
-        style={{ animation: `fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${i * 90}ms forwards`, opacity: 0, background: "linear-gradient(180deg, hsl(var(--card)/0.9), hsl(var(--card)/0.7), rgba(249,115,22,0.03))" }}>
+        style={{ animation: `result-pop 0.72s cubic-bezier(0.22, 1, 0.36, 1) ${i * 90}ms forwards`, opacity: 0, background: "linear-gradient(180deg, hsl(var(--card)/0.9), hsl(var(--card)/0.7), rgba(249,115,22,0.03))" }}>
         <CardHeader
           index={i}
           time={r.time}

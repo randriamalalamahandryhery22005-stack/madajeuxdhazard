@@ -97,23 +97,6 @@ const tutorials: Tutorial[] = [
     difficultyColor: "text-green-400 bg-green-500/10 border-green-500/20",
   },
   {
-    id: "virtuel",
-    title: "Virtuel Football — Prédictions de Matchs",
-    description: "Guide complet pour prédire les résultats des matchs de football virtuel avec 8 ligues disponibles.",
-    steps: [
-      "Ouvrez Virtuel Football depuis le menu principal",
-      "Sélectionnez la ligue souhaitée parmi les 8 disponibles",
-      "Choisissez le match à analyser",
-      "Le système calcule les scores probables avec des statistiques pondérées",
-      "Consultez les prédictions : score, gagnant, nombre de buts",
-      "Utilisez le niveau de confiance pour évaluer la fiabilité"
-    ],
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WcXgQ",
-    duration: "5 min",
-    difficulty: "Intermédiaire",
-    difficultyColor: "text-amber-400 bg-amber-500/10 border-amber-500/20",
-  },
-  {
     id: "penalty",
     title: "Penalty ShootOut — Tirs au But",
     description: "Comment utiliser les prédictions probabilistes pour les séances de tirs au but.",

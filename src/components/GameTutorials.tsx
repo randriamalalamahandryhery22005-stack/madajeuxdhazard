@@ -16,13 +16,6 @@ const jetxSteps: TutorialStep[] = [
   { narration: "JetX est idéal pour les vols courts et moyens. Jouez de manière responsable." },
 ];
 
-const virtuelSteps: TutorialStep[] = [
-  { narration: "Bienvenue dans le tutoriel Virtuel Football. Prédisez les résultats des matchs simulés." },
-  { narration: "Sélectionnez d'abord une ligue parmi les huit disponibles, puis choisissez votre match." },
-  { narration: "Indiquez les cotes du match, par exemple un point quatre vingts pour l'équipe à domicile.", coeff: "1.80" },
-  { narration: "L'analyse statistique pondérée propose le score le plus probable et le gagnant.", reveal: true, predicted: "2-1" },
-  { narration: "Virtuel Football vous donne un avantage stratégique sur chaque rencontre simulée." },
-];
 
 const penaltySteps: TutorialStep[] = [
   { narration: "Découvrez le tutoriel Penalty ShootOut. Anticipez la direction de chaque tir." },
@@ -33,13 +26,12 @@ const penaltySteps: TutorialStep[] = [
 ];
 
 interface Props {
-  game: "cosmox" | "jetx" | "virtuel" | "penalty";
+  game: "cosmox" | "jetx" | "penalty";
 }
 
 const configs = {
   cosmox:  { title: "CosmoX",          subtitle: "Prédictions cosmiques",       steps: cosmoxSteps,  accent: "blue"    as const },
   jetx:    { title: "JetX",            subtitle: "Prédictions de vol",          steps: jetxSteps,    accent: "amber"   as const },
-  virtuel: { title: "Virtuel Football",subtitle: "Analyse de matchs simulés",   steps: virtuelSteps, accent: "emerald" as const },
   penalty: { title: "Penalty ShootOut",subtitle: "Direction des tirs au but",   steps: penaltySteps, accent: "gold"    as const },
 };
 

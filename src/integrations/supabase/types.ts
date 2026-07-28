@@ -468,8 +468,8 @@ export type Database = {
           created_by: string | null
           description: string
           download_count: number
-          file_name: string | null
-          file_path: string | null
+          file_name: string
+          file_path: string
           file_size: number
           file_url: string | null
           id: string
@@ -488,8 +488,8 @@ export type Database = {
           created_by?: string | null
           description: string
           download_count?: number
-          file_name?: string | null
-          file_path?: string | null
+          file_name: string
+          file_path: string
           file_size?: number
           file_url?: string | null
           id?: string
@@ -508,8 +508,8 @@ export type Database = {
           created_by?: string | null
           description?: string
           download_count?: number
-          file_name?: string | null
-          file_path?: string | null
+          file_name?: string
+          file_path?: string
           file_size?: number
           file_url?: string | null
           id?: string
@@ -940,12 +940,14 @@ export type Database = {
           email: string
           full_name: string | null
           gen_store_last_seen_at: string | null
+          gender: string | null
           id: string
           is_validated: boolean
           last_seen_at: string | null
           location: string | null
           login_count: number
           name: string
+          phone: string | null
           region: string | null
           status: string
           trial_started_at: string | null
@@ -962,12 +964,14 @@ export type Database = {
           email: string
           full_name?: string | null
           gen_store_last_seen_at?: string | null
+          gender?: string | null
           id?: string
           is_validated?: boolean
           last_seen_at?: string | null
           location?: string | null
           login_count?: number
           name: string
+          phone?: string | null
           region?: string | null
           status?: string
           trial_started_at?: string | null
@@ -984,12 +988,14 @@ export type Database = {
           email?: string
           full_name?: string | null
           gen_store_last_seen_at?: string | null
+          gender?: string | null
           id?: string
           is_validated?: boolean
           last_seen_at?: string | null
           location?: string | null
           login_count?: number
           name?: string
+          phone?: string | null
           region?: string | null
           status?: string
           trial_started_at?: string | null
@@ -1259,6 +1265,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_user_coins: { Args: never; Returns: undefined }
       get_active_device: { Args: { _user_id: string }; Returns: string }
       get_total_revenue: { Args: never; Returns: number }
       has_active_premium_bonus: { Args: { _user_id: string }; Returns: boolean }
@@ -1273,6 +1280,8 @@ export type Database = {
         Args: { _conv: string; _user: string }
         Returns: boolean
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin" | "user"

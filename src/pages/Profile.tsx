@@ -5,8 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Camera, Check, KeyRound, Mail, Phone, Globe, User as UserIcon, Shield, Loader2, Calendar, MapPin, Sparkles } from "lucide-react";
+import { ArrowLeft, Camera, Check, KeyRound, Mail, Phone, Globe, User as UserIcon, Shield, Loader2, Calendar, MapPin, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { COUNTRIES } from "@/lib/countries";
 import { processAvatar } from "@/lib/avatarImage";
 
@@ -27,7 +31,24 @@ const fileToDataUrl = (file: File) =>
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, profile, loading, refreshProfile } = useAuth();
+  const { user, profile, loading, refreshProfile, signOut } = useAuth();
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteAccount = async () => {
+    if (!user) return;
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-account");
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || "Erreur");
+      toast.success("Compte supprimé");
+      await signOut();
+      navigate("/login");
+    } catch (e: any) {
+      toast.error("Échec de la suppression", { description: e?.message?.slice(0, 140) });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Quick-edit profile fields (no code)
   const [fullName, setFullName] = useState("");
@@ -344,6 +365,43 @@ const Profile = () => {
               <span className="text-[10px] text-primary font-bold uppercase">Modifier</span>
             </button>
           ))}
+        </section>
+
+        {/* Danger zone — delete account */}
+        <section id="danger" className="rounded-3xl border border-destructive/30 bg-destructive/5 backdrop-blur-sm p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <Trash2 className="w-4 h-4 text-destructive" />
+            <h2 className="text-sm font-bold text-destructive">Zone dangereuse</h2>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Supprimer votre compte est <strong>irréversible</strong>. Toutes vos données (profil, historique,
+            messages, abonnements) seront effacées et vous serez déconnecté.
+          </p>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="w-full" disabled={deleting}>
+                {deleting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Trash2 className="w-4 h-4 mr-1" />}
+                Supprimer définitivement mon compte
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer votre compte ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Cette action est définitive. Vos données seront effacées et vous serez immédiatement déconnecté.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={deleteAccount}
+                >
+                  Oui, supprimer
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </section>
       </main>
 

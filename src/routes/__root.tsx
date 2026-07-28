@@ -97,11 +97,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Jeux d'Hazard — Prédictions & Analyses Premium" },
       { property: "og:title", content: "Jeux d'Hazard — Prédictions & Analyses Premium" },
       { name: "twitter:title", content: "Jeux d'Hazard — Prédictions & Analyses Premium" },
-      { name: "description", content: "Plateforme Premium de prédictions et analyses avancées pour Aviator, JetX, CosmoX. Interface luxe, analyses en temps réel." },
-      { property: "og:description", content: "Plateforme Premium de prédictions et analyses avancées pour Aviator, JetX, CosmoX. Interface luxe, analyses en temps réel." },
-      { name: "twitter:description", content: "Plateforme Premium de prédictions et analyses avancées pour Aviator, JetX, CosmoX. Interface luxe, analyses en temps réel." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/f2ab96e2-9d10-4b90-a3b9-e5f4a52e7d2a" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/f2ab96e2-9d10-4b90-a3b9-e5f4a52e7d2a" },
+      { name: "description", content: "Plateforme Premium de Prédictions et Analyses Avancées pour Aviator, JetX, CosmoX.\nInterface Luxe, Analyses en Temps Réel. Tous droits réservés - Copyright 2017" },
+      { property: "og:description", content: "Plateforme Premium de Prédictions et Analyses Avancées pour Aviator, JetX, CosmoX.\nInterface Luxe, Analyses en Temps Réel. Tous droits réservés - Copyright 2017" },
+      { name: "twitter:description", content: "Plateforme Premium de Prédictions et Analyses Avancées pour Aviator, JetX, CosmoX.\nInterface Luxe, Analyses en Temps Réel. Tous droits réservés - Copyright 2017" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/3b18a815-9e8c-4a0b-b39c-b132d8fd0218" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/3b18a815-9e8c-4a0b-b39c-b132d8fd0218" },
     ],
     links: [
       {

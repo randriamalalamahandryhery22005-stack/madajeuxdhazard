@@ -24,7 +24,7 @@ const contactItems = [
 
 
 const features = [
-  { icon: Gamepad2, label: "Prédictions multi-jeux", desc: "Aviator, JetX, CosmoX, Virtuel, Penalty…" },
+  { icon: Gamepad2, label: "Prédictions multi-jeux", desc: "Aviator, JetX, CosmoX, Penalty…" },
   { icon: Zap, label: "Temps réel", desc: "Signaux instantanés, sync live avec la base." },
   { icon: Store, label: "J&H Store", desc: "Boutique numérique intégrée avec avis." },
   { icon: Lock, label: "Sécurisé", desc: "Authentification, RLS et vérification par code." },
@@ -68,7 +68,7 @@ const AboutSection = () => {
         </div>
         <p className="text-sm leading-relaxed text-foreground/85">
           Fournir des <span className="gold-text font-semibold">prédictions fiables et instantanées</span> pour les jeux
-          Crash et Virtuel, dans une interface premium, sécurisée et pensée pour tous les joueurs — du
+          Crash et Penalty, dans une interface premium, sécurisée et pensée pour tous les joueurs — du
           débutant au professionnel.
         </p>
       </div>

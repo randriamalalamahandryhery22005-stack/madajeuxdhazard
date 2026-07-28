@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Sheet,
@@ -39,7 +39,12 @@ import {
   Volume2,
   RotateCcw,
   Video as VideoIcon,
+  Globe,
+  Store,
+  Crown,
+  Gamepad2,
 } from "lucide-react";
+
 import { useAuth } from "@/contexts/AuthContext";
 import {
   readPersonalization,
@@ -47,6 +52,7 @@ import {
   subscribePersonalization,
   applyPalette,
   applyBackground,
+  applyStoredImageBackground,
   type Palette as PaletteT,
   type Personalization,
 } from "@/lib/appPersonalization";
@@ -56,8 +62,9 @@ import {
   applyStoredVideoBackground,
   applyBackgroundVideo,
 } from "@/lib/videoBackground";
-import { AI_WALLPAPERS } from "@/lib/aiVideoWallpapers";
-import { APP_LANGUAGES, applyAppLanguage } from "@/lib/appTranslation";
+import { saveMediaBlob, deleteMediaBlob } from "@/lib/mediaStore";
+import { applyBackgroundMusic, applyStoredBackgroundMusic } from "@/lib/backgroundMusic";
+
 
 const WHATSAPP_LINK = "https://wa.me/261379594257";
 const EMAIL_LINK = "mailto:jeuxdhazardmada@gmail.com";
@@ -217,6 +224,22 @@ function RootPanel({
   const displayName = profile?.full_name || profile?.name || user?.email?.split("@")[0] || "Invité";
   const initial = (displayName || "?").charAt(0).toUpperCase();
 
+  // Informations manquantes du profil → notification dans Paramètres > Compte
+  const missingProfileFields = useMemo(() => {
+    if (!user || !profile) return [] as string[];
+    const checks: Array<[string, unknown]> = [
+      ["nom complet", profile.full_name],
+      ["photo de profil", profile.avatar_url],
+      ["date de naissance", (profile as any).birth_date],
+      ["pays", (profile as any).country_code],
+      ["région", (profile as any).region],
+      ["téléphone", (profile as any).phone],
+      ["sexe", (profile as any).gender],
+    ];
+    return checks.filter(([, v]) => !v || String(v).trim() === "").map(([k]) => k);
+  }, [user, profile]);
+
+
   return (
     <div className="space-y-1">
       <button
@@ -235,17 +258,48 @@ function RootPanel({
         <ChevronRight className="w-4 h-4 text-slate-400" />
       </button>
 
+      {user && missingProfileFields.length > 0 && (
+        <button
+          onClick={() => { onClose(); navigate("/profile"); }}
+          className="mb-2 w-full flex items-start gap-3 rounded-2xl p-3.5 bg-amber-500/10 border border-amber-400/30 hover:bg-amber-500/15 transition text-left"
+        >
+          <span className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center shrink-0">
+            <Bell className="w-4 h-4 text-amber-300" />
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-[13px] font-semibold text-amber-100">
+              Profil incomplet
+            </span>
+            <span className="block text-[11px] text-amber-200/70 mt-0.5">
+              À compléter : {missingProfileFields.join(", ")}
+            </span>
+          </span>
+          <ChevronRight className="w-4 h-4 text-amber-300 mt-1" />
+        </button>
+      )}
+
       <Group title="Compte">
         <Row icon={<User className="w-[18px] h-[18px] text-amber-300" />} label="Profil" onClick={() => goto("profile")} />
+
         <Row icon={<Settings className="w-[18px] h-[18px] text-emerald-300" />} label="Paramètres" onClick={() => goto("settings")} />
         <Row icon={<Bell className="w-[18px] h-[18px] text-amber-300" />} label="Notifications" onClick={() => goto("notifications")} />
+        {user && (
+          <Row
+            icon={<Trash2 className="w-[18px] h-[18px] text-red-400" />}
+            label="Supprimer mon compte"
+            sublabel="Suppression définitive des données"
+            onClick={() => { onClose(); navigate("/profile#danger"); }}
+          />
+        )}
       </Group>
 
-      <Group title="Personnalisation IA">
-        <Row icon={<ImageIcon className="w-[18px] h-[18px] text-fuchsia-300" />} label="Thème & Fond IA" sublabel="Générer avec l'intelligence artificielle" onClick={() => goto("theme")} />
-        <Row icon={<Palette className="w-[18px] h-[18px] text-sky-300" />} label="Palette de couleurs IA" sublabel="Générer une palette avec l'IA" onClick={() => goto("theme")} />
-        <Row icon={<Languages className="w-[18px] h-[18px] text-teal-300" />} label="Langue" sublabel={LANGUAGES.find(l => l.code === (p.language || "fr"))?.native ?? "Français"} onClick={() => goto("language")} />
+      <Group title="Application">
+        <Row icon={<Globe className="w-[18px] h-[18px] text-sky-300" />} label="Langue & région" sublabel="Choisir la langue de l'application" onClick={() => goto("language")} />
+        <Row icon={<Store className="w-[18px] h-[18px] text-amber-300" />} label="J&H Store" sublabel="Contenus et publications" onClick={() => { onClose(); navigate("/gen-store"); }} />
+        <Row icon={<Crown className="w-[18px] h-[18px] text-yellow-300" />} label="Abonnement Premium" sublabel="Gérer votre accès premium" onClick={() => { onClose(); navigate("/premium"); }} />
+        <Row icon={<Gamepad2 className="w-[18px] h-[18px] text-emerald-300" />} label="Jeux & prédictions" sublabel="Accéder au hub des jeux" onClick={() => { onClose(); navigate("/games"); }} />
       </Group>
+
 
       <Group title="Contenu">
         <Row icon={<HistoryIcon className="w-[18px] h-[18px] text-amber-300" />} label="Historique" badge={(p.history?.length ?? 0) || undefined} onClick={() => goto("history")} />
@@ -472,56 +526,32 @@ function FavoritesPanel({ onClose }: { onClose: () => void }) {
 }
 
 /* ------------------- Language ------------------- */
-const LANGUAGES = APP_LANGUAGES;
-
-
 function LanguagePanel() {
   const [p, setP] = useState<Personalization>(() => readPersonalization());
-  const [q, setQ] = useState("");
   useEffect(() => subscribePersonalization(setP), []);
-  const current = p.language || "fr";
-  const set = (code: string) => {
-    const l = LANGUAGES.find((x) => x.code === code);
-    writePersonalization({ language: code });
-    applyAppLanguage(code);
-    toast.success(`${l?.native ?? code} ✓`);
+  const set = (lang: "fr" | "en") => {
+    writePersonalization({ language: lang });
+    document.documentElement.lang = lang;
+    toast.success(lang === "fr" ? "Français activé" : "English enabled");
   };
-  useEffect(() => {
-    const l = LANGUAGES.find((x) => x.code === current);
-    applyAppLanguage(current);
-  }, [current]);
-  const filtered = LANGUAGES.filter((l) => {
-    const s = q.trim().toLowerCase();
-    if (!s) return true;
-    return l.label.toLowerCase().includes(s) || l.native.toLowerCase().includes(s) || l.code.includes(s);
-  });
   return (
-    <div className="space-y-3">
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Rechercher une langue…"
-        className="w-full rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-sm outline-none focus:border-amber-400/40"
-      />
-      <div className="space-y-2">
-        {filtered.map((l) => (
-          <button
-            key={l.code}
-            onClick={() => set(l.code)}
-            className={`w-full flex items-center gap-3 rounded-2xl border p-3 transition ${current === l.code ? "border-amber-400/50 bg-amber-500/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}
-          >
-            <span className="text-2xl">{l.flag}</span>
-            <span className="flex-1 text-left">
-              <span className="block font-semibold">{l.native}</span>
-              <span className="block text-xs text-white/50">{l.label}</span>
-            </span>
-            {current === l.code && <span className="text-xs text-amber-300">Actif</span>}
-          </button>
-        ))}
-        {filtered.length === 0 && (
-          <p className="text-center text-sm text-white/50 py-8">Aucune langue trouvée</p>
-        )}
-      </div>
+    <div className="space-y-2">
+      {[
+        { code: "fr" as const, label: "Français", flag: "🇫🇷" },
+        { code: "en" as const, label: "English", flag: "🇬🇧" },
+      ].map((l) => (
+        <button
+          key={l.code}
+          onClick={() => set(l.code)}
+          className={`w-full flex items-center gap-3 rounded-2xl border p-4 transition ${p.language === l.code || (!p.language && l.code === "fr") ? "border-amber-400/50 bg-amber-500/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}
+        >
+          <span className="text-2xl">{l.flag}</span>
+          <span className="flex-1 text-left font-semibold">{l.label}</span>
+          {(p.language === l.code || (!p.language && l.code === "fr")) && (
+            <span className="text-xs text-amber-300">Actif</span>
+          )}
+        </button>
+      ))}
     </div>
   );
 }
@@ -548,8 +578,8 @@ function ThemePanel() {
       });
       if (!res.ok) throw new Error(await res.text());
       const { dataUrl } = (await res.json()) as { dataUrl: string };
-      writePersonalization({ bgUrl: dataUrl });
-      applyBackground(dataUrl);
+      writePersonalization({ bgUrl: dataUrl, bgImageSource: "ai", bgImageName: "fond IA" });
+      applyBackground(dataUrl, { opacity: p.bgOpacity ?? 1, blur: p.bgBlur ?? 0 });
       toast.success("Fond appliqué");
     } catch (e: any) {
       toast.error("Échec", { description: e?.message?.slice(0, 120) });
@@ -576,7 +606,7 @@ function ThemePanel() {
   };
 
   const resetAll = () => {
-    writePersonalization({ bgUrl: null, palette: null });
+    writePersonalization({ bgUrl: null, bgImageSource: null, bgImageName: null, palette: null });
     applyBackground(null);
     applyPalette(null);
     toast.success("Thème réinitialisé");
@@ -585,92 +615,128 @@ function ThemePanel() {
   /* ---- Fond d'écran vidéo ---- */
   const [videoBusy, setVideoBusy] = useState(false);
   const [remoteVideo, setRemoteVideo] = useState("");
-  const [aiVideoPrompt, setAiVideoPrompt] = useState("");
-  const [aiVideoBusy, setAiVideoBusy] = useState(false);
 
-  // Prévisualisation avant application : l'utilisateur voit la vidéo dans le
-  // menu et confirme via "Appliquer" avant de remplacer le fond actif.
-  type VideoPreview =
-    | { kind: "remote"; url: string; name: string; note?: string }
-    | { kind: "local"; url: string; name: string; file: File };
-  const [videoPreview, setVideoPreview] = useState<VideoPreview | null>(null);
-  const previewUrlRef = useRef<string | null>(null);
+  /* ---- Fond d'écran image (réelle) ---- */
+  const [imgBusy, setImgBusy] = useState(false);
+  const [remoteImage, setRemoteImage] = useState("");
 
-  const setPreview = (next: VideoPreview | null) => {
-    if (previewUrlRef.current) {
-      URL.revokeObjectURL(previewUrlRef.current);
-      previewUrlRef.current = null;
-    }
-    if (next?.kind === "local") previewUrlRef.current = next.url;
-    setVideoPreview(next);
-  };
-  useEffect(() => () => {
-    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-  }, []);
-
-  const previewAiWallpaper = (w: { id: string; label: string; url: string }, note?: string) => {
-    setPreview({ kind: "remote", url: w.url, name: `IA · ${w.label}`, note });
+  const imageOpts = (over: Partial<typeof p> = {}) => {
+    const n = { ...p, ...over };
+    return { opacity: n.bgOpacity ?? 1, blur: n.bgBlur ?? 0 };
   };
 
-  const generateAiVideo = async () => {
-    const prompt = aiVideoPrompt.trim();
-    if (!prompt) { toast.error("Décrivez l'ambiance souhaitée"); return; }
-    setAiVideoBusy(true);
+  const pickImage = async (file?: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Choisissez une image"); return; }
+    if (file.size > 15 * 1024 * 1024) { toast.error("Image trop lourde (15 Mo max)"); return; }
+    setImgBusy(true);
     try {
-      const res = await fetch("/api/ai-video", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const { wallpaper, reason } = (await res.json()) as {
-        wallpaper: { id: string; label: string; url: string };
-        reason?: string;
-      };
-      previewAiWallpaper(wallpaper, reason);
-      toast.success("Prévisualisation prête — appuyez sur « Appliquer »");
+      await saveMediaBlob("bg-image", file);
+      writePersonalization({ bgImageSource: "local", bgUrl: null, bgImageName: file.name });
+      await applyStoredImageBackground(imageOpts());
+      toast.success("Image appliquée en fond d'écran");
     } catch (e: any) {
-      toast.error("Échec de la génération", { description: e?.message?.slice(0, 120) });
-    } finally { setAiVideoBusy(false); }
+      toast.error("Échec", { description: e?.message?.slice(0, 120) });
+    } finally { setImgBusy(false); }
+  };
+
+  const applyRemoteImage = () => {
+    const url = remoteImage.trim();
+    if (!url) { toast.error("Collez un lien d'image"); return; }
+    writePersonalization({ bgImageSource: "remote", bgUrl: url, bgImageName: url.split("/").pop() || "image" });
+    applyBackground(url, imageOpts());
+    setRemoteImage("");
+    toast.success("Image appliquée en fond d'écran");
+  };
+
+  const removeImage = async () => {
+    await deleteMediaBlob("bg-image");
+    writePersonalization({ bgImageSource: null, bgUrl: null, bgImageName: null });
+    applyBackground(null);
+    toast.success("Fond image supprimé");
+  };
+
+  const updateImageOpts = (patch: Partial<typeof p>) => {
+    const next = { ...p, ...patch };
+    writePersonalization(patch);
+    const opts = imageOpts(patch);
+    if (next.bgImageSource === "local") void applyStoredImageBackground(opts);
+    else applyBackground(next.bgUrl, opts);
+  };
+
+  /* ---- Musique de fond ---- */
+  const [musicBusy, setMusicBusy] = useState(false);
+  const [remoteMusic, setRemoteMusic] = useState("");
+
+  const musicOpts = (over: Partial<typeof p> = {}) => {
+    const n = { ...p, ...over };
+    return { volume: n.bgMusicVolume ?? 0.4, paused: n.bgMusicPaused === true };
+  };
+
+  const pickMusic = async (file?: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("audio/")) { toast.error("Choisissez un fichier audio"); return; }
+    if (file.size > 30 * 1024 * 1024) { toast.error("Musique trop lourde (30 Mo max)"); return; }
+    setMusicBusy(true);
+    try {
+      await saveMediaBlob("bg-music", file);
+      writePersonalization({ bgMusicSource: "local", bgMusicUrl: null, bgMusicName: file.name, bgMusicPaused: false });
+      await applyStoredBackgroundMusic(musicOpts({ bgMusicPaused: false }));
+      toast.success("Musique de fond appliquée");
+    } catch (e: any) {
+      toast.error("Échec", { description: e?.message?.slice(0, 120) });
+    } finally { setMusicBusy(false); }
+  };
+
+  const applyRemoteMusic = () => {
+    const url = remoteMusic.trim();
+    if (!url) { toast.error("Collez un lien audio (mp3, ogg…)"); return; }
+    writePersonalization({ bgMusicSource: "remote", bgMusicUrl: url, bgMusicName: url.split("/").pop() || "musique", bgMusicPaused: false });
+    applyBackgroundMusic(url, musicOpts({ bgMusicPaused: false }));
+    setRemoteMusic("");
+    toast.success("Musique de fond appliquée");
+  };
+
+  const removeMusic = async () => {
+    await deleteMediaBlob("bg-music");
+    writePersonalization({ bgMusicSource: null, bgMusicUrl: null, bgMusicName: null });
+    applyBackgroundMusic(null);
+    toast.success("Musique de fond supprimée");
+  };
+
+  const updateMusicOpts = (patch: Partial<typeof p>) => {
+    const next = { ...p, ...patch };
+    writePersonalization(patch);
+    const opts = musicOpts(patch);
+    if (next.bgMusicSource === "remote" && next.bgMusicUrl) applyBackgroundMusic(next.bgMusicUrl, opts);
+    else if (next.bgMusicSource === "local") void applyStoredBackgroundMusic(opts);
   };
 
 
-  const pickVideo = (file?: File | null) => {
+
+
+  const pickVideo = async (file?: File | null) => {
     if (!file) return;
     if (!file.type.startsWith("video/")) { toast.error("Choisissez un fichier vidéo"); return; }
     if (file.size > 60 * 1024 * 1024) { toast.error("Vidéo trop lourde (60 Mo max)"); return; }
-    const url = URL.createObjectURL(file);
-    setPreview({ kind: "local", url, name: file.name, file });
-    toast.success("Prévisualisation prête — appuyez sur « Appliquer »");
-  };
-
-  const stageRemoteVideo = () => {
-    const url = remoteVideo.trim();
-    if (!url) { toast.error("Collez un lien vidéo (mp4, webm…)"); return; }
-    setPreview({ kind: "remote", url, name: url.split("/").pop() || "vidéo" });
-    setRemoteVideo("");
-    toast.success("Prévisualisation prête — appuyez sur « Appliquer »");
-  };
-
-  const cancelPreview = () => setPreview(null);
-
-  const confirmPreview = async () => {
-    if (!videoPreview) return;
     setVideoBusy(true);
     try {
-      if (videoPreview.kind === "local") {
-        await saveVideoBlob(videoPreview.file);
-        writePersonalization({ bgVideoSource: "local", bgVideoUrl: null, bgVideoName: videoPreview.name });
-        await applyStoredVideoBackground(videoOpts());
-      } else {
-        writePersonalization({ bgVideoSource: "remote", bgVideoUrl: videoPreview.url, bgVideoName: videoPreview.name });
-        applyBackgroundVideo(videoPreview.url, videoOpts());
-      }
-      setPreview(null);
-      toast.success("Fond vidéo appliqué");
+      await saveVideoBlob(file);
+      writePersonalization({ bgVideoSource: "local", bgVideoUrl: null, bgVideoName: file.name });
+      await applyStoredVideoBackground(videoOpts());
+      toast.success("Vidéo appliquée en fond d'écran");
     } catch (e: any) {
-      toast.error("Échec de l'application", { description: e?.message?.slice(0, 120) });
+      toast.error("Échec", { description: e?.message?.slice(0, 120) });
     } finally { setVideoBusy(false); }
+  };
+
+  const applyRemoteVideo = () => {
+    const url = remoteVideo.trim();
+    if (!url) { toast.error("Collez un lien vidéo (mp4, webm…)"); return; }
+    writePersonalization({ bgVideoSource: "remote", bgVideoUrl: url, bgVideoName: url.split("/").pop() || "vidéo" });
+    applyBackgroundVideo(url, videoOpts());
+    setRemoteVideo("");
+    toast.success("Vidéo appliquée en fond d'écran");
   };
 
   const removeVideo = async () => {
@@ -701,6 +767,73 @@ function ThemePanel() {
 
   return (
     <div className="space-y-5">
+      {/* Fond d'écran image (réelle) */}
+      <section className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-transparent p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <ImageIcon className="w-4 h-4 text-amber-300" />
+          <h3 className="font-bold text-sm">Fond d'écran image</h3>
+        </div>
+        <p className="text-[11px] text-slate-400 mb-3">
+          Choisissez une vraie photo depuis votre appareil (ou collez un lien) : elle habillera
+          toute l'application. Intensité et flou réglables.
+        </p>
+
+        <label className="block w-full rounded-xl border-2 border-dashed border-amber-500/30 hover:border-amber-500/60 transition-colors cursor-pointer px-3 py-4 text-center">
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            disabled={imgBusy}
+            onChange={(e) => { void pickImage(e.target.files?.[0]); e.currentTarget.value = ""; }}
+          />
+          <span className="text-xs text-slate-300 inline-flex items-center gap-2">
+            {imgBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4 text-amber-300" />}
+            {imgBusy ? "Application…" : (p.bgImageSource || p.bgUrl) ? "Remplacer l'image" : "Sélectionner une image"}
+          </span>
+        </label>
+
+        <div className="flex gap-2 mt-2">
+          <input
+            value={remoteImage}
+            onChange={(e) => setRemoteImage(e.target.value)}
+            placeholder="ou collez un lien .jpg / .png"
+            className="flex-1 h-9 rounded-lg bg-black/30 border border-white/10 px-3 text-xs outline-none focus:border-amber-500/50"
+          />
+          <Button size="sm" variant="secondary" className="h-9" onClick={applyRemoteImage}>Appliquer</Button>
+        </div>
+
+        {(p.bgImageSource || p.bgUrl) && (
+          <div className="mt-3 space-y-3">
+            <div className="flex items-center justify-between text-[11px] text-slate-300">
+              <span className="truncate pr-2">Image active : {p.bgImageName || "fond IA"}</span>
+              <button onClick={() => void removeImage()} className="text-amber-300 hover:underline shrink-0">Supprimer</button>
+            </div>
+            <div>
+              <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                <span>Intensité</span><span>{Math.round((p.bgOpacity ?? 1) * 100)}%</span>
+              </div>
+              <input
+                type="range" min={20} max={100} step={5}
+                value={Math.round((p.bgOpacity ?? 1) * 100)}
+                onChange={(e) => updateImageOpts({ bgOpacity: Number(e.target.value) / 100 })}
+                className="w-full accent-amber-400"
+              />
+            </div>
+            <div>
+              <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                <span>Flou</span><span>{p.bgBlur ?? 0}px</span>
+              </div>
+              <input
+                type="range" min={0} max={20} step={1}
+                value={p.bgBlur ?? 0}
+                onChange={(e) => updateImageOpts({ bgBlur: Number(e.target.value) })}
+                className="w-full accent-amber-400"
+              />
+            </div>
+          </div>
+        )}
+      </section>
+
       {/* Fond d'écran vidéo */}
       <section className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-transparent p-4">
         <div className="flex items-center gap-2 mb-2">
@@ -734,110 +867,8 @@ function ThemePanel() {
             placeholder="ou collez un lien .mp4 / .webm"
             className="flex-1 h-9 rounded-lg bg-black/30 border border-white/10 px-3 text-xs outline-none focus:border-emerald-500/50"
           />
-          <Button size="sm" variant="secondary" className="h-9" onClick={stageRemoteVideo}>Prévisualiser</Button>
+          <Button size="sm" variant="secondary" className="h-9" onClick={applyRemoteVideo}>Appliquer</Button>
         </div>
-
-        {/* Fond d'écran par IA */}
-        <div className="mt-4 rounded-xl border border-amber-400/25 bg-amber-400/5 p-3">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <h4 className="text-xs font-bold">Fond d'écran par IA</h4>
-          </div>
-          <p className="text-[11px] text-slate-400 mb-2">
-            Décrivez l'ambiance : l'IA génère et applique la vidéo la plus adaptée.
-            Vous pouvez aussi choisir directement dans la galerie.
-          </p>
-          <div className="flex gap-2">
-            <input
-              value={aiVideoPrompt}
-              onChange={(e) => setAiVideoPrompt(e.target.value)}
-              placeholder="ex. ambiance nocturne néon, luxueuse et calme"
-              className="flex-1 h-9 rounded-lg bg-black/30 border border-white/10 px-3 text-xs outline-none focus:border-amber-400/50"
-              onKeyDown={(e) => { if (e.key === "Enter") void generateAiVideo(); }}
-            />
-            <Button
-              size="sm"
-              className="h-9 shrink-0"
-              disabled={aiVideoBusy}
-              onClick={() => void generateAiVideo()}
-            >
-              {aiVideoBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Générer"}
-            </Button>
-          </div>
-          <div className="grid grid-cols-3 gap-2 mt-3">
-            {AI_WALLPAPERS.map((w) => {
-              const active = p.bgVideoUrl === w.url;
-              return (
-                <button
-                  key={w.id}
-                  type="button"
-                  onClick={() => { previewAiWallpaper(w); toast.success("Prévisualisation prête — appuyez sur « Appliquer »"); }}
-                  className={`relative rounded-lg overflow-hidden border text-left transition-colors ${
-                    active ? "border-amber-400" : "border-white/10 hover:border-amber-400/50"
-                  }`}
-                >
-                  <video
-                    src={w.url}
-                    muted
-                    loop
-                    playsInline
-                    autoPlay
-                    preload="metadata"
-                    className="w-full h-20 object-cover"
-                  />
-                  <span className="block px-1.5 py-1 text-[10px] text-slate-200 truncate">{w.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {videoPreview && (
-          <div className="mt-4 rounded-xl border border-emerald-400/40 bg-emerald-500/5 p-3 space-y-3">
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="font-semibold text-emerald-200">Prévisualisation</span>
-              <span className="truncate pl-2 text-slate-400 max-w-[60%]">{videoPreview.name}</span>
-            </div>
-            <div className="rounded-lg overflow-hidden border border-white/10 bg-black">
-              <video
-                key={videoPreview.url}
-                src={videoPreview.url}
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
-                className="w-full h-40 object-cover"
-              />
-            </div>
-            {"note" in videoPreview && videoPreview.note && (
-              <p className="text-[11px] text-slate-400 italic">{videoPreview.note}</p>
-            )}
-            <p className="text-[11px] text-slate-400">
-              Cette vidéo n'est pas encore le fond de l'application. Confirmez pour remplacer l'arrière-plan actuel.
-            </p>
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="secondary"
-                className="h-9 flex-1 text-xs"
-                onClick={cancelPreview}
-                disabled={videoBusy}
-              >
-                Annuler
-              </Button>
-              <Button
-                size="sm"
-                className="h-9 flex-1 text-xs"
-                onClick={() => void confirmPreview()}
-                disabled={videoBusy}
-              >
-                {videoBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Appliquer"}
-              </Button>
-            </div>
-          </div>
-        )}
-
 
 
 
@@ -905,6 +936,70 @@ function ThemePanel() {
                 value={p.bgVideoBlur ?? 0}
                 onChange={(e) => updateVideoOpts({ bgVideoBlur: Number(e.target.value) })}
                 className="w-full accent-emerald-400"
+              />
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Musique de fond */}
+      <section className="rounded-2xl border border-sky-500/20 bg-gradient-to-br from-sky-500/10 to-transparent p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Volume2 className="w-4 h-4 text-sky-300" />
+          <h3 className="font-bold text-sm">Musique de fond</h3>
+        </div>
+        <p className="text-[11px] text-slate-400 mb-3">
+          Ajoutez votre propre musique : elle sera jouée en boucle pendant l'utilisation de
+          l'application (lecture, pause et volume réglables).
+        </p>
+
+        <label className="block w-full rounded-xl border-2 border-dashed border-sky-500/30 hover:border-sky-500/60 transition-colors cursor-pointer px-3 py-4 text-center">
+          <input
+            type="file"
+            accept="audio/*"
+            className="hidden"
+            disabled={musicBusy}
+            onChange={(e) => { void pickMusic(e.target.files?.[0]); e.currentTarget.value = ""; }}
+          />
+          <span className="text-xs text-slate-300 inline-flex items-center gap-2">
+            {musicBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Volume2 className="w-4 h-4 text-sky-300" />}
+            {musicBusy ? "Application…" : p.bgMusicSource ? "Remplacer la musique" : "Sélectionner une musique"}
+          </span>
+        </label>
+
+        <div className="flex gap-2 mt-2">
+          <input
+            value={remoteMusic}
+            onChange={(e) => setRemoteMusic(e.target.value)}
+            placeholder="ou collez un lien .mp3 / .ogg"
+            className="flex-1 h-9 rounded-lg bg-black/30 border border-white/10 px-3 text-xs outline-none focus:border-sky-500/50"
+          />
+          <Button size="sm" variant="secondary" className="h-9" onClick={applyRemoteMusic}>Appliquer</Button>
+        </div>
+
+        {p.bgMusicSource && (
+          <div className="mt-3 space-y-3">
+            <div className="flex items-center justify-between text-[11px] text-slate-300">
+              <span className="truncate pr-2">Musique active : {p.bgMusicName || "musique"}</span>
+              <button onClick={() => void removeMusic()} className="text-amber-300 hover:underline shrink-0">Supprimer</button>
+            </div>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-8 w-full text-xs"
+              onClick={() => updateMusicOpts({ bgMusicPaused: !(p.bgMusicPaused === true) })}
+            >
+              {p.bgMusicPaused ? "Lecture" : "Pause"}
+            </Button>
+            <div>
+              <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                <span>Volume</span><span>{Math.round((p.bgMusicVolume ?? 0.4) * 100)}%</span>
+              </div>
+              <input
+                type="range" min={0} max={100} step={5}
+                value={Math.round((p.bgMusicVolume ?? 0.4) * 100)}
+                onChange={(e) => updateMusicOpts({ bgMusicVolume: Number(e.target.value) / 100 })}
+                className="w-full accent-sky-400"
               />
             </div>
           </div>
@@ -1024,8 +1119,18 @@ function PrivacyPanel() {
       </ul>
       <button
         onClick={() => {
-          localStorage.clear();
-          toast.success("Données locales effacées");
+          try {
+            // Preserve saved-accounts of OTHER users on this shared device.
+            const preserved = localStorage.getItem("jh.savedAccounts.v1");
+            const keysToClear: string[] = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i);
+              if (k && k !== "jh.savedAccounts.v1") keysToClear.push(k);
+            }
+            keysToClear.forEach((k) => localStorage.removeItem(k));
+            if (preserved) localStorage.setItem("jh.savedAccounts.v1", preserved);
+          } catch { /* no-op */ }
+          toast.success("Vos données locales ont été effacées");
           setTimeout(() => location.reload(), 400);
         }}
         className="w-full mt-2 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-200 py-3 text-sm font-semibold hover:bg-amber-500/15"

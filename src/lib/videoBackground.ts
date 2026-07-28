@@ -1,6 +1,7 @@
 // Fond d'écran vidéo de l'application.
 // La vidéo choisie par l'utilisateur est stockée localement (IndexedDB) afin de
 // survivre aux rechargements, et appliquée derrière toute l'interface.
+import { setBackdropActive } from "@/lib/backdrop";
 
 const DB_NAME = "jh-personalization";
 const STORE = "media";
@@ -64,13 +65,6 @@ const ELEMENT_ID = "jh-custom-bg-video";
 let currentObjectUrl: string | null = null;
 let gestureArmed = false;
 
-function refreshMediaClass() {
-  if (typeof document === "undefined") return;
-  const hasVideo = Boolean(document.getElementById(ELEMENT_ID));
-  const hasImage = Boolean(document.getElementById("jh-custom-bg"));
-  document.documentElement.classList.toggle("has-custom-media", hasVideo || hasImage);
-}
-
 export interface VideoBgOptions {
   opacity?: number; // 0..1
   blur?: number;    // px
@@ -111,28 +105,21 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
   const existing = document.getElementById(ELEMENT_ID) as HTMLDivElement | null;
   if (!src) {
     existing?.remove();
-    document.documentElement.classList.remove("has-bg-video");
-    refreshMediaClass();
     if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+    setBackdropActive("video", false);
     return;
   }
   let wrapper = existing;
   let video = wrapper?.querySelector("video") as HTMLVideoElement | null;
-  let fallback = wrapper?.querySelector("[data-video-fallback='1']") as HTMLDivElement | null;
   if (!wrapper) {
     wrapper = document.createElement("div");
     wrapper.id = ELEMENT_ID;
-    wrapper.setAttribute("aria-hidden", "true");
     Object.assign(wrapper.style, {
       position: "fixed",
       inset: "0",
-      zIndex: "0",
+      zIndex: "-2",
       pointerEvents: "none",
       overflow: "hidden",
-      background: "hsl(var(--background))",
-      opacity: "0",
-      transition: "opacity 420ms ease",
-      transform: "translateZ(0)",
     } as CSSStyleDeclaration);
 
     video = document.createElement("video");
@@ -141,54 +128,26 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
     video.muted = true;
     video.playsInline = true;
     video.setAttribute("playsinline", "");
-    video.setAttribute("webkit-playsinline", "");
-    video.setAttribute("preload", "auto");
     Object.assign(video.style, {
-      position: "absolute",
-      inset: "0",
       width: "100%",
       height: "100%",
       objectFit: "cover",
-      display: "block",
     } as CSSStyleDeclaration);
     wrapper.appendChild(video);
-
-    fallback = document.createElement("div");
-    fallback.dataset.videoFallback = "1";
-    fallback.className = "jh-bg-video-fallback";
-    Object.assign(fallback.style, {
-      position: "absolute",
-      inset: "0",
-      opacity: "0",
-      transition: "opacity 420ms ease",
-      pointerEvents: "none",
-    } as CSSStyleDeclaration);
-    wrapper.appendChild(fallback);
 
     const veil = document.createElement("div");
     veil.dataset.veil = "1";
     Object.assign(veil.style, {
       position: "absolute",
       inset: "0",
-      pointerEvents: "none",
-      background: "linear-gradient(hsl(var(--background) / 0.50), hsl(var(--background) / 0.76))",
+      background: "linear-gradient(hsl(var(--background)/0.62), hsl(var(--background)/0.82))",
     } as CSSStyleDeclaration);
     wrapper.appendChild(veil);
-    // Insérer en tout premier enfant de <body> pour rester derrière l'app.
-    document.body.insertBefore(wrapper, document.body.firstChild);
+    document.body.appendChild(wrapper);
   }
-  document.documentElement.classList.add("has-bg-video");
-  refreshMediaClass();
   if (!video) return;
-  // Ne pas ré-affecter src si identique (évite un reload/flash noir).
-  const currentSrc = video.getAttribute("src") || "";
-  if (currentSrc !== src) {
-    if (wrapper) wrapper.style.opacity = "0";
-    if (fallback) fallback.style.opacity = "0";
-    video.style.display = "block";
-    video.src = src;
-    try { video.load(); } catch { /* noop */ }
-  }
+  if (video.src !== src) video.src = src;
+  setBackdropActive("video", true);
 
   const wantSound = opts.muted === false;
   video.muted = !wantSound;
@@ -196,37 +155,21 @@ export function applyBackgroundVideo(src: string | null, opts: VideoBgOptions = 
   video.style.opacity = String(opts.opacity ?? 1);
   video.style.filter = opts.blur ? `blur(${opts.blur}px)` : "none";
 
-  const revealVideo = () => {
-    if (wrapper) wrapper.style.opacity = "1";
-    if (video) video.style.display = "block";
-    if (fallback) fallback.style.opacity = "0";
-  };
+  if (opts.paused) {
+    try { video.pause(); } catch { /* noop */ }
+    return;
+  }
 
-  const tryPlay = () => {
-    revealVideo();
-    if (opts.paused) {
-      try { video!.pause(); } catch { /* noop */ }
-      return;
-    }
-    const p = video!.play();
-    if (p && typeof p.then === "function") {
-      p.catch(() => {
-        video!.muted = true;
-        void video!.play().catch(() => { /* noop */ });
-        if (wantSound) armSoundGesture(video!);
-      });
-    }
-  };
-  video.onerror = () => {
-    if (wrapper) wrapper.style.opacity = "1";
-    if (video) video.style.display = "none";
-    if (fallback) fallback.style.opacity = "1";
-  };
-  video.oncanplay = () => {
-    revealVideo();
-  };
-  if (video.readyState >= 2) tryPlay();
-  else video.addEventListener("loadeddata", tryPlay, { once: true });
+  const p = video.play();
+  if (p && typeof p.then === "function") {
+    p.catch(() => {
+      // Lecture sonore refusée : on repasse en muet pour garder le visuel,
+      // puis on rétablit le son au premier geste utilisateur.
+      video!.muted = true;
+      void video!.play().catch(() => { /* noop */ });
+      if (wantSound) armSoundGesture(video!);
+    });
+  }
   if (wantSound && video.muted) armSoundGesture(video);
 }
 
