@@ -164,7 +164,7 @@ const PremiumSelect = () => {
             { name: "Aviator Premium", route: "/aviator-premium", icon: Crown, accent: "from-amber-500/20 to-amber-500/10 border-amber-500/40 text-amber-300" },
             { name: "CosmoX", route: "/cosmox", icon: Sparkles, accent: "from-emerald-500/20 to-emerald-500/10 border-emerald-500/40 text-emerald-300" },
             { name: "JetX", route: "/jetx", icon: Zap, accent: "from-amber-500/20 to-amber-500/10 border-amber-500/40 text-amber-300" },
-            { name: "Virtuel", route: "/virtuel", icon: TrendingUp, accent: "from-emerald-500/20 to-green-500/10 border-emerald-500/40 text-emerald-300" },
+            
           ].map((g, i) => (
             <button
               key={g.name}

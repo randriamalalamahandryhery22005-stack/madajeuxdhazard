@@ -3,7 +3,7 @@ import { ChevronRight, History, Trophy, TrendingUp, Clock, BarChart3, Plane, Roc
 import aviatorLogo from "@/assets/aviator-logo.png";
 import cosmoxLogo from "@/assets/cosmox-logo.png";
 import jetxLogo from "@/assets/jetx-logo.png";
-import virtuelLogo from "@/assets/virtuel-logo.png";
+
 import aviatorPremiumLogo from "@/assets/aviator-premium-logo.png";
 
 interface Platform {
@@ -78,21 +78,6 @@ const platforms: Platform[] = [
     stats: [
       { label: "Modes", value: "1" },
       { label: "Précision", value: "~86%" },
-    ],
-  },
-  {
-    id: "virtuel",
-    name: "Virtuel Football",
-    logo: virtuelLogo,
-    description: "Prédictions de matchs virtuels avec 8 ligues et analyse de statistiques pondérées.",
-    icon: Globe2,
-    color: "text-emerald-400",
-    bgColor: "from-emerald-500/15 to-emerald-900/5",
-    borderColor: "border-emerald-500/25",
-    features: ["8 ligues", "Stats pondérées", "Multi-matchs"],
-    stats: [
-      { label: "Ligues", value: "8" },
-      { label: "Précision", value: "~80%" },
     ],
   },
   {

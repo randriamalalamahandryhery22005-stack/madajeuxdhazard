@@ -11,16 +11,67 @@ export type SoundKind =
   | "download"
   | "error";
 
+import messageSound from "@/assets/sound-message.mp3.asset.json";
+import notificationSound from "@/assets/sound-notification.mp3.asset.json";
+import callSound from "@/assets/ringtone-call.ogg.asset.json";
+
 const FILES: Record<SoundKind, string> = {
-  message: "/sounds/notif-text.wav",
-  voice: "/sounds/notif-voice.wav",
-  call: "/sounds/notif-call.wav",
-  ring: "/sounds/ringtone.wav",
-  subscription: "/sounds/notif-call.wav",
-  validation: "/sounds/notif-text.wav",
-  download: "/sounds/notif-voice.wav",
-  error: "/sounds/notif-voice.wav",
+  message: messageSound.url,
+  voice: messageSound.url,
+  call: callSound.url,
+  ring: callSound.url,
+  subscription: notificationSound.url,
+  validation: notificationSound.url,
+  download: notificationSound.url,
+  error: notificationSound.url,
 };
+
+/* ---------------------------------------------------------------------------
+ * Préchargement + déverrouillage audio.
+ * Les navigateurs bloquent la lecture tant qu'aucune interaction n'a eu lieu :
+ * on « débloque » silencieusement chaque piste au premier geste utilisateur
+ * pour que les sons de message / appel / notification partent instantanément.
+ * ------------------------------------------------------------------------ */
+const pool = new Map<string, HTMLAudioElement>();
+let unlocked = false;
+
+function getPooled(src: string): HTMLAudioElement {
+  let a = pool.get(src);
+  if (!a) {
+    a = new Audio(src);
+    a.preload = "auto";
+    pool.set(src, a);
+  }
+  return a;
+}
+
+export function unlockAudioPlayback() {
+  if (unlocked || typeof window === "undefined") return;
+  unlocked = true;
+  Array.from(new Set(Object.values(FILES))).forEach((src) => {
+    const a = getPooled(src);
+    const prev = a.volume;
+    a.volume = 0;
+    a.play()
+      .then(() => {
+        a.pause();
+        a.currentTime = 0;
+        a.volume = prev;
+      })
+      .catch(() => {
+        a.volume = prev;
+      });
+  });
+}
+
+if (typeof window !== "undefined") {
+  const evts: (keyof WindowEventMap)[] = ["pointerdown", "touchstart", "keydown", "click"];
+  const handler = () => {
+    unlockAudioPlayback();
+    evts.forEach((e) => window.removeEventListener(e, handler));
+  };
+  evts.forEach((e) => window.addEventListener(e, handler, { passive: true } as any));
+}
 
 const KEY = "jh.sound.v1";
 const EVT = "jh-sound-settings-changed";
@@ -76,6 +127,7 @@ export function playNotificationSound(kind: SoundKind, opts: { force?: boolean }
   lastPlay[kind] = now;
   try {
     const a = new Audio(FILES[kind]);
+    a.preload = "auto";
     a.volume = Math.min(1, Math.max(0, s.volume * (kind === "ring" ? 1 : 0.9)));
     void a.play().catch(() => { /* autoplay bloqué avant interaction */ });
   } catch { /* noop */ }

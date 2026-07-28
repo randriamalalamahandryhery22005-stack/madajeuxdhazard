@@ -458,7 +458,7 @@ export default function Chat() {
             </div>
           ) : grouped.length === 0 ? (
             <div className="text-center py-16 text-slate-400 text-sm">
-              Aucun message d'utilisateur en ligne pour l'instant.
+              {search.trim() ? "Aucun message ne correspond à votre recherche." : "Aucun message pour l'instant. Soyez le premier à écrire !"}
             </div>
           ) : (
             grouped.map((g) => (

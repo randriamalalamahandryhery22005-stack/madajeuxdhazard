@@ -46,7 +46,7 @@ export function useGameStats() {
       onlineCounts[row.game_name].add(row.user_id);
     });
 
-    const gameNames = ["aviator", "virtuel", "cosmox", "jetx", "aviator-premium", "aviator-studio", "aviator-spribe", "penalty-shootout"];
+    const gameNames = ["aviator", "cosmox", "jetx", "aviator-premium", "aviator-studio", "aviator-spribe", "penalty-shootout"];
     const stats = gameNames.map(name => ({
       game_name: name,
       total_uses: counts[name] || 0,

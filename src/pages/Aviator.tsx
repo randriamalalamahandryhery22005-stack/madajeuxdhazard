@@ -110,7 +110,7 @@ const Aviator = () => {
               <img src={premiumLogo} alt="Jeux" className="w-20 h-20 object-contain drop-shadow-2xl" loading="lazy" />
               <div className="text-center space-y-1">
                 <p className="font-black text-sm gold-text">Jeux</p>
-                <p className="text-[10px] text-muted-foreground leading-snug">Aviator · CosmoX · JetX · Virtuel</p>
+                <p className="text-[10px] text-muted-foreground leading-snug">Aviator · CosmoX · JetX · Penalty</p>
               </div>
               <div className="flex items-center gap-1 text-[9px] font-semibold mt-1 px-2 py-1 rounded-full bg-primary/15 text-primary">
                 <Crown className="w-2.5 h-2.5" /> Abonnement

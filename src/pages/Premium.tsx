@@ -16,7 +16,7 @@ import PremiumHelp from "@/components/premium/PremiumHelp";
 const COMPARE: { label: string; free: boolean | string; premium: boolean | string }[] = [
   { label: "Aviator Basique (10/jour)", free: true, premium: true },
   { label: "Aviator Premium / Pro / Spribe", free: false, premium: true },
-  { label: "CosmoX, JetX, Virtuel", free: false, premium: true },
+  { label: "CosmoX, JetX, Penalty", free: false, premium: true },
   { label: "Fréquence des prédictions", free: "limitée", premium: "illimitée" },
   { label: "Activation automatique", free: false, premium: true },
   { label: "Support admin", free: "standard", premium: "prioritaire" },

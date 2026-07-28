@@ -1,102 +1,110 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import jhLogo from "@/assets/jh-logo.png";
-import welcomeMusic from "@/assets/bienvenue.mp3.asset.json";
-import { takeWelcomeAudio, fadeAudio } from "@/lib/introAudio";
+import welcomeTheme from "@/assets/welcome-theme-v5.mp3.asset.json";
 
 /**
  * Écran d'accueil animé affiché juste après le SplashScreen.
- * Affiche le logo + message textuel « Bienvenue dans l'univers de Jeux d'Hazard. Bonne chance ! »
- * accompagné d'une musique douce qui s'estompe (fade-out) avant transition.
- *
- * Voix off (optionnelle) : ajoutez un asset `src/assets/welcome-voice.mp3.asset.json`
- * pour qu'elle soit jouée automatiquement par-dessus la musique.
+ * Synchronisé sur la bande sonore de bienvenue (~4,7 s) avec fondu de sortie.
  */
-
-const FALLBACK_TOTAL_MS = 5400; // Repli si la durée réelle est inconnue
-const FADE_IN_MS = 900;         // Fondu entrant, en relais du fondu du Splash
-const FADE_OUT_MS = 1200;       // Fondu sortant avant la sortie de l'écran
-const TAIL_MS = 500;            // Petit silence après la piste
+const TOTAL_MS = 5000;
+const FADE_MS = 700;
 
 interface Props {
   onComplete: () => void;
-  voiceUrl?: string;
 }
 
-const WelcomeIntro = ({ onComplete, voiceUrl }: Props) => {
+const WelcomeIntro = ({ onComplete }: Props) => {
   const [leaving, setLeaving] = useState(false);
-  const musicRef = useRef<HTMLAudioElement | null>(null);
-  const voiceRef = useRef<HTMLAudioElement | null>(null);
   const doneRef = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const startedRef = useRef(false);
+  const timersRef = useRef<number[]>([]);
+
+  const startTimeline = useCallback(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+
+    const exitAt = window.setTimeout(() => {
+      setLeaving(true);
+      const el = audioRef.current;
+      if (el) {
+        const from = el.volume;
+        const t0 = performance.now();
+        const fade = (t: number) => {
+          const k = Math.min(1, (t - t0) / FADE_MS);
+          el.volume = Math.max(0, from * (1 - k));
+          if (k < 1) requestAnimationFrame(fade);
+          else el.pause();
+        };
+        requestAnimationFrame(fade);
+      }
+    }, Math.max(0, TOTAL_MS - FADE_MS));
+
+    const finishAt = window.setTimeout(() => {
+      if (doneRef.current) return;
+      doneRef.current = true;
+      onComplete();
+    }, TOTAL_MS);
+
+    timersRef.current.push(exitAt, finishAt);
+  }, [onComplete]);
 
   useEffect(() => {
-    // Musique de bienvenue : élément préchargé pendant le Splash → démarrage instantané
-    const music = takeWelcomeAudio(welcomeMusic.url);
-    music.currentTime = 0;
-    music.volume = 0;
-    musicRef.current = music;
+    const el = new Audio(welcomeTheme.url);
+    el.preload = "auto";
+    el.volume = 1;
+    el.setAttribute("playsinline", "");
+    audioRef.current = el;
 
-    const timers: number[] = [];
-
-    const startFades = () => {
-      // Fondu entrant qui prend le relais du fondu sortant du Splash
-      fadeAudio(music, 0.95, FADE_IN_MS);
-      const trackMs = Number.isFinite(music.duration) && music.duration > 0
-        ? music.duration * 1000
-        : FALLBACK_TOTAL_MS;
-      const totalMs = Math.max(3200, trackMs + TAIL_MS);
-      timers.push(window.setTimeout(() => fadeAudio(music, 0, FADE_OUT_MS), Math.max(0, totalMs - FADE_OUT_MS)));
-      timers.push(window.setTimeout(() => {
-        if (doneRef.current) return;
-        doneRef.current = true;
-        setLeaving(true);
-        window.setTimeout(() => {
-          try { music.pause(); music.src = ""; } catch { /* noop */ }
-          try { voiceRef.current?.pause(); if (voiceRef.current) voiceRef.current.src = ""; } catch { /* noop */ }
-          onComplete();
-        }, 400);
-      }, totalMs));
+    const onPlaying = () => {
+      el.muted = false;
+      el.volume = 1;
+      startTimeline();
     };
+    el.addEventListener("playing", onPlaying);
 
-    const begin = () => {
-      if (music.readyState >= 1) startFades();
-      else music.addEventListener("loadedmetadata", startFades, { once: true });
+    (async () => {
+      try {
+        await el.play();
+      } catch {
+        try {
+          el.muted = true;
+          await el.play();
+        } catch {
+          /* geste requis */
+        }
+      }
+    })();
+
+    const onGesture = () => {
+      el.muted = false;
+      el.volume = 1;
+      el.play().catch(() => {});
+      startTimeline();
     };
+    const evts: (keyof WindowEventMap)[] = ["pointerdown", "touchstart", "click", "keydown"];
+    evts.forEach((e) => window.addEventListener(e, onGesture, { once: true, passive: true } as any));
 
-    const p = music.play();
-    if (p && typeof p.then === "function") {
-      p.then(begin).catch(() => {
-        music.muted = true;
-        music.play()
-          .then(() => { setTimeout(() => { music.muted = false; }, 0); begin(); })
-          .catch(() => { begin(); });
-      });
-    } else {
-      begin();
-    }
-
-    // Voix off optionnelle
-    if (voiceUrl) {
-      const voice = new Audio(voiceUrl);
-      voice.preload = "auto";
-      voice.volume = 1;
-      (voice as HTMLAudioElement & { playsInline?: boolean }).playsInline = true;
-      voice.setAttribute("playsinline", "");
-      voiceRef.current = voice;
-      // Petit délai pour laisser la musique poser l'ambiance
-      setTimeout(() => { voice.play().catch(() => { /* noop */ }); }, 500);
-    }
+    const safety = window.setTimeout(startTimeline, 1200);
 
     return () => {
-      timers.forEach((t) => window.clearTimeout(t));
-      music.removeEventListener("loadedmetadata", startFades);
-      try { music.pause(); music.src = ""; } catch { /* noop */ }
-      try { voiceRef.current?.pause(); if (voiceRef.current) voiceRef.current.src = ""; } catch { /* noop */ }
+      window.clearTimeout(safety);
+      timersRef.current.forEach((t) => window.clearTimeout(t));
+      timersRef.current = [];
+      evts.forEach((e) => window.removeEventListener(e, onGesture));
+      el.removeEventListener("playing", onPlaying);
+      try {
+        el.pause();
+      } catch {
+        /* noop */
+      }
+      audioRef.current = null;
     };
-  }, [onComplete, voiceUrl]);
+  }, [startTimeline]);
 
   return (
     <div
-      className={`fixed inset-0 z-[9998] flex flex-col items-center justify-center overflow-hidden transition-all duration-500 ${
+      className={`fixed inset-0 z-[9998] flex flex-col items-center justify-center overflow-hidden transition-all duration-700 ${
         leaving ? "opacity-0 scale-105" : "opacity-100 scale-100"
       }`}
       style={{

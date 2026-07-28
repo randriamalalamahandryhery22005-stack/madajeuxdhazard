@@ -11,8 +11,6 @@ import {
   Star, TrendingUp, Award, Gift, Flame, BarChart3, Search, Gamepad2,
   MessageSquare, Image as ImageIcon, Sparkles, LogOut,
 } from "lucide-react";
-import AdminCustomPredictions from "@/components/AdminCustomPredictions";
-import AdminAIConfigPanel from "@/components/AdminAIConfigPanel";
 import AdminOnlineUsersPanel from "@/components/AdminOnlineUsersPanel";
 import AdminGenStorePanel from "@/components/AdminGenStorePanel";
 import AdminPremiumBonusPanel from "@/components/AdminPremiumBonusPanel";
@@ -43,7 +41,7 @@ interface GameAccess {
 interface AppUpdate { id: string; title: string; update_url: string; is_active: boolean; created_at: string; }
 interface UserPoints { user_id: string; total: number; }
 
-type Tab = "dashboard" | "users" | "codes" | "resets" | "premium" | "bonuses" | "updates" | "settings" | "points" | "notifications" | "rewards" | "chat" | "sessions" | "predictions" | "ai_config" | "online_live" | "gen_store";
+type Tab = "dashboard" | "users" | "codes" | "resets" | "premium" | "bonuses" | "settings" | "points" | "notifications" | "rewards" | "chat" | "sessions" | "online_live" | "gen_store";
 
 interface OnlineSession {
   user_id: string;
@@ -53,7 +51,7 @@ interface OnlineSession {
 }
 
 const GAME_MODE_LABELS: Record<string, string> = {
-  aviator_premium: "Aviator Premium", aviator_pro: "Aviator Pro", cosmox: "CosmoX", virtuel: "Virtuel", jetx: "JetX",
+  aviator_premium: "Aviator Premium", aviator_pro: "Aviator Pro", cosmox: "CosmoX", jetx: "JetX",
   aviator_studio: "Aviator Studio (Plateforme secondaire)", aviator_spribe: "Aviator Spribe (Plateforme secondaire)", jetx_1xbet: "JetX (Plateforme secondaire)",
 };
 
@@ -62,7 +60,7 @@ const SUB_MODES = [
   { key: "sub_aviator_pro", label: "Professionnel" },
   { key: "sub_cosmox", label: "CosmoX" },
   { key: "sub_jetx", label: "JetX" },
-  { key: "sub_virtuel", label: "Virtuel" },
+  
   { key: "sub_aviator_studio", label: "Aviator Studio (Plateforme secondaire)" },
   { key: "sub_aviator_spribe", label: "Aviator Spribe (Plateforme secondaire)" },
 ];
@@ -73,7 +71,7 @@ const SECONDS_MODES = [
   { key: "seconds_premium", label: "Premium" },
   { key: "seconds_cosmox", label: "CosmoX" },
   { key: "seconds_jetx", label: "JetX" },
-  { key: "seconds_virtuel", label: "Virtuel" },
+  
 ];
 
 const LEAGUE_MODES = [
@@ -414,12 +412,10 @@ const Admin = () => {
     { id: "bonuses", label: "Bonus Premium", icon: <Gift className="w-3.5 h-3.5" />, badge: undefined },
     { id: "rewards", label: "Récomp.", icon: <Gift className="w-3.5 h-3.5" /> },
     { id: "notifications", label: "Notifs", icon: <Bell className="w-3.5 h-3.5" /> },
-    { id: "updates", label: "MAJ", icon: <Download className="w-3.5 h-3.5" /> },
+    
     { id: "settings", label: "Réglages", icon: <Settings className="w-3.5 h-3.5" /> },
     { id: "chat", label: "Chat", icon: <MessageSquare className="w-3.5 h-3.5" />, badge: chatMessages.filter(m => m.status === "pending").length || undefined },
     { id: "sessions", label: "Sessions", icon: <Activity className="w-3.5 h-3.5" />, badge: onlineSessions.length || undefined },
-    { id: "predictions", label: "Prédictions", icon: <Sparkles className="w-3.5 h-3.5" /> },
-    { id: "ai_config", label: "IA Config", icon: <Sparkles className="w-3.5 h-3.5" /> },
     { id: "online_live", label: "En ligne", icon: <Activity className="w-3.5 h-3.5" /> },
     { id: "gen_store", label: "J&H Store", icon: <ImageIcon className="w-3.5 h-3.5" /> },
     
@@ -430,7 +426,7 @@ const Admin = () => {
   const TAB_GROUPS: { title: string; items: Tab[] }[] = [
     { title: "Vue d'ensemble", items: ["dashboard", "online_live", "sessions", "points"] },
     { title: "Utilisateurs & accès", items: ["users", "premium", "bonuses", "rewards", "resets"] },
-    { title: "Contenu & comm.", items: ["chat", "notifications", "predictions", "updates", "ai_config", "gen_store"] },
+    { title: "Contenu & comm.", items: ["chat", "notifications", "gen_store"] },
     { title: "Configuration", items: ["codes", "settings"] },
   ];
   const tabsById = Object.fromEntries(tabs.map((t) => [t.id, t]));
@@ -1178,44 +1174,8 @@ const Admin = () => {
           </div>
         )}
 
-        {/* UPDATES TAB */}
-        {tab === "updates" && (
-          <>
-            <div className="p-5 rounded-2xl bg-card/90 border border-primary/25 glow-gold backdrop-blur-sm space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center"><Download className="w-4 h-4 text-primary-foreground" /></div>
-                <p className="text-xs font-bold uppercase tracking-wider gold-text">Publier une mise à jour</p>
-              </div>
-              <Input value={newUpdateTitle} onChange={(e) => setNewUpdateTitle(e.target.value)} placeholder="Titre" className="h-11 bg-secondary/80 border-border/40 text-sm" />
-              <Input value={newUpdateUrl} onChange={(e) => setNewUpdateUrl(e.target.value)} placeholder="URL de téléchargement" className="h-11 bg-secondary/80 border-border/40 text-sm font-mono" />
-              <Button variant="premium" className="w-full h-12 text-sm font-bold" onClick={publishUpdate}>
-                <Send className="w-4 h-4 mr-2" /> Publier pour tous les utilisateurs
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground font-medium mt-4">Historique</p>
-            {appUpdates.length === 0 && (
-              <div className="text-center py-12 space-y-2"><Download className="w-10 h-10 text-muted-foreground/30 mx-auto" /><p className="text-sm text-muted-foreground">Aucune mise à jour</p></div>
-            )}
-            {appUpdates.map((u, i) => (
-              <div key={u.id} className="p-4 rounded-2xl bg-card/80 border border-border/40 backdrop-blur-sm space-y-2"
-                style={{ animation: `fade-up 0.3s ease ${i * 40}ms forwards`, opacity: 0 }}>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold">{u.title}</p>
-                  <span className={`text-[10px] px-2.5 py-1 rounded-full font-semibold ${u.is_active ? "bg-emerald-500/10 text-emerald-300" : "bg-secondary text-muted-foreground"}`}>
-                    {u.is_active ? "Active" : "Inactive"}
-                  </span>
-                </div>
-                <p className="text-[10px] text-muted-foreground font-mono truncate flex items-center gap-1"><Link2 className="w-3 h-3" />{u.update_url}</p>
-                <p className="text-[10px] text-muted-foreground">{new Date(u.created_at).toLocaleString("fr")}</p>
-                {u.is_active && (
-                  <Button size="sm" variant="ghost" onClick={() => deactivateUpdate(u.id)} className="h-9 text-xs text-destructive hover:bg-destructive/10 w-full justify-center">
-                    <Power className="w-3.5 h-3.5 mr-1" /> Désactiver
-                  </Button>
-                )}
-              </div>
-            ))}
-          </>
-        )}
+
+
 
         {/* CHAT TAB */}
         {tab === "chat" && (
@@ -1329,23 +1289,6 @@ const Admin = () => {
               })}
             </div>
             <div className="p-4 rounded-2xl bg-card/80 border border-border/40 space-y-4">
-              <div className="flex items-center gap-2"><Gamepad2 className="w-4 h-4 text-emerald-300" /><h3 className="text-sm font-bold">Ligues virtuelles</h3></div>
-              <p className="text-[10px] text-muted-foreground">Activez ou désactivez chaque ligue pour le mode Virtuel.</p>
-              {LEAGUE_MODES.map((mode) => {
-                const isEnabled = getCodeValue(mode.key) === "enabled";
-                return (
-                  <button key={mode.key} onClick={() => toggleSetting(mode.key)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/40 border border-border/20 hover:bg-secondary/60 transition-all active:scale-[0.98]">
-                    <span className="text-sm font-medium">{mode.label}</span>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-semibold ${isEnabled ? "text-emerald-300" : "text-muted-foreground"}`}>{isEnabled ? "Visible" : "Masquée"}</span>
-                      {isEnabled ? <ToggleRight className="w-6 h-6 text-emerald-300" /> : <ToggleLeft className="w-6 h-6 text-muted-foreground" />}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="p-4 rounded-2xl bg-card/80 border border-border/40 space-y-4">
               <div className="flex items-center gap-2"><Timer className="w-4 h-4 text-primary" /><h3 className="text-sm font-bold">Secondes (SS) dans les prédictions</h3></div>
               <p className="text-[10px] text-muted-foreground">Activez pour afficher les secondes dans les résultats de chaque mode.</p>
               {SECONDS_MODES.map((mode) => {
@@ -1452,17 +1395,6 @@ const Admin = () => {
           </div>
         )}
 
-        {/* CUSTOM PREDICTIONS TAB */}
-        {tab === "predictions" && (
-          <div style={{ animation: "fade-up 0.4s ease forwards" }}>
-            <AdminCustomPredictions />
-          </div>
-        )}
-        {tab === "ai_config" && (
-          <div style={{ animation: "fade-up 0.4s ease forwards" }}>
-            <AdminAIConfigPanel />
-          </div>
-        )}
         {tab === "online_live" && (
           <div style={{ animation: "fade-up 0.4s ease forwards" }}>
             <AdminOnlineUsersPanel />

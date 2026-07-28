@@ -5,9 +5,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Jeux d'Hazard — Prédictions & Analyses Premium" },
-      { name: "description", content: "Plateforme Premium de prédictions et analyses avancées pour Aviator, JetX, CosmoX. Interface luxe, analyses en temps réel." },
+      { name: "description", content: "Plateforme Premium de Prédictions et Analyses Avancées pour Aviator, JetX, CosmoX.\nInterface Luxe, Analyses en Temps Réel. Tous droits réservés - Copyright 2017" },
       { property: "og:title", content: "Jeux d'Hazard — Prédictions & Analyses Premium" },
-      { property: "og:description", content: "Plateforme Premium de prédictions et analyses avancées pour Aviator, JetX, CosmoX. Interface luxe, analyses en temps réel." },
+      { property: "og:description", content: "Plateforme Premium de Prédictions et Analyses Avancées pour Aviator, JetX, CosmoX.\nInterface Luxe, Analyses en Temps Réel. Tous droits réservés - Copyright 2017" },
     ],
   }),
   component: RouteComponent,

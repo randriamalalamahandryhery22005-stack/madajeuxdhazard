@@ -16,7 +16,7 @@ interface CoinsRow {
 interface Profile { user_id: string; full_name: string | null; avatar_url: string | null; }
 interface UsageRow { user_id: string; game_name: string; used_at: string; }
 
-const GAMES = ["aviator-premium", "jetx", "cosmox", "virtuel", "aviator-studio", "aviator-spribe"];
+const GAMES = ["aviator-premium", "jetx", "cosmox", "aviator-studio", "aviator-spribe"];
 const GAME_LABEL: Record<string, string> = {
   "aviator-premium": "Aviator", jetx: "JetX", cosmox: "CosmoX", virtuel: "Virtuel",
   "aviator-studio": "Studio", "aviator-spribe": "Spribe",

@@ -17,14 +17,14 @@ const BENEFITS = [
   { icon: Zap,          title: "Activation instantanée", desc: "Validation automatique après paiement" },
   { icon: Shield,       title: "Données protégées", desc: "Preuves de paiement chiffrées" },
   { icon: Headphones,   title: "Support prioritaire", desc: "Chat direct avec l'équipe admin" },
-  { icon: Star,         title: "Une seule formule", desc: "Aviator + CosmoX + JetX + Virtuel inclus" },
+  { icon: Star,         title: "Une seule formule", desc: "Aviator + CosmoX + JetX + Penalty inclus" },
 ];
 
 const SERVICES = [
   { icon: Plane,    name: "Aviator", desc: "Pro · Spribe · Studio" },
   { icon: Sparkles, name: "CosmoX",  desc: "Prédictions cosmiques HH:MM:SS" },
   { icon: Rocket,   name: "JetX",    desc: "Algorithme HH:MM précis" },
-  { icon: Trophy,   name: "Virtuel", desc: "8 ligues couvertes en direct" },
+  { icon: Trophy,   name: "Penalty", desc: "Prédictions tir au but en direct" },
 ];
 
 interface PremiumDashboardProps {

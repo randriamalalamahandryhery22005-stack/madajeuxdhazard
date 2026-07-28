@@ -152,7 +152,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      // « Se souvenir de moi » : sans cette option, la session n'est pas
+      // réutilisée à la réouverture de l'application (nouvel onglet/lancement).
+      let remembered = true;
+      let firstOpen = false;
+      try {
+        remembered = localStorage.getItem("jh_remember_me") !== "0";
+        firstOpen = sessionStorage.getItem("jh_app_open") !== "1";
+        sessionStorage.setItem("jh_app_open", "1");
+      } catch { /* no-op */ }
+
+      if (session && !remembered && firstOpen) {
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setIsAdmin(false);
+        setAccessCodeVerified(false);
+        setLoading(false);
+        return;
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -164,6 +185,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       setLoading(false);
     });
+
 
     // Listen for access code changes in realtime
     const codeChannel = supabase

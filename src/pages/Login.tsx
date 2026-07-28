@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   X,
   Plus,
-  ChevronRight,
+  Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -28,6 +28,7 @@ import {
   initialsFrom,
   type SavedAccount,
 } from "@/lib/savedAccounts";
+
 
 const emailSchema = z.object({
   identifier: z.string().trim().toLowerCase().email("Adresse email invalide").max(255, "Email trop long"),
@@ -55,11 +56,26 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
+  // « Se souvenir de moi » : on restaure le choix + le dernier identifiant utilisé.
   useEffect(() => {
     const list = getSavedAccounts();
     setSaved(list);
     setView(list.length > 0 ? "accounts" : "other");
+    try {
+      const flag = localStorage.getItem("jh_remember_me");
+      const remember = flag === null ? true : flag === "1";
+      setRememberMe(remember);
+      if (remember) {
+        const last = localStorage.getItem("jh_last_identifier") || "";
+        const lastMethod = localStorage.getItem("jh_last_method");
+        if (last) setIdentifier(last);
+        if (lastMethod === "phone" || lastMethod === "email") setLoginMethod(lastMethod);
+      }
+    } catch {
+      /* no-op */
+    }
   }, []);
+
 
   const heroTitle = useMemo(() => {
     if (view === "quick" && selected) return `Bonjour, ${selected.displayName.split(" ")[0]}`;
@@ -86,9 +102,20 @@ const Login = () => {
       if (data.user && rememberMe) {
         await rememberCurrentAccount(data.user.id, fallback);
       }
+      if (data.user && !rememberMe) {
+        removeSavedAccount(data.user.id);
+      }
       try {
         localStorage.setItem("jh_remember_me", rememberMe ? "1" : "0");
+        if (rememberMe) {
+          localStorage.setItem("jh_last_identifier", fallback.identifier);
+          localStorage.setItem("jh_last_method", fallback.method);
+        } else {
+          localStorage.removeItem("jh_last_identifier");
+          localStorage.removeItem("jh_last_method");
+        }
       } catch { /* no-op */ }
+
       toast.success("Connexion réussie !");
       navigate("/games");
     } catch (err: any) {
@@ -195,6 +222,10 @@ const Login = () => {
       {/* Main */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-start px-5 pt-8 pb-10">
         <div className="w-full max-w-[400px]">
+          {/* Note discrète : comptes propres à cet appareil */}
+
+
+
           {/* Hero */}
           <div className="text-center mb-6 animate-blur-in">
             <h1 className="font-display text-[28px] font-bold tracking-tight leading-tight">
@@ -226,12 +257,15 @@ const Login = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleRemove(acc.userId);
+                        if (window.confirm(`Retirer ${acc.displayName} de cet appareil ?`)) {
+                          handleRemove(acc.userId);
+                        }
                       }}
-                      className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 border border-[hsl(var(--gold)/0.2)] flex items-center justify-center text-foreground/60 hover:text-destructive hover:border-destructive/50 opacity-0 group-hover:opacity-100 focus:opacity-100 transition"
-                      aria-label={`Retirer ${acc.displayName}`}
+                      className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-[hsl(158_60%_5%)] border border-destructive/60 flex items-center justify-center text-destructive shadow-lg hover:bg-destructive hover:text-white active:scale-90 transition z-10"
+                      aria-label={`Supprimer ${acc.displayName} de cet appareil`}
+                      title="Supprimer ce compte de l'appareil"
                     >
-                      <X className="w-3 h-3" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </li>
                 ))}
@@ -433,7 +467,6 @@ const Login = () => {
               >
                 <UserPlus className="w-4 h-4" />
                 Créer un nouveau compte
-                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -445,6 +478,8 @@ const Login = () => {
         </div>
       </main>
     </div>
+
+
   );
 };
 

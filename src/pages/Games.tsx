@@ -11,7 +11,7 @@ import aviatorLogo from "@/assets/logo-aviator.png";
 import cosmoxLogo from "@/assets/logo-cosmox.png";
 import jetxLogo from "@/assets/logo-jetx.png";
 import aviatorPremiumLogo from "@/assets/logo-aviator-premium.png";
-import virtuelLogo from "@/assets/logo-virtuel.png";
+
 import penaltyLogo from "@/assets/logo-penalty.png";
 import aviatorStudioLogo from "@/assets/logo-aviator-studio.png";
 import aviatorSpribeLogo from "@/assets/logo-aviator-spribe.png";

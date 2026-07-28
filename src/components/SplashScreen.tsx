@@ -1,31 +1,28 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import jhLogo from "@/assets/jh-logo.png";
-import splashTheme from "@/assets/splash-screen.mp3.asset.json";
-import welcomeTheme from "@/assets/bienvenue.mp3.asset.json";
-import { preloadWelcomeAudio } from "@/lib/introAudio";
+import splashTheme from "@/assets/splash-theme-v5.mp3.asset.json";
+import welcomeTheme from "@/assets/welcome-theme-v5.mp3.asset.json";
 
 interface SplashScreenProps {
   onComplete: () => void;
 }
 
 /**
- * Splash luxe "Jeux d'Hazard" — Émeraude Prestige
- * Anneau conique doré tournant, halo pulsé, monogramme JH, barre de progression fine.
- * Synchronisé sur la bande sonore (13s).
+ * Splash luxe "Jeux d'Hazard" — Émeraude Prestige.
+ * Bande sonore de 14 s, animations calées exactement sur la musique.
  */
-const SPLASH_DURATION_MS = 13800;
-const FADE_OUT_MS = 4500; // fondu sonore progressif en fin de splash
+const SPLASH_DURATION_MS = 13885;
+const FADE_OUT_MS = 3500;
 
 const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   const [progress, setProgress] = useState(0);
   const [leaving, setLeaving] = useState(false);
   const [stepIdx, setStepIdx] = useState(0);
-  const [needsTap, setNeedsTap] = useState(false);
   const doneRef = useRef(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const startedRef = useRef(false);
   const rafRef = useRef(0);
-  const fallbackTimerRef = useRef<number | null>(null);
+  const startedRef = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const fadeStartedRef = useRef(false);
 
   const steps = [
     "Initialisation du salon",
@@ -36,162 +33,107 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     "Prêt à jouer",
   ];
 
-  useEffect(() => {
-    // Précharge la musique de bienvenue pour un enchaînement sans coupure
-    preloadWelcomeAudio(welcomeTheme.url);
-    // Élément audio compatible iOS Safari + Android Chrome
-    const audio = new Audio();
-    audio.src = splashTheme.url;
-    audio.preload = "auto";
-    audio.volume = 1;
-    // Attributs iOS: lecture inline, pas en plein écran
-    (audio as HTMLAudioElement & { playsInline?: boolean }).playsInline = true;
-    audio.setAttribute("playsinline", "");
-    audio.setAttribute("webkit-playsinline", "");
-    audio.setAttribute("x-webkit-airplay", "deny");
-    audioRef.current = audio;
-
-    const totalMs = SPLASH_DURATION_MS;
-
-    const unmuteToFull = () => {
-      // Restaure le volume à 100% une fois la lecture réellement démarrée
+  const finish = useCallback(() => {
+    if (doneRef.current) return;
+    doneRef.current = true;
+    setLeaving(true);
+    const el = audioRef.current;
+    if (el) {
       try {
-        audio.muted = false;
-        audio.volume = 1;
-      } catch { /* noop */ }
-    };
-
-    const startTimer = () => {
-      if (startedRef.current) return;
-      startedRef.current = true;
-      setNeedsTap(false);
-      const startedAt = performance.now();
-      // Fondu sortant progressif de 5 s avant la fin du splash
-      let fadeStartedAt = 0;
-      let fadeBaseVol = 1;
-      const tick = (t: number) => {
-        const elapsed = t - startedAt;
-        const p = Math.min(100, (elapsed / totalMs) * 100);
-        setProgress(p);
-        setStepIdx(Math.min(steps.length - 1, Math.floor((p / 100) * steps.length)));
-        if (elapsed >= totalMs - FADE_OUT_MS) {
-          if (!fadeStartedAt) {
-            fadeStartedAt = t;
-            fadeBaseVol = audio.volume || 1;
-          }
-          const fp = Math.min(1, (t - fadeStartedAt) / FADE_OUT_MS);
-          // Courbe équi-puissance : décroissance perçue comme naturelle
-          const gain = Math.cos((fp * Math.PI) / 2);
-          try { audio.volume = Math.max(0, fadeBaseVol * gain); } catch { /* noop */ }
-        }
-        if (p < 100) {
-          rafRef.current = requestAnimationFrame(tick);
-        } else if (!doneRef.current) {
-          doneRef.current = true;
-          setLeaving(true);
-          try { audio.volume = 0; } catch { /* noop */ }
-          setTimeout(() => {
-            try {
-              audio.pause();
-              audio.src = "";
-            } catch { /* noop */ }
-            onComplete();
-          }, 300);
-        }
-
-      };
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    const cleanupGestureListeners = () => {
-      window.removeEventListener("pointerdown", onGesture, true);
-      window.removeEventListener("touchstart", onGesture, true);
-      window.removeEventListener("touchend", onGesture, true);
-      window.removeEventListener("click", onGesture, true);
-      window.removeEventListener("keydown", onGesture, true);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-
-    function onGesture() {
-      audio.muted = false;
-      audio.volume = 1;
-      audio
-        .play()
-        .then(() => {
-          cleanupGestureListeners();
-          unmuteToFull();
-          startTimer();
-        })
-        .catch(() => { /* l'utilisateur peut réessayer */ });
-    }
-
-    function onVisibility() {
-      if (document.visibilityState === "visible" && !startedRef.current) {
-        audio.play().then(() => { unmuteToFull(); startTimer(); }).catch(() => { /* noop */ });
+        el.volume = 0;
+        el.pause();
+      } catch {
+        /* noop */
       }
     }
+    setTimeout(() => onComplete(), 400);
+  }, [onComplete]);
 
-    const armGestureFallback = () => {
-      setNeedsTap(true);
-      window.addEventListener("pointerdown", onGesture, true);
-      window.addEventListener("touchstart", onGesture, { capture: true, passive: true });
-      window.addEventListener("touchend", onGesture, { capture: true, passive: true });
-      window.addEventListener("click", onGesture, true);
-      window.addEventListener("keydown", onGesture, true);
-      document.addEventListener("visibilitychange", onVisibility);
-      // Sécurité: si l'utilisateur n'interagit jamais, on démarre quand même
-      // l'animation après 2s pour ne pas bloquer l'application.
-      fallbackTimerRef.current = window.setTimeout(() => {
-        if (!startedRef.current) startTimer();
-      }, 2000);
+  // Timeline animée — démarre en même temps que la musique.
+  const startTimeline = useCallback(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    const startedAt = performance.now();
+    const tick = (t: number) => {
+      const elapsed = t - startedAt;
+      const p = Math.min(100, (elapsed / SPLASH_DURATION_MS) * 100);
+      setProgress(p);
+      setStepIdx(Math.min(steps.length - 1, Math.floor((p / 100) * steps.length)));
+      // Fondu de sortie progressif (équi-puissance) sur la fin de la piste.
+      const el = audioRef.current;
+      if (el && !el.muted) {
+        const remaining = SPLASH_DURATION_MS - elapsed;
+        if (remaining <= FADE_OUT_MS) {
+          fadeStartedRef.current = true;
+          const k = Math.max(0, Math.min(1, remaining / FADE_OUT_MS));
+          el.volume = Math.max(0, Math.sin((k * Math.PI) / 2));
+        }
+      }
+      if (p < 100) rafRef.current = requestAnimationFrame(tick);
+      else finish();
     };
+    rafRef.current = requestAnimationFrame(tick);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finish]);
 
-    // Démarre le timer dès que la lecture est effectivement en cours
-    const onPlaying = () => { unmuteToFull(); startTimer(); };
-    audio.addEventListener("playing", onPlaying);
+  useEffect(() => {
+    const el = new Audio(splashTheme.url);
+    // Préchargement de la piste de bienvenue pour un enchaînement sans coupure.
+    const preloadWelcome = new Audio(welcomeTheme.url);
+    preloadWelcome.preload = "auto";
+    try { preloadWelcome.load(); } catch { /* noop */ }
+    el.preload = "auto";
+    el.volume = 1;
+    el.setAttribute("playsinline", "");
+    audioRef.current = el;
 
-    // Stratégie autoplay multi-plateforme:
-    // 1) Tentative en son plein (fonctionne si le site a déjà une interaction / PWA)
-    // 2) Si bloqué, on tente en muet (autorisé partout) puis on démonte le mute
-    //    après le premier événement "playing". Android Chrome autorise ce chemin.
-    // 3) Si même le muet est refusé, on arme le fallback geste utilisateur.
-    const tryMutedAutoplay = () => {
-      audio.muted = true;
-      const p = audio.play();
-      if (p && typeof p.then === "function") {
-        p.then(() => {
-          // Démonte le mute très vite pour retrouver le son à 100%
-          setTimeout(unmuteToFull, 0);
-        }).catch(() => {
-          armGestureFallback();
-        });
+    const onPlaying = () => {
+      el.muted = false;
+      el.volume = 1;
+      startTimeline();
+    };
+    el.addEventListener("playing", onPlaying);
+
+    const tryPlay = async () => {
+      try {
+        await el.play();
+      } catch {
+        // Autoplay bloqué : repli muet (autorisé sur Chrome Android/iOS)
+        try {
+          el.muted = true;
+          await el.play();
+        } catch {
+          /* attend un geste utilisateur */
+        }
       }
     };
+    tryPlay();
 
-    const attempt = audio.play();
-    if (attempt && typeof attempt.then === "function") {
-      attempt
-        .then(() => {
-          unmuteToFull();
-        })
-        .catch(() => {
-          tryMutedAutoplay();
-        });
-    } else {
-      startTimer();
-    }
+    const onGesture = () => {
+      el.muted = false;
+      el.volume = 1;
+      el.play().catch(() => {});
+      startTimeline();
+    };
+    const evts: (keyof WindowEventMap)[] = ["pointerdown", "touchstart", "click", "keydown"];
+    evts.forEach((e) => window.addEventListener(e, onGesture, { once: true, passive: true } as any));
+
+    // Filet de sécurité : ne jamais bloquer l'utilisateur si l'audio échoue.
+    const safety = window.setTimeout(startTimeline, 1500);
 
     return () => {
+      window.clearTimeout(safety);
       cancelAnimationFrame(rafRef.current);
-      if (fallbackTimerRef.current) window.clearTimeout(fallbackTimerRef.current);
-      cleanupGestureListeners();
-      audio.removeEventListener("playing", onPlaying);
+      evts.forEach((e) => window.removeEventListener(e, onGesture));
+      el.removeEventListener("playing", onPlaying);
       try {
-        audio.pause();
-        audio.src = "";
-      } catch { /* noop */ }
+        el.pause();
+      } catch {
+        /* noop */
+      }
+      audioRef.current = null;
     };
-  }, [onComplete]);
+  }, [startTimeline]);
 
   return (
     <div
@@ -206,7 +148,6 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
           "linear-gradient(180deg, hsl(158 60% 4%) 0%, hsl(158 55% 6%) 100%)",
       }}
     >
-      {/* Grain overlay */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.05] mix-blend-overlay"
         style={{
@@ -215,14 +156,11 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
         }}
       />
 
-      {/* Aurora blobs */}
       <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-[hsl(152_72%_35%_/_0.35)] blur-3xl animate-aurora" />
       <div className="absolute -bottom-24 -right-16 h-[28rem] w-[28rem] rounded-full bg-[hsl(42_82%_50%_/_0.22)] blur-3xl animate-aurora" style={{ animationDelay: "1.2s" }} />
 
-      {/* Logo cluster */}
       <div className="relative z-10 flex flex-col items-center px-8">
         <div className="relative flex items-center justify-center">
-          {/* Conic gold ring */}
           <div
             className="absolute h-56 w-56 rounded-full animate-orbit"
             style={{
@@ -232,11 +170,9 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
               mask: "radial-gradient(closest-side, transparent 68%, black 70%)",
             }}
           />
-          {/* Pulse rings */}
           <div className="absolute h-40 w-40 rounded-full border border-[hsl(42_82%_55%_/_0.4)] animate-pulse-ring" />
           <div className="absolute h-40 w-40 rounded-full border border-[hsl(152_72%_45%_/_0.45)] animate-pulse-ring" style={{ animationDelay: "0.8s" }} />
 
-          {/* Logo card */}
           <div
             className="relative h-36 w-36 rounded-3xl overflow-hidden animate-blur-in"
             style={{
@@ -244,19 +180,11 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
                 "0 30px 80px -20px hsl(42 82% 40% / 0.55), 0 0 0 1px hsl(42 82% 55% / 0.25) inset",
             }}
           >
-            <img
-              src={jhLogo}
-              alt="Jeux d'Hazard"
-              className="h-full w-full object-cover"
-              width={512}
-              height={512}
-            />
-            {/* Shimmer sheen */}
+            <img src={jhLogo} alt="Jeux d'Hazard" className="h-full w-full object-cover" width={512} height={512} />
             <div className="pointer-events-none absolute inset-0 animate-shimmer-sunset" />
           </div>
         </div>
 
-        {/* Wordmark */}
         <div className="mt-10 text-center animate-blur-in" style={{ animationDelay: "0.15s" }}>
           <div className="text-[10px] tracking-[0.55em] font-medium text-[hsl(45_60%_75%_/_0.75)] uppercase mb-2">
             Premium · Casino Édition
@@ -271,7 +199,6 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
           </div>
         </div>
 
-        {/* Progress */}
         <div className="mt-12 w-72 max-w-[80vw] animate-blur-in" style={{ animationDelay: "0.3s" }}>
           <div className="relative h-[3px] w-full overflow-hidden rounded-full bg-[hsl(158_45%_12%)]">
             <div
@@ -293,19 +220,9 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
         </div>
       </div>
 
-      {/* Bottom mark */}
       <div className="absolute bottom-6 left-0 right-0 text-center text-[10px] tracking-[0.4em] uppercase text-[hsl(45_30%_75%_/_0.4)]">
         Édition Or · 2026
       </div>
-
-      {/* Overlay iOS: autoplay bloqué — invite à toucher l'écran */}
-      {needsTap && (
-        <div className="absolute inset-0 z-20 flex items-end justify-center pb-24 pointer-events-none animate-blur-in">
-          <div className="pointer-events-auto px-5 py-3 rounded-full bg-black/40 backdrop-blur border border-[hsl(var(--gold)/0.4)] text-[11px] uppercase tracking-[0.35em] text-[hsl(45_60%_82%)] shadow-lg">
-            Touchez pour activer le son
-          </div>
-        </div>
-      )}
     </div>
   );
 };
