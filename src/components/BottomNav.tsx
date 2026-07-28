@@ -212,6 +212,14 @@ const BottomNav = () => {
                       {unreadStore > 99 ? "99+" : unreadStore}
                     </span>
                   )}
+                  {item.path === "/notifications" && unreadNotifs > 0 && (
+                    <span
+                      className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[9px] font-bold text-white bg-gradient-to-br from-rose-500 to-rose-600 ring-2 ring-slate-900 shadow-[0_0_10px_rgba(244,63,94,0.6)] animate-[scale-in_0.25s_ease-out]"
+                      aria-label={`${unreadNotifs} notifications non lues`}
+                    >
+                      {unreadNotifs > 99 ? "99+" : unreadNotifs}
+                    </span>
+                  )}
                 </div>
                 <span className="text-[9px] font-bold leading-none tracking-tight truncate max-w-full">
                   {item.label}
