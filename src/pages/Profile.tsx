@@ -82,6 +82,7 @@ const Profile = () => {
       setCountry(profile.country_code || "");
       setRegion(profile.region || "");
       setBirthDate(profile.birth_date || "");
+      setGender((profile as any).gender || "");
       setAvatarUrl(profile.avatar_url);
       setAvatarPreview(profile.avatar_url);
     }
