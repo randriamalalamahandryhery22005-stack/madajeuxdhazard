@@ -85,6 +85,10 @@ const Games = () => {
   const [codeInput, setCodeInput] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [customPreds, setCustomPreds] = useState<Array<{ id: string; name: string; slug: string; description: string | null; requires_subscription: boolean }>>([]);
+  const { onlineNow, totalAccounts, winsToday, claimWin, claimingWin } = useDashboardStats();
+  const [onlineOpen, setOnlineOpen] = useState(false);
+  const [accountsOpen, setAccountsOpen] = useState(false);
+  const [winsOpen, setWinsOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
