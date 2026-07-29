@@ -160,6 +160,7 @@ const Profile = () => {
         country_code: country || null,
         region: region || null,
         birth_date: birthDate || null,
+        gender: gender || null,
         avatar_url: avatarUrl,
       })
       .eq("user_id", user.id);
