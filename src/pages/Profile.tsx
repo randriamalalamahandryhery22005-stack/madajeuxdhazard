@@ -55,6 +55,7 @@ const Profile = () => {
   const [country, setCountry] = useState("");
   const [region, setRegion] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [gender, setGender] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -81,6 +82,7 @@ const Profile = () => {
       setCountry(profile.country_code || "");
       setRegion(profile.region || "");
       setBirthDate(profile.birth_date || "");
+      setGender((profile as any).gender || "");
       setAvatarUrl(profile.avatar_url);
       setAvatarPreview(profile.avatar_url);
     }
@@ -158,6 +160,7 @@ const Profile = () => {
         country_code: country || null,
         region: region || null,
         birth_date: birthDate || null,
+        gender: gender || null,
         avatar_url: avatarUrl,
       })
       .eq("user_id", user.id);
@@ -330,6 +333,22 @@ const Profile = () => {
                 <Calendar className="w-3 h-3" /> Date de naissance
               </Label>
               <Input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                Sexe
+              </Label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="">Non renseigné</option>
+                <option value="male">Homme</option>
+                <option value="female">Femme</option>
+                <option value="other">Autre</option>
+                <option value="prefer_not">Préfère ne pas dire</option>
+              </select>
             </div>
             <Button onClick={saveProfileFields} disabled={savingProfile || uploading || validatingFace} className="w-full">
               {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 mr-1" />}

@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Crown, Shield, KeyRound, Users, Activity, Trophy, Bell, Sparkles } from "lucide-react";
+import { LogOut, Crown, Shield, KeyRound, Users, UserPlus, Trophy, Bell, Sparkles, Plus, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGameStats } from "@/hooks/useGameStats";
 import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,8 @@ import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import InfoModal from "@/components/InfoModal";
 import Bet261Hub, { BET261_GAMES } from "@/components/hubs/Bet261Hub";
 import OnexbetHub, { ONEXBET_GAMES } from "@/components/hubs/OnexbetHub";
+import OnlineUsersDialog from "@/components/OnlineUsersDialog";
+import StatsDetailDialog from "@/components/StatsDetailDialog";
 
 const StatCard = ({
   icon: Icon,
@@ -23,6 +26,8 @@ const StatCard = ({
   sub,
   tone,
   delay,
+  onClick,
+  action,
 }: {
   icon: typeof Users;
   label: string;
@@ -30,6 +35,8 @@ const StatCard = ({
   sub: string;
   tone: "emerald" | "gold" | "trophy" | "bell";
   delay: number;
+  onClick?: () => void;
+  action?: React.ReactNode;
 }) => {
   const tones = {
     emerald: { bg: "hsl(152 70% 45% / 0.14)", ring: "hsl(152 70% 45% / 0.35)", text: "hsl(152 80% 65%)", glow: "hsl(152 70% 45% / 0.35)" },
@@ -39,7 +46,11 @@ const StatCard = ({
   }[tone];
   return (
     <div
-      className="relative rounded-2xl p-2.5 border overflow-hidden backdrop-blur-xl"
+      className={`relative rounded-2xl p-2.5 border overflow-hidden backdrop-blur-xl ${onClick ? "cursor-pointer hover:brightness-110 active:scale-[0.98] transition" : ""}`}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
       style={{
         borderColor: "hsl(42 45% 45% / 0.25)",
         background: "linear-gradient(160deg, hsl(0 0% 8% / 0.85), hsl(0 0% 4% / 0.9))",
@@ -60,6 +71,7 @@ const StatCard = ({
         <p className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold text-center leading-tight">{label}</p>
         <p className="text-base font-black leading-none" style={{ color: tones.text }}>{value}</p>
         <p className="text-[9px] text-slate-500 leading-tight text-center truncate max-w-full">{sub}</p>
+        {action}
       </div>
     </div>
   );
@@ -73,6 +85,10 @@ const Games = () => {
   const [codeInput, setCodeInput] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [customPreds, setCustomPreds] = useState<Array<{ id: string; name: string; slug: string; description: string | null; requires_subscription: boolean }>>([]);
+  const { onlineNow, totalAccounts, winsToday, claimWin, claimingWin } = useDashboardStats();
+  const [onlineOpen, setOnlineOpen] = useState(false);
+  const [accountsOpen, setAccountsOpen] = useState(false);
+  const [winsOpen, setWinsOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -231,12 +247,65 @@ const Games = () => {
       {/* Dashboard stats */}
       <section className="px-4 mt-1">
         <div className="grid grid-cols-4 gap-2">
-          <StatCard icon={Users}    label="En ligne"        value={totalOnline.toLocaleString("fr-FR")} sub="Utilisateurs"      tone="emerald" delay={60} />
-          <StatCard icon={Activity} label="IA Status"       value="ACTIVE"                              sub="Précision élevée"  tone="emerald" delay={120} />
-          <StatCard icon={Trophy}   label="Parties gagnées" value={totalWins.toLocaleString("fr-FR")}   sub="Aujourd'hui"       tone="trophy"  delay={180} />
-          <StatCard icon={Bell}     label="Notifications"   value={String(unreadNotifs)}                sub="Nouvelles"         tone="bell"    delay={240} />
+          <StatCard
+            icon={Users}
+            label="En ligne"
+            value={onlineNow.toLocaleString("fr-FR")}
+            sub="Temps réel"
+            tone="emerald"
+            delay={60}
+            onClick={() => setOnlineOpen(true)}
+          />
+          <StatCard
+            icon={UserPlus}
+            label="Comptes"
+            value={totalAccounts.toLocaleString("fr-FR")}
+            sub="Enregistrés"
+            tone="emerald"
+            delay={120}
+            onClick={() => setAccountsOpen(true)}
+          />
+          <StatCard
+            icon={Trophy}
+            label="Paris gagnés"
+            value={winsToday.toLocaleString("fr-FR")}
+            sub="Dernières 24 h"
+            tone="trophy"
+            delay={180}
+            onClick={() => setWinsOpen(true)}
+            action={
+              <button
+                type="button"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const res = await claimWin();
+                  if (res.ok) toast.success("Prédiction gagnée validée !");
+                  else toast.error("Impossible d'enregistrer la validation");
+                }}
+                disabled={claimingWin}
+                className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-400/40 px-2 py-0.5 text-[9px] font-bold text-amber-300 hover:bg-amber-500/25 transition disabled:opacity-50"
+              >
+                {claimingWin ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Plus className="w-2.5 h-2.5" />}
+                Gagné
+              </button>
+            }
+          />
+          <StatCard
+            icon={Bell}
+            label="Notifications"
+            value={String(unreadNotifs)}
+            sub="Nouvelles"
+            tone="bell"
+            delay={240}
+            onClick={() => navigate("/notifications")}
+          />
         </div>
       </section>
+
+      <OnlineUsersDialog open={onlineOpen} onOpenChange={setOnlineOpen} />
+      <StatsDetailDialog open={accountsOpen} onOpenChange={setAccountsOpen} kind="accounts" />
+      <StatsDetailDialog open={winsOpen} onOpenChange={setWinsOpen} kind="wins" />
+
 
       {/* Content */}
       <main className="flex-1 px-4 py-5 space-y-6 overflow-y-auto">
