@@ -55,6 +55,7 @@ const Profile = () => {
   const [country, setCountry] = useState("");
   const [region, setRegion] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [gender, setGender] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
