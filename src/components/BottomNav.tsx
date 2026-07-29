@@ -144,10 +144,8 @@ const BottomNav = () => {
   };
 
   const menuBtnClass = (active: boolean) =>
-    `relative flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-2xl overflow-hidden transition-all duration-300 active:scale-90 min-h-[48px] ${
-      active
-        ? "text-white bg-gradient-to-br from-[hsl(var(--sunset-orange)/0.35)] via-[hsl(var(--sunset-magenta)/0.30)] to-[hsl(var(--sunset-violet)/0.35)] shadow-inner"
-        : "text-slate-400 hover:text-white hover:bg-white/5"
+    `relative flex-1 min-w-0 flex flex-col items-center justify-center gap-1 px-1 py-2 rounded-2xl overflow-hidden transition-all duration-300 active:scale-90 min-h-[52px] ${
+      active ? "text-white" : "text-slate-400 hover:text-white"
     }`;
 
   const displayName = profile?.full_name || profile?.name || user?.email?.split("@")[0] || "Invité";
@@ -156,17 +154,21 @@ const BottomNav = () => {
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom"
+        className="fixed bottom-3 left-3 right-3 z-50 safe-area-bottom rounded-[26px]"
         style={{
-          background: "linear-gradient(180deg, hsl(258 45% 6% / 0.85), hsl(258 45% 5% / 0.96))",
-          backdropFilter: "blur(24px) saturate(160%)",
-          borderTop: "1px solid rgba(255,255,255,0.10)",
-          boxShadow: "0 -12px 40px -10px hsl(18 100% 55% / 0.28)",
+          background: "linear-gradient(180deg, hsl(0 0% 6% / 0.85), hsl(0 0% 3% / 0.95))",
+          backdropFilter: "blur(28px) saturate(160%)",
+          border: "1.5px solid hsl(42 55% 45% / 0.35)",
+          boxShadow:
+            "0 20px 50px -18px hsl(152 70% 30% / 0.35), 0 -8px 30px -12px hsl(42 82% 50% / 0.25), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
         }}
       >
-        <div className="flex items-stretch justify-around gap-0.5 px-1.5 py-1.5 sm:py-2 max-w-md mx-auto">
+        <div className="flex items-stretch justify-around gap-0.5 px-1.5 py-1.5 max-w-md mx-auto">
           {navItems.map((item) => {
             const active = isActive(item.path);
+            const activeAccent = item.path === "/premium"
+              ? "hsl(45 90% 65%)"
+              : "hsl(152 80% 55%)";
             return (
               <button
                 key={item.label}
@@ -177,8 +179,12 @@ const BottomNav = () => {
               >
                 {active && (
                   <span
-                    className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
-                    style={{ background: "linear-gradient(90deg, hsl(var(--sunset-orange)), hsl(var(--sunset-magenta)), hsl(var(--sunset-violet)))" }}
+                    aria-hidden
+                    className="absolute inset-1 rounded-2xl pointer-events-none"
+                    style={{
+                      background: `radial-gradient(80% 80% at 50% 30%, ${activeAccent}30, transparent 70%)`,
+                      boxShadow: `inset 0 0 0 1px ${activeAccent}55, 0 6px 18px -8px ${activeAccent}`,
+                    }}
                   />
                 )}
                 {ripple?.id.startsWith(item.path) && (
@@ -195,10 +201,13 @@ const BottomNav = () => {
                   />
                 )}
                 <div className="relative">
-                  <item.icon className={`w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0 transition-transform ${active ? "scale-110" : ""}`} />
+                  <item.icon
+                    className={`w-[19px] h-[19px] shrink-0 transition-transform ${active ? "scale-110" : ""}`}
+                    style={active ? { color: activeAccent, filter: `drop-shadow(0 0 6px ${activeAccent})` } : undefined}
+                  />
                   {item.path === "/chat" && unreadChats > 0 && (
                     <span
-                      className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[9px] font-bold text-white bg-gradient-to-br from-amber-500 to-amber-600 ring-2 ring-slate-900 shadow-[0_0_10px_rgba(244,63,94,0.6)] animate-[scale-in_0.25s_ease-out]"
+                      className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[9px] font-bold text-white bg-gradient-to-br from-rose-500 to-rose-600 ring-2 ring-black/90 shadow-[0_0_10px_rgba(244,63,94,0.6)] animate-[scale-in_0.25s_ease-out]"
                       aria-label={`${unreadChats} messages non lus`}
                     >
                       {unreadChats > 99 ? "99+" : unreadChats}
@@ -206,7 +215,7 @@ const BottomNav = () => {
                   )}
                   {item.path === "/gen-store" && unreadStore > 0 && (
                     <span
-                      className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[9px] font-bold text-white bg-gradient-to-br from-amber-500 to-amber-600 ring-2 ring-slate-900 shadow-[0_0_10px_rgba(249,115,22,0.6)] animate-[scale-in_0.25s_ease-out]"
+                      className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[9px] font-bold text-white bg-gradient-to-br from-amber-500 to-amber-600 ring-2 ring-black/90 shadow-[0_0_10px_rgba(249,115,22,0.6)] animate-[scale-in_0.25s_ease-out]"
                       aria-label={`${unreadStore} nouvelles publications`}
                     >
                       {unreadStore > 99 ? "99+" : unreadStore}
@@ -214,28 +223,30 @@ const BottomNav = () => {
                   )}
                   {item.path === "/notifications" && unreadNotifs > 0 && (
                     <span
-                      className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[9px] font-bold text-white bg-gradient-to-br from-rose-500 to-rose-600 ring-2 ring-slate-900 shadow-[0_0_10px_rgba(244,63,94,0.6)] animate-[scale-in_0.25s_ease-out]"
+                      className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[9px] font-bold text-white bg-gradient-to-br from-rose-500 to-rose-600 ring-2 ring-black/90 shadow-[0_0_10px_rgba(244,63,94,0.6)] animate-[scale-in_0.25s_ease-out]"
                       aria-label={`${unreadNotifs} notifications non lues`}
                     >
                       {unreadNotifs > 99 ? "99+" : unreadNotifs}
                     </span>
                   )}
                 </div>
-                <span className="text-[9px] font-bold leading-none tracking-tight truncate max-w-full">
+                <span
+                  className="text-[9.5px] font-bold leading-none tracking-tight truncate max-w-full relative"
+                  style={active ? { color: activeAccent } : undefined}
+                >
                   {item.label}
                 </span>
               </button>
             );
           })}
 
-
           <button
             aria-label="Menu"
             onClick={() => setMenuOpen(true)}
             className={menuBtnClass(false)}
           >
-            <MenuIcon className="w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0" />
-            <span className="text-[9px] font-bold leading-none tracking-tight truncate max-w-full">
+            <MenuIcon className="w-[19px] h-[19px] shrink-0" />
+            <span className="text-[9.5px] font-bold leading-none tracking-tight truncate max-w-full">
               Menu
             </span>
           </button>
@@ -246,6 +257,7 @@ const BottomNav = () => {
 
   );
 };
+
 
 const MenuRow = ({
   icon,
