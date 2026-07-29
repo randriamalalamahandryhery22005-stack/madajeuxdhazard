@@ -247,12 +247,65 @@ const Games = () => {
       {/* Dashboard stats */}
       <section className="px-4 mt-1">
         <div className="grid grid-cols-4 gap-2">
-          <StatCard icon={Users}    label="En ligne"        value={totalOnline.toLocaleString("fr-FR")} sub="Utilisateurs"      tone="emerald" delay={60} />
-          <StatCard icon={Activity} label="IA Status"       value="ACTIVE"                              sub="Précision élevée"  tone="emerald" delay={120} />
-          <StatCard icon={Trophy}   label="Parties gagnées" value={totalWins.toLocaleString("fr-FR")}   sub="Aujourd'hui"       tone="trophy"  delay={180} />
-          <StatCard icon={Bell}     label="Notifications"   value={String(unreadNotifs)}                sub="Nouvelles"         tone="bell"    delay={240} />
+          <StatCard
+            icon={Users}
+            label="En ligne"
+            value={onlineNow.toLocaleString("fr-FR")}
+            sub="Temps réel"
+            tone="emerald"
+            delay={60}
+            onClick={() => setOnlineOpen(true)}
+          />
+          <StatCard
+            icon={UserPlus}
+            label="Comptes"
+            value={totalAccounts.toLocaleString("fr-FR")}
+            sub="Enregistrés"
+            tone="emerald"
+            delay={120}
+            onClick={() => setAccountsOpen(true)}
+          />
+          <StatCard
+            icon={Trophy}
+            label="Paris gagnés"
+            value={winsToday.toLocaleString("fr-FR")}
+            sub="Dernières 24 h"
+            tone="trophy"
+            delay={180}
+            onClick={() => setWinsOpen(true)}
+            action={
+              <button
+                type="button"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const res = await claimWin();
+                  if (res.ok) toast.success("Prédiction gagnée validée !");
+                  else toast.error("Impossible d'enregistrer la validation");
+                }}
+                disabled={claimingWin}
+                className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-400/40 px-2 py-0.5 text-[9px] font-bold text-amber-300 hover:bg-amber-500/25 transition disabled:opacity-50"
+              >
+                {claimingWin ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Plus className="w-2.5 h-2.5" />}
+                Gagné
+              </button>
+            }
+          />
+          <StatCard
+            icon={Bell}
+            label="Notifications"
+            value={String(unreadNotifs)}
+            sub="Nouvelles"
+            tone="bell"
+            delay={240}
+            onClick={() => navigate("/notifications")}
+          />
         </div>
       </section>
+
+      <OnlineUsersDialog open={onlineOpen} onOpenChange={setOnlineOpen} />
+      <StatsDetailDialog open={accountsOpen} onOpenChange={setAccountsOpen} kind="accounts" />
+      <StatsDetailDialog open={winsOpen} onOpenChange={setWinsOpen} kind="wins" />
+
 
       {/* Content */}
       <main className="flex-1 px-4 py-5 space-y-6 overflow-y-auto">
