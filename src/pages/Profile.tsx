@@ -334,6 +334,22 @@ const Profile = () => {
               </Label>
               <Input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className="mt-1" />
             </div>
+            <div>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                Sexe
+              </Label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="">Non renseigné</option>
+                <option value="male">Homme</option>
+                <option value="female">Femme</option>
+                <option value="other">Autre</option>
+                <option value="prefer_not">Préfère ne pas dire</option>
+              </select>
+            </div>
             <Button onClick={saveProfileFields} disabled={savingProfile || uploading || validatingFace} className="w-full">
               {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 mr-1" />}
               Enregistrer le profil
