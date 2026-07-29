@@ -37,9 +37,10 @@ export function useUnreadNotifications(userId: string | null | undefined) {
 
     refresh();
     const ch = supabase
-      .channel(`unread-notifs-${userId}`)
+      .channel(`unread-notifs-${userId}-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => refresh())
       .subscribe();
+
 
     const onStorage = (e: StorageEvent) => {
       if (e.key === HIDDEN_KEY || e.key === READ_KEY) refresh();
