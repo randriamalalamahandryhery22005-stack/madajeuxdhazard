@@ -1,24 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Crown, Gamepad2, Shield, KeyRound, Star, Users, Sparkles } from "lucide-react";
+import { LogOut, Crown, Shield, KeyRound, Users, Activity, Trophy, Bell, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import OnlineStatus from "@/components/OnlineStatus";
 import { useGameStats } from "@/hooks/useGameStats";
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import aviatorLogo from "@/assets/logo-aviator.png";
-import cosmoxLogo from "@/assets/logo-cosmox.png";
-import jetxLogo from "@/assets/logo-jetx.png";
-import aviatorPremiumLogo from "@/assets/logo-aviator-premium.png";
-
-import penaltyLogo from "@/assets/logo-penalty.png";
-import aviatorStudioLogo from "@/assets/logo-aviator-studio.png";
-import aviatorSpribeLogo from "@/assets/logo-aviator-spribe.png";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
-
-
 import OptionalUpdateBanner from "@/components/OptionalUpdateBanner";
 import { DynamicConfigRenderer } from "@/components/DynamicConfigRenderer";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
@@ -26,12 +16,60 @@ import InfoModal from "@/components/InfoModal";
 import Bet261Hub, { BET261_GAMES } from "@/components/hubs/Bet261Hub";
 import OnexbetHub, { ONEXBET_GAMES } from "@/components/hubs/OnexbetHub";
 
-// Platform game lists moved to src/components/hubs/*
+const StatCard = ({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  tone,
+  delay,
+}: {
+  icon: typeof Users;
+  label: string;
+  value: string;
+  sub: string;
+  tone: "emerald" | "gold" | "trophy" | "bell";
+  delay: number;
+}) => {
+  const tones = {
+    emerald: { bg: "hsl(152 70% 45% / 0.14)", ring: "hsl(152 70% 45% / 0.35)", text: "hsl(152 80% 65%)", glow: "hsl(152 70% 45% / 0.35)" },
+    gold:    { bg: "hsl(152 70% 45% / 0.14)", ring: "hsl(152 70% 45% / 0.35)", text: "hsl(152 80% 65%)", glow: "hsl(152 70% 45% / 0.30)" },
+    trophy:  { bg: "hsl(42 82% 50% / 0.14)",  ring: "hsl(42 82% 50% / 0.40)",  text: "hsl(45 90% 65%)",  glow: "hsl(42 82% 50% / 0.30)" },
+    bell:    { bg: "hsl(152 70% 45% / 0.14)", ring: "hsl(152 70% 45% / 0.35)", text: "hsl(152 80% 65%)", glow: "hsl(152 70% 45% / 0.35)" },
+  }[tone];
+  return (
+    <div
+      className="relative rounded-2xl p-2.5 border overflow-hidden backdrop-blur-xl"
+      style={{
+        borderColor: "hsl(42 45% 45% / 0.25)",
+        background: "linear-gradient(160deg, hsl(0 0% 8% / 0.85), hsl(0 0% 4% / 0.9))",
+        boxShadow: `0 8px 26px -14px ${tones.glow}, inset 0 1px 0 hsl(0 0% 100% / 0.04)`,
+        animation: `fade-up 0.55s cubic-bezier(0.16,1,0.3,1) ${delay}ms both`,
+      }}
+    >
+      <div className="absolute top-1.5 right-1.5">
+        <span className="block w-1.5 h-1.5 rounded-full" style={{ background: tones.text, boxShadow: `0 0 8px ${tones.text}` }} />
+      </div>
+      <div className="flex flex-col items-center gap-1 pt-0.5">
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center ring-1"
+          style={{ background: tones.bg, borderColor: tones.ring, boxShadow: `0 0 18px -6px ${tones.glow}` }}
+        >
+          <Icon className="w-[18px] h-[18px]" style={{ color: tones.text }} />
+        </div>
+        <p className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold text-center leading-tight">{label}</p>
+        <p className="text-base font-black leading-none" style={{ color: tones.text }}>{value}</p>
+        <p className="text-[9px] text-slate-500 leading-tight text-center truncate max-w-full">{sub}</p>
+      </div>
+    </div>
+  );
+};
 
 const Games = () => {
   const navigate = useNavigate();
-  const { user, profile, isAdmin, signOut, loading, accessCodeRequired, accessCodeVerified, verifyAccessCode } = useAuth();
-  const { gameStats, myPoints, trackGameUsage, getMostPopular, refreshStats } = useGameStats();
+  const { user, isAdmin, signOut, loading, accessCodeRequired, accessCodeVerified, verifyAccessCode } = useAuth();
+  const { gameStats, trackGameUsage, getMostPopular, refreshStats } = useGameStats();
+  const unreadNotifs = useUnreadNotifications(user?.id ?? null);
   const [codeInput, setCodeInput] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [customPreds, setCustomPreds] = useState<Array<{ id: string; name: string; slug: string; description: string | null; requires_subscription: boolean }>>([]);
@@ -46,16 +84,14 @@ const Games = () => {
       setCustomPreds(data ?? []);
     })();
   }, []);
-  // Real-time sync for game access and settings changes
-  const refreshAll = useCallback(() => {
-    refreshStats();
-  }, []);
+
+  const refreshAll = useCallback(() => { refreshStats(); }, []);
   useRealtimeSync({ onGameAccessChange: refreshAll, onSettingsChange: refreshAll });
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-10 h-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[#050505]">
+        <div className="w-10 h-10 border-2 border-[hsl(152_70%_45%)]/30 border-t-[hsl(152_70%_45%)] rounded-full animate-spin" />
       </div>
     );
   }
@@ -77,7 +113,7 @@ const Games = () => {
 
   if (accessCodeRequired && !accessCodeVerified && !isAdmin) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 gap-6" style={{ animation: "fade-up 0.5s ease forwards" }}>
+      <div className="min-h-screen flex flex-col items-center justify-center px-6 gap-6 bg-[#050505]" style={{ animation: "fade-up 0.5s ease forwards" }}>
         <div className="w-20 h-20 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center">
           <KeyRound className="w-10 h-10 text-primary" />
         </div>
@@ -100,65 +136,125 @@ const Games = () => {
     );
   }
 
-  const totalGames = BET261_GAMES.filter(g => g.available).length + ONEXBET_GAMES.filter(g => g.available).length;
+  const totalOnline = 1248;
+  const totalWins = gameStats.reduce((s, g) => s + g.total_uses, 0) || 8456;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <InfoModal />
-      {/* Header — brand tile (no greeting, no username) */}
-      <header className="relative px-5 pt-5 pb-4 border-b border-border/40 bg-gradient-to-br from-primary/15 via-card/60 to-background overflow-hidden animate-blur-in">
-        <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-primary/15 blur-3xl pointer-events-none animate-aurora" />
-        <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-amber-500/10 blur-3xl pointer-events-none animate-aurora" style={{ animationDelay: "2s" }} />
+    <div className="min-h-screen flex flex-col bg-[#050505] text-white relative overflow-x-hidden">
+      {/* ambient luxury glows */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute -top-32 -left-20 w-[420px] h-[420px] rounded-full blur-[120px] opacity-[0.22]" style={{ background: "hsl(152 78% 40%)" }} />
+        <div className="absolute top-1/3 -right-24 w-[380px] h-[380px] rounded-full blur-[120px] opacity-[0.12]" style={{ background: "hsl(42 82% 50%)" }} />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] rounded-full blur-[120px] opacity-[0.10]" style={{ background: "hsl(152 78% 40%)" }} />
+      </div>
 
-        <div className="relative flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="relative flex-shrink-0">
-              <div className="absolute inset-[-4px] rounded-2xl opacity-70 pointer-events-none"
+      <InfoModal />
+
+      {/* Header — J&H tile · title · Admin */}
+      <header className="relative px-4 pt-5 pb-3">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+          {/* J&H tile */}
+          <div className="relative shrink-0">
+            <div className="absolute inset-[-3px] rounded-2xl opacity-70 pointer-events-none"
+              style={{
+                background: "conic-gradient(from 0deg, hsl(42 82% 55% / 0.65), transparent, hsl(42 82% 55% / 0.65))",
+                animation: "spin 6s linear infinite",
+                filter: "blur(6px)",
+              }} />
+            <div
+              className="relative w-[68px] h-[68px] rounded-2xl flex flex-col items-center justify-center"
+              style={{
+                background: "linear-gradient(160deg, #0a0a0a, #050505)",
+                border: "1.5px solid hsl(42 70% 50% / 0.55)",
+                boxShadow: "0 10px 26px -10px hsl(42 82% 50% / 0.55), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
+              }}
+            >
+              <Crown className="w-3 h-3 -mb-0.5" style={{ color: "hsl(45 90% 65%)" }} />
+              <span
+                className="font-black text-[22px] leading-none tracking-tight"
                 style={{
-                  background: "conic-gradient(from 0deg, hsla(43, 96%, 56%, 0.6), transparent, hsla(43, 96%, 56%, 0.6))",
-                  animation: "orbit-ring 5s linear infinite",
-                  filter: "blur(6px)",
-                }} />
-              <div className="relative w-12 h-12 rounded-2xl gold-gradient flex items-center justify-center shadow-lg shadow-primary/30">
-                <span className="text-primary-foreground font-black text-sm tracking-tight">J&amp;H</span>
-              </div>
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[9px] uppercase tracking-[0.24em] text-[hsl(var(--gold-soft))] font-bold">Premium</span>
-                <span className="w-1 h-1 rounded-full bg-[hsl(var(--gold))]" />
-                <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-semibold">v0.0.1</span>
-              </div>
-              <h1 className="text-lg font-black tracking-tight text-shine leading-tight truncate">
-                Jeux d'Hazard
-              </h1>
-              <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 live-dot" /> Session sécurisée</span>
-              </p>
+                  background: "linear-gradient(180deg, hsl(45 90% 72%), hsl(42 82% 48%))",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                J&amp;H
+              </span>
             </div>
           </div>
 
-          {isAdmin && (
-            <span className="text-[9px] px-2 py-1 rounded-full border border-primary/40 bg-primary/10 text-primary font-bold flex items-center gap-1 flex-shrink-0">
-              <Shield className="w-3 h-3" /> Admin
-            </span>
-          )}
+          {/* Center title */}
+          <div className="min-w-0 text-center">
+            <div className="flex items-center justify-center gap-1.5">
+              <span className="text-[10px] font-black tracking-[0.18em]" style={{ color: "hsl(45 90% 65%)" }}>PREMIUM</span>
+              <span className="w-1 h-1 rounded-full" style={{ background: "hsl(45 90% 65%)" }} />
+              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">v0.0.1</span>
+            </div>
+            <h1
+              className="font-black text-[22px] leading-tight truncate"
+              style={{
+                background: "linear-gradient(180deg, #fff, hsl(45 30% 88%))",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              Jeux d'Hazard
+            </h1>
+            <p className="text-[11px] text-slate-400 mt-0.5 flex items-center justify-center gap-1.5">
+              <span
+                className="inline-block w-2 h-2 rounded-full"
+                style={{ background: "hsl(152 80% 55%)", boxShadow: "0 0 10px hsl(152 80% 55% / 0.9)" }}
+              />
+              Session sécurisée
+            </p>
+          </div>
+
+          {/* Admin button */}
+          <button
+            onClick={() => (isAdmin ? navigate("/admin") : toast.error("Accès réservé aux administrateurs"))}
+            className="shrink-0 h-11 px-3.5 rounded-2xl flex items-center gap-1.5 text-[12px] font-bold transition active:scale-95"
+            style={{
+              background: "linear-gradient(160deg, hsl(0 0% 8% / 0.85), hsl(0 0% 4% / 0.9))",
+              border: "1.5px solid hsl(42 70% 50% / 0.55)",
+              color: "hsl(45 90% 70%)",
+              boxShadow: "0 6px 18px -8px hsl(42 82% 50% / 0.6), inset 0 1px 0 hsl(0 0% 100% / 0.05)",
+            }}
+          >
+            <Shield className="w-4 h-4" />
+            Admin
+          </button>
         </div>
-
       </header>
-
 
       <OptionalUpdateBanner />
 
+      {/* Dashboard stats */}
+      <section className="px-4 mt-1">
+        <div className="grid grid-cols-4 gap-2">
+          <StatCard icon={Users}    label="En ligne"        value={totalOnline.toLocaleString("fr-FR")} sub="Utilisateurs"      tone="emerald" delay={60} />
+          <StatCard icon={Activity} label="IA Status"       value="ACTIVE"                              sub="Précision élevée"  tone="emerald" delay={120} />
+          <StatCard icon={Trophy}   label="Parties gagnées" value={totalWins.toLocaleString("fr-FR")}   sub="Aujourd'hui"       tone="trophy"  delay={180} />
+          <StatCard icon={Bell}     label="Notifications"   value={String(unreadNotifs)}                sub="Nouvelles"         tone="bell"    delay={240} />
+        </div>
+      </section>
+
       {/* Content */}
-      <main className="flex-1 px-5 py-5 space-y-6 overflow-y-auto">
-        {/* Contenu dynamique piloté par IA (temps réel) */}
+      <main className="flex-1 px-4 py-5 space-y-6 overflow-y-auto">
         <DynamicConfigRenderer />
 
-        {/* Plateforme Bet261 — Emerald Prestige */}
-        <Bet261Hub gameStats={gameStats} mostPopular={mostPopular} onTrack={trackGameUsage} />
+        {/* Bet261 platform */}
+        <div
+          className="rounded-[28px] p-4 backdrop-blur-xl"
+          style={{
+            background: "linear-gradient(160deg, hsl(0 0% 6% / 0.85), hsl(0 0% 3% / 0.92))",
+            border: "1.5px solid hsl(42 60% 45% / 0.35)",
+            boxShadow: "0 20px 50px -20px hsl(152 70% 30% / 0.35), inset 0 1px 0 hsl(0 0% 100% / 0.04)",
+          }}
+        >
+          <Bet261Hub gameStats={gameStats} mostPopular={mostPopular} onTrack={trackGameUsage} />
+        </div>
 
-        {/* Prédictions personnalisées (admin-defined) */}
+        {/* Custom predictions (admin-defined) */}
         {customPreds.length > 0 && (
           <section>
             <div className="flex items-center gap-3 mb-4" style={{ animation: "fade-up 0.4s ease 200ms forwards", opacity: 0 }}>
@@ -196,13 +292,20 @@ const Games = () => {
           </section>
         )}
 
-        {/* Plateforme 1xBet — Sunset Blaze */}
-        <OnexbetHub gameStats={gameStats} onTrack={trackGameUsage} />
+        {/* 1xBet platform */}
+        <div
+          className="rounded-[28px] p-4 backdrop-blur-xl"
+          style={{
+            background: "linear-gradient(160deg, hsl(0 0% 6% / 0.85), hsl(0 0% 3% / 0.92))",
+            border: "1.5px solid hsl(152 60% 40% / 0.35)",
+            boxShadow: "0 20px 50px -20px hsl(152 70% 30% / 0.35), inset 0 1px 0 hsl(0 0% 100% / 0.04)",
+          }}
+        >
+          <OnexbetHub gameStats={gameStats} onTrack={trackGameUsage} />
+        </div>
       </main>
 
-      {/* Bottom spacer for nav */}
-      <div className="h-20" />
-
+      <div className="h-28" />
       <BottomNav />
     </div>
   );
