@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Crown, Shield, KeyRound, Users, Activity, Trophy, Bell, Sparkles } from "lucide-react";
+import { LogOut, Crown, Shield, KeyRound, Users, UserPlus, Trophy, Bell, Sparkles, Plus, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGameStats } from "@/hooks/useGameStats";
 import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,8 @@ import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import InfoModal from "@/components/InfoModal";
 import Bet261Hub, { BET261_GAMES } from "@/components/hubs/Bet261Hub";
 import OnexbetHub, { ONEXBET_GAMES } from "@/components/hubs/OnexbetHub";
+import OnlineUsersDialog from "@/components/OnlineUsersDialog";
+import StatsDetailDialog from "@/components/StatsDetailDialog";
 
 const StatCard = ({
   icon: Icon,
