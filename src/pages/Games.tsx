@@ -26,6 +26,8 @@ const StatCard = ({
   sub,
   tone,
   delay,
+  onClick,
+  action,
 }: {
   icon: typeof Users;
   label: string;
@@ -33,6 +35,8 @@ const StatCard = ({
   sub: string;
   tone: "emerald" | "gold" | "trophy" | "bell";
   delay: number;
+  onClick?: () => void;
+  action?: React.ReactNode;
 }) => {
   const tones = {
     emerald: { bg: "hsl(152 70% 45% / 0.14)", ring: "hsl(152 70% 45% / 0.35)", text: "hsl(152 80% 65%)", glow: "hsl(152 70% 45% / 0.35)" },
@@ -42,7 +46,11 @@ const StatCard = ({
   }[tone];
   return (
     <div
-      className="relative rounded-2xl p-2.5 border overflow-hidden backdrop-blur-xl"
+      className={`relative rounded-2xl p-2.5 border overflow-hidden backdrop-blur-xl ${onClick ? "cursor-pointer hover:brightness-110 active:scale-[0.98] transition" : ""}`}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
       style={{
         borderColor: "hsl(42 45% 45% / 0.25)",
         background: "linear-gradient(160deg, hsl(0 0% 8% / 0.85), hsl(0 0% 4% / 0.9))",
@@ -63,6 +71,7 @@ const StatCard = ({
         <p className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold text-center leading-tight">{label}</p>
         <p className="text-base font-black leading-none" style={{ color: tones.text }}>{value}</p>
         <p className="text-[9px] text-slate-500 leading-tight text-center truncate max-w-full">{sub}</p>
+        {action}
       </div>
     </div>
   );
