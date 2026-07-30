@@ -216,7 +216,7 @@ function RootPanel({
   goto: (p: PanelKey) => void;
   onClose: () => void;
 }) {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [p, setP] = useState<Personalization>(() => readPersonalization());
   useEffect(() => subscribePersonalization(setP), []);
