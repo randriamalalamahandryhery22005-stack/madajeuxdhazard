@@ -1265,6 +1265,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      app_access_code_required: { Args: never; Returns: boolean }
       consume_user_coins: { Args: never; Returns: undefined }
       get_active_device: { Args: { _user_id: string }; Returns: string }
       get_total_revenue: { Args: never; Returns: number }
@@ -1282,6 +1283,7 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      verify_app_access_code: { Args: { _code: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"

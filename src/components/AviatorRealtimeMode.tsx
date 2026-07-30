@@ -18,10 +18,9 @@ interface Props {
 }
 
 const RealtimeLogo = () => (
-  <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-400 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-500/40 ring-1 ring-emerald-300/30">
-    <Radar className="w-5 h-5 text-white drop-shadow" />
-    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-300 border-2 border-background animate-pulse" />
-    <span className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
+  <div className="luxe-icon-badge luxe-float relative">
+    <Radar className="w-5 h-5" strokeWidth={2.4} />
+    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#00D084] ring-2 ring-[#050505] animate-pulse" />
   </div>
 );
 
@@ -88,7 +87,7 @@ const AviatorRealtimeMode = ({ showSeconds, accessStart, accessExpiry, onBack }:
 
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background to-emerald-950/15">
+    <div className="min-h-screen flex flex-col luxe-page">
       {showSplash && (
         <AnalysisSequence
           variant="premium-realtime"
@@ -97,28 +96,22 @@ const AviatorRealtimeMode = ({ showSeconds, accessStart, accessExpiry, onBack }:
         />
       )}
 
-      <div className="relative overflow-hidden border-b border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 via-card/90 to-emerald-500/5">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_hsl(160_85%_45%/0.15),transparent_55%)] pointer-events-none" />
-        <div className="relative flex items-center gap-3 px-5 py-4">
-          <button onClick={onBack} className="p-2 rounded-lg hover:bg-secondary transition-colors active:scale-95">
-            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+      <div className="px-4 pt-4">
+        <div className="luxe-header luxe-ring flex items-center gap-3">
+          <button onClick={onBack} className="luxe-back" aria-label="Retour">
+            <ArrowLeft className="w-4 h-4" />
           </button>
           <RealtimeLogo />
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-black flex items-center gap-2">
-              <span className="bg-gradient-to-r from-emerald-300 via-emerald-200 to-green-300 bg-clip-text text-transparent">Temps Réel</span>
-            </h1>
-            <p className="text-[10px] text-muted-foreground flex items-center gap-1.5 truncate">
-              <Zap className="w-3 h-3 text-emerald-400" /> Double zone d'analyse · Aviator Premium
+            <h1 className="text-lg luxe-title leading-tight">Temps Réel</h1>
+            <p className="text-[10px] text-white/60 flex items-center gap-1.5 truncate mt-0.5">
+              <Zap className="w-3 h-3 luxe-emerald" /> Double zone d'analyse · Aviator Premium
             </p>
           </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
-            <span className="text-[10px] font-bold text-emerald-300 tracking-wider">LIVE</span>
-          </div>
+          <span className="luxe-badge-live">LIVE</span>
         </div>
         {(accessStart || accessExpiry) && (
-          <div className="relative flex gap-2 px-5 pb-2 text-[10px] text-muted-foreground">
+          <div className="mt-2 flex gap-3 px-2 text-[10px] text-white/40">
             {accessStart && <span>Début · {new Date(accessStart).toLocaleDateString("fr-FR")}</span>}
             {accessExpiry && <span>Expire · {new Date(accessExpiry).toLocaleDateString("fr-FR")}</span>}
           </div>
@@ -126,29 +119,25 @@ const AviatorRealtimeMode = ({ showSeconds, accessStart, accessExpiry, onBack }:
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5">
-        
-
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2.5">
           {[
             { label: "Coeff. min", value: "5.00", icon: Activity },
             { label: "Coeff. max", value: "500", icon: Sparkles },
             { label: "Fiabilité", value: "97%", icon: Signal },
           ].map((k) => (
-            <div key={k.label} className="rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/8 to-card/60 p-3 text-center">
-              <k.icon className="w-3.5 h-3.5 text-emerald-300 mx-auto mb-1" />
-              <p className="text-base font-black text-emerald-200">{k.value}</p>
-              <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{k.label}</p>
+            <div key={k.label} className="luxe-stat">
+              <k.icon className="w-4 h-4 luxe-emerald mx-auto mb-1.5" />
+              <p className="text-xl font-black luxe-gold-text leading-none">{k.value}</p>
+              <p className="text-[9px] uppercase tracking-widest text-white/50 mt-1.5 font-semibold">{k.label}</p>
             </div>
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
-            <BarChart3 className="w-4 h-4 text-white" />
-          </div>
-          <div>
-            <h2 className="font-bold text-sm text-emerald-300 leading-tight">Paramètres d'analyse</h2>
-            <p className="text-[10px] text-muted-foreground">Utilisez une ou les deux zones — elles sont indépendantes</p>
+        <div className="luxe-card px-4 py-3 flex items-center gap-3">
+          <div className="luxe-icon-badge shrink-0"><BarChart3 className="w-4 h-4" /></div>
+          <div className="min-w-0">
+            <h2 className="font-bold text-sm luxe-emerald-text leading-tight">Paramètres d'analyse</h2>
+            <p className="text-[10px] text-white/55">Utilisez une ou les deux zones — elles sont indépendantes</p>
           </div>
         </div>
 
@@ -156,7 +145,6 @@ const AviatorRealtimeMode = ({ showSeconds, accessStart, accessExpiry, onBack }:
           {renderZone("A", "Analyse gauche")}
           {renderZone("B", "Analyse droite")}
         </div>
-
       </div>
     </div>
   );
@@ -177,42 +165,45 @@ interface ZoneCardProps {
 const ZoneCard = ({ id, label, state, disabled, onChangeTime, onChangeCoeff, onPredict, onReset, onClearResults }: ZoneCardProps) => {
   const hasInput = !!(state.results || state.timeInput || state.coeffInput);
   return (
-    <div className="rounded-2xl border border-emerald-500/25 bg-card/80 backdrop-blur-sm shadow-lg shadow-emerald-500/5 overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-emerald-500/15 bg-gradient-to-r from-emerald-500/10 to-transparent">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center text-white font-black text-xs">
+    <div className="luxe-card luxe-card-emerald flex flex-col">
+      <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#F4C542]/12">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-2xl luxe-icon-badge text-sm font-black">
             {id}
           </div>
           <div>
-            <p className="text-[11px] font-bold text-emerald-200 leading-tight">{label}</p>
-            <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Zone indépendante</p>
+            <p className="text-[12px] font-bold text-white leading-tight">{label}</p>
+            <p className="text-[9px] uppercase tracking-widest luxe-emerald opacity-80">Zone indépendante</p>
           </div>
         </div>
-        {hasInput && (
-          <button
-            onClick={onReset}
-            className="p-1.5 rounded-md hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-300 transition-colors"
-            aria-label="Réinitialiser"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          <span className="luxe-badge-live scale-90 origin-right">LIVE</span>
+          {hasInput && (
+            <button
+              onClick={onReset}
+              className="p-1.5 rounded-md hover:bg-[#F4C542]/10 text-white/50 hover:luxe-gold transition-colors"
+              aria-label="Réinitialiser"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="p-4 space-y-3">
         <div className="space-y-1.5">
-          <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium flex items-center gap-1">
-            <Clock className="w-3 h-3" /> Heure
+          <Label className="text-[10px] text-white/55 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+            <Clock className="w-3 h-3 luxe-gold" /> Heure
           </Label>
           <Input
             type="time"
             value={state.timeInput}
             onChange={(e) => onChangeTime(e.target.value)}
-            className="h-11 bg-secondary/80 border-emerald-500/20 text-center font-mono text-sm focus:border-emerald-500/50"
+            className="luxe-input h-12 text-center font-mono text-sm"
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+          <Label className="text-[10px] text-white/55 uppercase tracking-widest font-semibold">
             Coefficient
           </Label>
           <Input
@@ -223,23 +214,23 @@ const ZoneCard = ({ id, label, state, disabled, onChangeTime, onChangeCoeff, onP
             placeholder="25.00"
             value={state.coeffInput}
             onChange={(e) => onChangeCoeff(e.target.value)}
-            className="h-11 bg-secondary/80 border-emerald-500/20 text-center font-mono text-sm focus:border-emerald-500/50"
+            className="luxe-input h-12 text-center font-mono text-base"
           />
         </div>
 
         {state.error && <p className="text-destructive text-[11px] text-center font-medium">{state.error}</p>}
 
         <Button
-          className="w-full h-11 text-xs font-bold bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white shadow-md shadow-emerald-500/25 transition-all active:scale-[0.98]"
+          className="luxe-btn w-full h-12 text-sm"
           onClick={onPredict}
           disabled={disabled}
         >
-          <Play className="w-3.5 h-3.5 mr-1.5" /> Analyser
+          <Play className="w-4 h-4 mr-2" /> Analyser
         </Button>
       </div>
 
       <div className="px-4 pb-4">
-        <div className="rounded-xl border border-emerald-500/15 bg-background/40 min-h-[140px] p-3">
+        <div className="rounded-2xl border border-[#00D084]/18 bg-black/40 min-h-[150px] p-3">
           {state.results ? (
             <PredictionResults
               results={state.results}
@@ -248,10 +239,15 @@ const ZoneCard = ({ id, label, state, disabled, onChangeTime, onChangeCoeff, onP
               onBack={onClearResults}
             />
           ) : (
-            <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-center gap-1.5 text-muted-foreground">
-              <Signal className="w-5 h-5 opacity-40" />
-              <p className="text-[11px]">En attente d'analyse</p>
-              <p className="text-[9px] opacity-70">Les résultats de la zone {id} s'afficheront ici</p>
+            <div className="h-full min-h-[130px] flex flex-col items-center justify-center text-center gap-2 text-white/55">
+              <div className="relative">
+                <div className="w-11 h-11 rounded-full border border-[#00D084]/35 flex items-center justify-center animate-pulse">
+                  <BarChart3 className="w-5 h-5 luxe-emerald" />
+                </div>
+                <span className="absolute inset-0 rounded-full border border-[#F4C542]/30 animate-ping opacity-40" />
+              </div>
+              <p className="text-[12px] font-semibold text-white/80">En attente d'analyse</p>
+              <p className="text-[10px] text-white/45">Les résultats de la zone {id} s'afficheront ici</p>
             </div>
           )}
         </div>
@@ -261,4 +257,3 @@ const ZoneCard = ({ id, label, state, disabled, onChangeTime, onChangeCoeff, onP
 };
 
 export default AviatorRealtimeMode;
-
