@@ -81,21 +81,6 @@ const platforms: Platform[] = [
     ],
   },
   {
-    id: "penalty",
-    name: "Penalty ShootOut",
-    logo: aviatorLogo,
-    description: "Prédictions probabilistes pour les tirs au but avec analyse de tendances.",
-    icon: Target,
-    color: "text-green-400",
-    bgColor: "from-green-500/15 to-green-900/5",
-    borderColor: "border-green-500/25",
-    features: ["Probabilités", "Analyse tendance", "Score prédit"],
-    stats: [
-      { label: "Modes", value: "1" },
-      { label: "Précision", value: "~82%" },
-    ],
-  },
-  {
     id: "studio-spribe",
     name: "Studio & Spribe",
     logo: aviatorPremiumLogo,

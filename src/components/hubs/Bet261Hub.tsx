@@ -9,7 +9,6 @@ import aviatorLogo from "@/assets/logo-aviator.png";
 import cosmoxLogo from "@/assets/logo-cosmox.png";
 import jetxLogo from "@/assets/logo-jetx.png";
 
-import penaltyLogo from "@/assets/logo-penalty.png";
 import type { GameStats } from "@/hooks/useGameStats";
 
 export interface Bet261GameCard {

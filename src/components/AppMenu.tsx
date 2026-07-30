@@ -216,7 +216,7 @@ function RootPanel({
   goto: (p: PanelKey) => void;
   onClose: () => void;
 }) {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [p, setP] = useState<Personalization>(() => readPersonalization());
   useEffect(() => subscribePersonalization(setP), []);
@@ -295,9 +295,13 @@ function RootPanel({
 
       <Group title="Application">
         
+        <Row icon={<MessageCircle className="w-[18px] h-[18px] text-sky-300" />} label="Chat & Support" sublabel="Discuter avec l'équipe" onClick={() => { onClose(); navigate("/chat"); }} />
         <Row icon={<Store className="w-[18px] h-[18px] text-amber-300" />} label="J&H Store" sublabel="Contenus et publications" onClick={() => { onClose(); navigate("/gen-store"); }} />
         <Row icon={<Crown className="w-[18px] h-[18px] text-yellow-300" />} label="Abonnement Premium" sublabel="Gérer votre accès premium" onClick={() => { onClose(); navigate("/premium"); }} />
         <Row icon={<Gamepad2 className="w-[18px] h-[18px] text-emerald-300" />} label="Jeux & prédictions" sublabel="Accéder au hub des jeux" onClick={() => { onClose(); navigate("/games"); }} />
+        {isAdmin && (
+          <Row icon={<Shield className="w-[18px] h-[18px] text-sky-300" />} label="Administration" sublabel="Console d'administration" onClick={() => { onClose(); navigate("/admin"); }} />
+        )}
       </Group>
 
 

@@ -16,7 +16,7 @@ import PremiumHelp from "@/components/premium/PremiumHelp";
 const COMPARE: { label: string; free: boolean | string; premium: boolean | string }[] = [
   { label: "Aviator Basique (10/jour)", free: true, premium: true },
   { label: "Aviator Premium / Pro / Spribe", free: false, premium: true },
-  { label: "CosmoX, JetX, Penalty", free: false, premium: true },
+  { label: "CosmoX, JetX", free: false, premium: true },
   { label: "Fréquence des prédictions", free: "limitée", premium: "illimitée" },
   { label: "Activation automatique", free: false, premium: true },
   { label: "Support admin", free: "standard", premium: "prioritaire" },
@@ -225,34 +225,29 @@ const Premium = () => {
       <div className="pointer-events-none absolute top-40 -right-24 w-96 h-96 rounded-full bg-[#F4C542]/20 blur-[120px]" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 w-96 h-96 rounded-full bg-[#00D084]/15 blur-[120px]" />
 
-      <div className="relative px-4 pt-4 pb-2 flex items-center justify-between">
-        <button onClick={() => navigate(-1)} className="luxe-back" aria-label="Retour">
-          <ArrowLeft className="w-4 h-4" />
+      <div className="relative px-4 pt-5 pb-4 flex items-start gap-3 pm-anim-slide">
+        <button onClick={() => navigate(-1)} className="luxe-back shrink-0 mt-1" aria-label="Retour">
+          <ArrowLeft className="w-5 h-5" />
         </button>
-        <span className="text-[10px] uppercase tracking-widest luxe-gold font-bold">Menu Premium</span>
-        <div className="w-10" />
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] uppercase tracking-[0.3em] luxe-gold font-bold">Tableau de bord</p>
+          <h1 className="text-[27px] leading-tight font-black text-white tracking-tight">Espace Premium</h1>
+          <p className="text-[12px] text-white/55 mt-0.5">Statut, statistiques et accès rapide</p>
+        </div>
+        <div className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border border-[#F4C542]/60 bg-[#F4C542]/8 luxe-gold text-[12px] font-black tracking-wide"
+          style={{ boxShadow: "0 0 24px rgba(244,197,66,0.25)" }}>
+          <Crown className="w-4 h-4" /> PREMIUM
+        </div>
       </div>
 
-      <div className="relative px-5 pt-3 pb-5 text-center space-y-3 pm-anim-slide">
-        <div className="relative inline-block">
-          <div className="w-24 h-24 rounded-[32px] flex items-center justify-center mx-auto luxe-float"
-            style={{ background: "linear-gradient(135deg,#F4C542 0%,#E0A82F 55%,#00D084 130%)",
-                     boxShadow: "0 0 40px rgba(244,197,66,0.55), inset 0 1px 0 rgba(255,255,255,0.35)" }}>
-            <Crown className="w-11 h-11 text-[#06120C]" strokeWidth={2.5} />
-          </div>
-          <div className="absolute -top-1 -right-2 luxe-badge-premium">PRO</div>
-        </div>
-        <div className="space-y-1">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-white/50 font-bold">Tableau de bord</p>
-          <h1 className="text-3xl luxe-title tracking-tight">Espace Premium</h1>
-          <p className="text-[11px] text-white/55">Statut, statistiques et accès rapide</p>
-        </div>
-        {isAdmin && (
+      {isAdmin && (
+        <div className="relative px-4 pb-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#00D084]/12 border border-[#00D084]/45 luxe-emerald text-[11px] font-semibold">
             <Shield className="w-3 h-3" /> Compte admin — accès total automatique
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
 
       <div className="relative px-4">
         <Tabs value={tab} onValueChange={setTab} className="w-full">
