@@ -15,7 +15,6 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PremiumSelectRouteImport } from './routes/premium-select'
 import { Route as PremiumRouteImport } from './routes/premium'
-import { Route as PmpreviewRouteImport } from './routes/pmpreview'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JetxRouteImport } from './routes/jetx'
@@ -67,11 +66,6 @@ const PremiumSelectRoute = PremiumSelectRouteImport.update({
 const PremiumRoute = PremiumRouteImport.update({
   id: '/premium',
   path: '/premium',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PmpreviewRoute = PmpreviewRouteImport.update({
-  id: '/pmpreview',
-  path: '/pmpreview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -200,7 +194,6 @@ export interface FileRoutesByFullPath {
   '/jetx': typeof JetxRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
-  '/pmpreview': typeof PmpreviewRoute
   '/premium': typeof PremiumRoute
   '/premium-select': typeof PremiumSelectRoute
   '/profile': typeof ProfileRoute
@@ -231,7 +224,6 @@ export interface FileRoutesByTo {
   '/jetx': typeof JetxRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
-  '/pmpreview': typeof PmpreviewRoute
   '/premium': typeof PremiumRoute
   '/premium-select': typeof PremiumSelectRoute
   '/profile': typeof ProfileRoute
@@ -263,7 +255,6 @@ export interface FileRoutesById {
   '/jetx': typeof JetxRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
-  '/pmpreview': typeof PmpreviewRoute
   '/premium': typeof PremiumRoute
   '/premium-select': typeof PremiumSelectRoute
   '/profile': typeof ProfileRoute
@@ -296,7 +287,6 @@ export interface FileRouteTypes {
     | '/jetx'
     | '/login'
     | '/notifications'
-    | '/pmpreview'
     | '/premium'
     | '/premium-select'
     | '/profile'
@@ -327,7 +317,6 @@ export interface FileRouteTypes {
     | '/jetx'
     | '/login'
     | '/notifications'
-    | '/pmpreview'
     | '/premium'
     | '/premium-select'
     | '/profile'
@@ -358,7 +347,6 @@ export interface FileRouteTypes {
     | '/jetx'
     | '/login'
     | '/notifications'
-    | '/pmpreview'
     | '/premium'
     | '/premium-select'
     | '/profile'
@@ -390,7 +378,6 @@ export interface RootRouteChildren {
   JetxRoute: typeof JetxRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
-  PmpreviewRoute: typeof PmpreviewRoute
   PremiumRoute: typeof PremiumRoute
   PremiumSelectRoute: typeof PremiumSelectRoute
   ProfileRoute: typeof ProfileRoute
@@ -449,13 +436,6 @@ declare module '@tanstack/react-router' {
       path: '/premium'
       fullPath: '/premium'
       preLoaderRoute: typeof PremiumRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pmpreview': {
-      id: '/pmpreview'
-      path: '/pmpreview'
-      fullPath: '/pmpreview'
-      preLoaderRoute: typeof PmpreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -630,7 +610,6 @@ const rootRouteChildren: RootRouteChildren = {
   JetxRoute: JetxRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
-  PmpreviewRoute: PmpreviewRoute,
   PremiumRoute: PremiumRoute,
   PremiumSelectRoute: PremiumSelectRoute,
   ProfileRoute: ProfileRoute,
@@ -649,3 +628,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
