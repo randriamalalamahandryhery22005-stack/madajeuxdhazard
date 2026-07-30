@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Play, Rocket, BarChart3, Radar } from "lucide-react";
+import { ArrowLeft, Play, Rocket, BarChart3, Radar, Brain, Zap, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +17,6 @@ import { PREMIUM_GAME_MODES, computeTrial } from "@/lib/premiumAccess";
 
 import type { PredictionResult } from "@/lib/predictions";
 
-// JetX prediction engine - similar to Aviator but with JetX-specific ranges
 class SeededRandom {
   private seed: number;
   constructor(seed: number) { this.seed = seed; }
@@ -50,7 +49,6 @@ const generateJetXPrediction = (hour: number, minute: number, coefficient: numbe
   const m = Math.floor((totalSeconds % 3600) / 60);
   const s = totalSeconds % 60;
 
-  // Distribution équilibrée [3.00, 10.00]
   const span = maxCoeff - minCoeff;
   const r = rng.next();
   let raw: number;
@@ -137,73 +135,90 @@ const JetX = () => {
 
 
   if (hasAccess === null) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>;
+    return <div className="min-h-screen flex items-center justify-center luxe-page"><div className="w-8 h-8 border-2 border-[#F4C542]/30 border-t-[#F4C542] rounded-full animate-spin" /></div>;
   }
 
   if (!hasAccess && subEnabled) {
-    return <PremiumPaywall gameName="JetX" icon={<Rocket className="w-5 h-5 text-amber-400" />} />;
+    return <PremiumPaywall gameName="JetX" icon={<Rocket className="w-5 h-5 luxe-gold" />} />;
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col luxe-page">
       {showSplash && (
         <AnalysisSequence variant="jetx" duration={5000} onComplete={handleSplashComplete} />
       )}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-border/50">
-        <button onClick={() => navigate("/games")} className="p-2 rounded-lg hover:bg-secondary transition-colors active:scale-95">
-          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-lg font-bold flex items-center gap-2">
-            <Rocket className="w-5 h-5 text-amber-400" /> JetX
-          </h1>
-          <div className="flex gap-2 text-[10px] text-muted-foreground">
-            {accessStart && <span>Début: {new Date(accessStart).toLocaleDateString("fr-FR")}</span>}
-            {accessExpiry && <span>· Expire: {new Date(accessExpiry).toLocaleDateString("fr-FR")}</span>}
+      <div className="px-4 pt-4">
+        <div className="luxe-header luxe-ring flex items-center gap-3">
+          <button onClick={() => navigate("/games")} className="luxe-back" aria-label="Retour">
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <div className="luxe-icon-badge luxe-icon-badge-gold luxe-float">
+            <Rocket className="w-5 h-5" strokeWidth={2.4} />
           </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg luxe-title leading-tight flex items-center gap-2">
+              JetX <span className="luxe-badge-premium">Premium</span>
+            </h1>
+            <div className="flex gap-2 text-[10px] text-white/55 mt-0.5">
+              {accessStart && <span>Début · {new Date(accessStart).toLocaleDateString("fr-FR")}</span>}
+              {accessExpiry && <span>Expire · {new Date(accessExpiry).toLocaleDateString("fr-FR")}</span>}
+            </div>
+          </div>
+          <span className="luxe-badge-live">LIVE</span>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-6 space-y-6">
-        <div className="px-5 space-y-6">
+      <div className="flex-1 overflow-y-auto py-5 space-y-5">
+        <div className="px-4 space-y-5">
 
-        {/* Analyse du tour actuel — dédiée */}
         <button
           onClick={() => navigate("/analyse/jetx")}
-          className="w-full flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-amber-500/20 via-card to-card border border-amber-400/40 hover:border-amber-400/70 transition-all active:scale-[0.98]"
+          className="w-full flex items-center gap-3 p-4 luxe-card luxe-card-gold transition-transform active:scale-[0.98]"
         >
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center shrink-0 shadow-lg">
-            <Radar className="w-5 h-5 text-white" />
+          <div className="luxe-icon-badge luxe-icon-badge-gold shrink-0">
+            <Radar className="w-5 h-5" />
           </div>
           <div className="flex-1 text-left min-w-0">
-            <p className="font-bold text-sm">Analyse du tour actuel</p>
-            <p className="text-[10px] text-muted-foreground leading-snug">Verdict IA à partir d'une capture</p>
+            <p className="font-bold text-sm text-white">Analyse du tour actuel</p>
+            <p className="text-[10px] text-white/55 leading-snug">Verdict IA à partir d'une capture</p>
           </div>
-          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-amber-500/15 text-amber-300 shrink-0">Lancer</span>
+          <span className="luxe-badge-premium shrink-0">Lancer</span>
         </button>
 
         {!results && (
-          <div className="p-5 rounded-2xl bg-card/80 border border-amber-500/30 backdrop-blur-sm space-y-4" style={{ animation: "fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center">
-                <BarChart3 className="w-4 h-4 text-white" />
-              </div>
-              <h2 className="font-bold text-sm text-amber-400">Prédiction JetX</h2>
+          <div className="luxe-card luxe-card-lg luxe-card-gold p-5 space-y-4" style={{ animation: "fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
+            <div className="flex items-center gap-2.5">
+              <div className="luxe-icon-badge luxe-icon-badge-gold"><BarChart3 className="w-4 h-4" /></div>
+              <h2 className="font-bold text-sm luxe-gold-text">Prédiction JetX</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Heure (HH:MM)</Label>
-                <Input type="time" value={timeInput} onChange={e => setTimeInput(e.target.value)} className="h-12 bg-secondary/80 border-border/40 text-center font-mono text-base" />
+                <Label className="text-[10px] text-white/55 uppercase tracking-widest font-semibold">Heure (HH:MM)</Label>
+                <Input type="time" value={timeInput} onChange={e => setTimeInput(e.target.value)} className="luxe-input h-12 text-center font-mono text-base" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Coefficient</Label>
-                <Input type="number" step="0.01" min={1.5} max={100} placeholder="5.00" value={coeffInput} onChange={e => setCoeffInput(e.target.value)} className="h-12 bg-secondary/80 border-border/40 text-center font-mono text-base" />
+                <Label className="text-[10px] text-white/55 uppercase tracking-widest font-semibold">Coefficient</Label>
+                <Input type="number" step="0.01" min={1.5} max={100} placeholder="5.00" value={coeffInput} onChange={e => setCoeffInput(e.target.value)} className="luxe-input h-12 text-center font-mono text-base" />
               </div>
             </div>
             {error && <p className="text-destructive text-xs text-center font-medium">{error}</p>}
-            <Button className="w-full h-12 text-sm bg-gradient-to-r from-amber-500 to-amber-500 hover:from-amber-400 hover:to-amber-400 text-white font-bold shadow-lg" onClick={handlePredict}>
+            <Button className="luxe-btn w-full h-12 text-sm" onClick={handlePredict}>
               <Play className="w-4 h-4 mr-2" /> Générer les prédictions
             </Button>
+
+            <div className="grid grid-cols-3 gap-2 pt-2">
+              {[
+                { icon: Brain, label: "IA avancée", d: "Puissante" },
+                { icon: Zap, label: "Rapide", d: "Instantané" },
+                { icon: Target, label: "Précis", d: "Haute fiabilité" },
+              ].map(({ icon: Icon, label, d }) => (
+                <div key={label} className="luxe-stat">
+                  <Icon className="w-4 h-4 luxe-emerald mx-auto mb-1" />
+                  <p className="text-[11px] font-bold luxe-gold-text leading-none">{label}</p>
+                  <p className="text-[9px] text-white/50 mt-1">{d}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

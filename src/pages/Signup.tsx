@@ -346,7 +346,17 @@ const Signup = () => {
         .eq("user_id", userId);
       if (profileErr) throw new Error("Impossible d'enregistrer le profil : " + profileErr.message);
 
+      // Permet la connexion indifféremment par e-mail ou par téléphone :
+      // on synchronise le numéro sur le compte d'authentification.
+      const authPhone = normalizePhone(formData.profilePhone || formData.phone);
+      if (signupMethod === "email" && authPhone) {
+        try {
+          await supabase.functions.invoke("update-user-auth", { body: { phone: authPhone } });
+        } catch { /* non bloquant */ }
+      }
+
       await refreshProfile();
+
       // Remember this account on this device (Facebook-style quick relogin)
       try {
         await rememberCurrentAccount(userId, {

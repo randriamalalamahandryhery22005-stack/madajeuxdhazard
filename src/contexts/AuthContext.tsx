@@ -177,11 +177,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
-        checkAdmin(session.user.id).then(admin => {
-          if (admin) setAccessCodeVerified(true);
-        });
-        checkAccessCode();
+        // On attend la vérification du rôle avant de lever l'état de chargement,
+        // sinon les routes protégées (ex. /admin) redirigent trop tôt.
+        await fetchProfile(session.user.id);
+        const admin = await checkAdmin(session.user.id);
+        if (admin) setAccessCodeVerified(true);
+        await checkAccessCode();
       }
       setLoading(false);
     });
