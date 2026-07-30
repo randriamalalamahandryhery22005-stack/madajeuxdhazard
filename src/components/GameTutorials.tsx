@@ -17,22 +17,13 @@ const jetxSteps: TutorialStep[] = [
 ];
 
 
-const penaltySteps: TutorialStep[] = [
-  { narration: "Découvrez le tutoriel Penalty ShootOut. Anticipez la direction de chaque tir." },
-  { narration: "Choisissez d'abord la difficulté : facile, moyen ou difficile selon votre niveau." },
-  { narration: "Entrez l'heure courante de la partie, par exemple vingt heures quinze.", time: "20:15" },
-  { narration: "Le système analyse les probabilités et révèle la direction la plus probable.", reveal: true, predicted: "↗️ 78%" },
-  { narration: "Suivez les recommandations Penalty ShootOut pour maximiser vos chances." },
-];
-
 interface Props {
-  game: "cosmox" | "jetx" | "penalty";
+  game: "cosmox" | "jetx";
 }
 
 const configs = {
   cosmox:  { title: "CosmoX",          subtitle: "Prédictions cosmiques",       steps: cosmoxSteps,  accent: "blue"    as const },
   jetx:    { title: "JetX",            subtitle: "Prédictions de vol",          steps: jetxSteps,    accent: "amber"   as const },
-  penalty: { title: "Penalty ShootOut",subtitle: "Direction des tirs au but",   steps: penaltySteps, accent: "gold"    as const },
 };
 
 const GameTutorial = ({ game }: Props) => {

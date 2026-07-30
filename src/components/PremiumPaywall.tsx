@@ -54,7 +54,7 @@ const PremiumPaywall = ({ gameName, icon }: PremiumPaywallProps) => {
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-left pt-2">
-            {["Aviator complet", "CosmoX", "JetX", "Penalty"].map((s) => (
+            {["Aviator complet", "CosmoX", "JetX", "Prédictions illimitées"].map((s) => (
               <div key={s} className="flex items-center gap-1.5 text-[11px] text-foreground/90 px-2.5 py-2 rounded-lg bg-secondary/40 border border-border/40">
                 <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
                 <span className="font-semibold">{s}</span>

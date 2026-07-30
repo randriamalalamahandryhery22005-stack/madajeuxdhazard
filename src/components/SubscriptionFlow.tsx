@@ -67,15 +67,6 @@ const SubscriptionFlow = ({ gameMode, gameName, onAccessGranted, onCancel, fixed
       glowClass: "shadow-emerald-500/40",
       perks: ["Format HH:MM:SS", "Latence ultra-faible", "Historique étendu", "Multi-fenêtres"],
     };
-    if (m.includes("penalty")) return {
-      label: "Édition Champion",
-      tagline: "Pour les passionnés de penalty",
-      icon: Trophy,
-      accent: "from-emerald-400 via-emerald-500 to-emerald-500",
-      ring: "ring-emerald-500/40",
-      glowClass: "shadow-emerald-500/40",
-      perks: ["Prédictions tireur/gardien", "Statistiques équipes", "Mode multi-match", "Alertes en direct"],
-    };
     return {
       label: "Édition Pro",
       tagline: "Débloquez la pleine puissance",

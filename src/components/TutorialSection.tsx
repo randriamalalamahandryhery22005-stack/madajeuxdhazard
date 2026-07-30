@@ -97,22 +97,6 @@ const tutorials: Tutorial[] = [
     difficultyColor: "text-green-400 bg-green-500/10 border-green-500/20",
   },
   {
-    id: "penalty",
-    title: "Penalty ShootOut — Tirs au But",
-    description: "Comment utiliser les prédictions probabilistes pour les séances de tirs au but.",
-    steps: [
-      "Accédez à Penalty ShootOut depuis les jeux",
-      "Entrez les paramètres de la séance en cours",
-      "Le système analyse les probabilités de chaque tir",
-      "Consultez le score prédit et la probabilité de victoire",
-      "Utilisez les indicateurs pour placer vos mises"
-    ],
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WcXgQ",
-    duration: "3 min",
-    difficulty: "Facile",
-    difficultyColor: "text-green-400 bg-green-500/10 border-green-500/20",
-  },
-  {
     id: "studio-spribe",
     title: "Aviator Studio & Spribe (1XBET)",
     description: "Guide d'utilisation des modes Studio et Spribe dédiés à la plateforme 1XBET.",

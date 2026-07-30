@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 const FAQ = [
   { q: "Comment activer mon abonnement Premium ?", a: "Choisissez une formule dans l'onglet Abonnement, effectuez le paiement via Yas ou Airtel Money, puis envoyez la preuve. L'activation est automatique après vérification." },
-  { q: "Quels services sont inclus ?", a: "Un seul abonnement débloque Aviator (Pro, Spribe, Studio), CosmoX, JetX et Penalty — sans supplément." },
+  { q: "Quels services sont inclus ?", a: "Un seul abonnement débloque Aviator (Pro, Spribe, Studio), CosmoX et JetX — sans supplément." },
   { q: "Quels sont les moyens de paiement acceptés ?", a: "Yas et Airtel Money uniquement. Les numéros sont affichés dans le tunnel de paiement." },
   { q: "Combien de temps prend l'activation ?", a: "Généralement quelques minutes, une fois la preuve de paiement validée par un administrateur." },
   { q: "Que faire si mon paiement est rejeté ?", a: "Vous verrez le motif dans l'onglet Historique. Vous pouvez alors renvoyer une nouvelle preuve ou contacter le support Premium." },

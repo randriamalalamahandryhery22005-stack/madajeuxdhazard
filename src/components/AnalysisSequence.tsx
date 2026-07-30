@@ -13,8 +13,7 @@ export type AnalysisVariant =
   | "balanced"
   | "spribe"
   | "cosmox"
-  | "jetx"
-  | "penalty";
+  | "jetx";
 
 interface Preset {
   title: string;
@@ -135,27 +134,6 @@ const PRESETS: Record<AnalysisVariant, Preset> = {
       "Mesure de la traînée thermique",
       "Cartographie des pics récents",
       "Estimation de l'apogée",
-      "Compilation des prédictions",
-    ],
-  },
-  penalty: {
-    title: "Analyse Penalty",
-    subtitle: "Cartographie de la cage",
-    accent: "#22c55e",
-    accentSoft: "34,197,94",
-    gradient: "from-green-500/25 via-emerald-500/10 to-lime-900/10",
-    ring: "border-green-500/40",
-    text: "text-green-300",
-    chip: "bg-green-500/15 border-green-500/40 text-green-300",
-    bar: "from-green-400 via-emerald-300 to-lime-300",
-    Icon: Target,
-    visual: "goal",
-    badge: "SHOOT",
-    steps: [
-      "Analyse du profil du tireur",
-      "Étude des zones préférentielles",
-      "Simulation Monte-Carlo (5 tirs)",
-      "Calcul du taux de conversion",
       "Compilation des prédictions",
     ],
   },
