@@ -520,20 +520,31 @@ export default function Chat() {
                   return (
                     <div key={m.id} className={`flex gap-2 group ${mine ? "flex-row-reverse" : ""}`} style={{ animation: "chat-in 0.25s ease-out" }}>
                       <div className="relative shrink-0">
-                        <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-800 ring-1 ring-white/10 flex items-center justify-center">
+                        <button
+                          onClick={() => setProfileFor(m.user_id)}
+                          className="w-8 h-8 rounded-full overflow-hidden bg-slate-800 ring-1 ring-white/10 flex items-center justify-center"
+                          title="Voir le profil"
+                        >
                           {p?.avatar_url ? (
                             <img src={p.avatar_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")} />
                           ) : (
                             <span className="text-[11px] font-bold uppercase">{initials(displayName(p))}</span>
                           )}
-                        </div>
+                        </button>
                         {online && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-950" />}
                       </div>
                       <div className={`max-w-[78%] flex flex-col ${mine ? "items-end" : "items-start"}`}>
                         <div className={`flex items-center gap-2 text-[11px] mb-1 ${mine ? "flex-row-reverse" : ""}`}>
-                          <span className="font-semibold text-slate-200 truncate max-w-[140px]">{mine ? "Vous" : displayName(p)}</span>
+                          <button
+                            onClick={() => setProfileFor(m.user_id)}
+                            className="font-semibold text-slate-200 truncate max-w-[150px] hover:underline"
+                          >
+                            {mine ? "Vous" : displayName(p)}
+                          </button>
+                          <AccountBadges userId={m.user_id} admins={admins} premium={premium} compact />
                           <span className="text-slate-500">{formatTime(m.created_at)}</span>
                         </div>
+
                         <div
                           className={`relative px-3 py-2 rounded-2xl text-[14px] leading-snug break-words shadow ${
                             mine ? "bg-gradient-to-br from-amber-600 to-emerald-600 text-white rounded-tr-sm" : "bg-white/[0.06] border border-white/10 text-slate-100 rounded-tl-sm"
