@@ -555,7 +555,7 @@ export default function Chat() {
                               <div className="font-semibold opacity-80 truncate">
                                 {reply.user_id === user?.id ? "Vous" : displayName(replyAuthor ?? undefined)}
                               </div>
-                              <div className="opacity-70 truncate">{reply.content || (reply.image_url ? "📷 Image" : "")}</div>
+                              <div className="opacity-70 truncate">{parseMessage(reply.content).text || (reply.image_url ? "📷 Pièce jointe" : "")}</div>
                             </div>
                           )}
                           {imgUrl && isAudioPath(m.image_url) && (
@@ -582,8 +582,35 @@ export default function Chat() {
                               <Download className="w-4 h-4 shrink-0 opacity-80" />
                             </a>
                           )}
-                          {m.content && !isAudioPath(m.image_url) && <div className="whitespace-pre-wrap">{m.content}</div>}
-                          {m.content && isAudioPath(m.image_url) && <div className="text-[11px] opacity-70 mt-0.5">{m.content}</div>}
+                          {editingId === m.id ? (
+                            <div className="space-y-1.5">
+                              <textarea
+                                value={editText}
+                                onChange={(e) => setEditText(e.target.value)}
+                                rows={2}
+                                className="w-full min-w-[200px] resize-none rounded-xl bg-black/30 border border-white/20 px-2 py-1.5 text-[13px] text-white focus:outline-none"
+                              />
+                              <div className="flex gap-2 justify-end">
+                                <button onClick={() => setEditingId(null)} className="text-[11px] px-2 py-1 rounded-lg bg-white/10">Annuler</button>
+                                <button onClick={() => saveEdit(m)} className="text-[11px] px-2 py-1 rounded-lg bg-emerald-600 text-white font-semibold">Enregistrer</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {parsed.text && !isAudioPath(m.image_url) && <div className="whitespace-pre-wrap">{parsed.text}</div>}
+                              {parsed.text && isAudioPath(m.image_url) && <div className="text-[11px] opacity-70 mt-0.5">{parsed.text}</div>}
+                              {parsed.editedAt && (
+                                <button
+                                  onClick={() => setOriginalFor(m)}
+                                  className="mt-1 text-[10px] italic opacity-70 underline underline-offset-2"
+                                  title="Voir le message original"
+                                >
+                                  modifié · {new Date(parsed.editedAt).toLocaleString()}
+                                </button>
+                              )}
+                            </>
+                          )}
+
                         </div>
 
                         {/* Reactions */}
