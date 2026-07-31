@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import AdminOnlineUsersPanel from "@/components/AdminOnlineUsersPanel";
 import AdminGenStorePanel from "@/components/AdminGenStorePanel";
+import AdminSecurityPanel from "@/components/AdminSecurityPanel";
 import AdminPremiumBonusPanel from "@/components/AdminPremiumBonusPanel";
 
 import { toast } from "sonner";
@@ -418,6 +419,7 @@ const Admin = () => {
     { id: "sessions", label: "Sessions", icon: <Activity className="w-3.5 h-3.5" />, badge: onlineSessions.length || undefined },
     { id: "online_live", label: "En ligne", icon: <Activity className="w-3.5 h-3.5" /> },
     { id: "gen_store", label: "J&H Store", icon: <ImageIcon className="w-3.5 h-3.5" /> },
+    { id: "security", label: "Sécurité", icon: <Shield className="w-3.5 h-3.5" /> },
     
   ];
 
@@ -427,7 +429,7 @@ const Admin = () => {
     { title: "Vue d'ensemble", items: ["dashboard", "online_live", "sessions", "points"] },
     { title: "Utilisateurs & accès", items: ["users", "premium", "bonuses", "rewards", "resets"] },
     { title: "Contenu & comm.", items: ["chat", "notifications", "gen_store"] },
-    { title: "Configuration", items: ["codes", "settings"] },
+    { title: "Configuration", items: ["codes", "settings", "security"] },
   ];
   const tabsById = Object.fromEntries(tabs.map((t) => [t.id, t]));
   const pendingTotal = pendingAccess.length + resets.filter(r => r.status === "pending").length + chatMessages.filter(m => m.status === "pending").length;
@@ -1403,6 +1405,11 @@ const Admin = () => {
         {tab === "gen_store" && (
           <div style={{ animation: "fade-up 0.4s ease forwards" }}>
             <AdminGenStorePanel />
+          </div>
+        )}
+        {tab === "security" && (
+          <div style={{ animation: "fade-up 0.4s ease forwards" }}>
+            <AdminSecurityPanel />
           </div>
         )}
         {tab === "bonuses" && (
