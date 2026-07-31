@@ -825,7 +825,47 @@ export default function Chat() {
         </DialogContent>
       </Dialog>
 
+      {/* Message original (après modification) */}
+      <Dialog open={!!originalFor} onOpenChange={(o) => !o && setOriginalFor(null)}>
+        <DialogContent className="max-w-sm bg-slate-900 border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <History className="w-4 h-4" /> Message original
+            </DialogTitle>
+          </DialogHeader>
+          {originalFor && (
+            <div className="space-y-2 text-sm">
+              <div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 whitespace-pre-wrap">
+                {parseMessage(originalFor.content).original}
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Modifié le {new Date(parseMessage(originalFor.content).editedAt || originalFor.created_at).toLocaleString()}
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <UserProfileDialog
+        userId={profileFor}
+        open={!!profileFor}
+        onClose={() => setProfileFor(null)}
+        viewerIsAdmin={isAdmin}
+        admins={admins}
+        premium={premium}
+      />
+
+      {user && (
+        <CallHistoryDialog
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          userId={user.id}
+          profiles={profiles}
+        />
+      )}
+
       {/* Global VoiceCallPanel is rendered by GlobalCallRoot to persist across navigation */}
+
       <BottomNav />
       <style>{`
         @keyframes chat-in {
