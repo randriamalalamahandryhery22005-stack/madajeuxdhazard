@@ -412,7 +412,7 @@ export default function Chat() {
   const filtered = useMemo(() => {
     if (!search.trim()) return visible;
     const q = search.toLowerCase();
-    return visible.filter((m) => m.content?.toLowerCase().includes(q));
+    return visible.filter((m) => parseMessage(m.content).text.toLowerCase().includes(q));
   }, [visible, search]);
 
   const grouped = useMemo(() => {
