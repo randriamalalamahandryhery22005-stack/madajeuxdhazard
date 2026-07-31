@@ -515,6 +515,8 @@ export default function Chat() {
                   const msgReactions = reactionsByMsg[m.id] || {};
                   const msgReads = readsByMsg[m.id] || [];
                   const readCount = msgReads.filter((r) => r.user_id !== m.user_id).length;
+                  const parsed = parseMessage(m.content);
+
                   return (
                     <div key={m.id} className={`flex gap-2 group ${mine ? "flex-row-reverse" : ""}`} style={{ animation: "chat-in 0.25s ease-out" }}>
                       <div className="relative shrink-0">
