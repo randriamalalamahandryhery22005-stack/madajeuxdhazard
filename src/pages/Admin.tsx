@@ -42,7 +42,7 @@ interface GameAccess {
 interface AppUpdate { id: string; title: string; update_url: string; is_active: boolean; created_at: string; }
 interface UserPoints { user_id: string; total: number; }
 
-type Tab = "dashboard" | "users" | "codes" | "resets" | "premium" | "bonuses" | "settings" | "points" | "notifications" | "rewards" | "chat" | "sessions" | "online_live" | "gen_store";
+type Tab = "dashboard" | "users" | "codes" | "resets" | "premium" | "bonuses" | "settings" | "points" | "notifications" | "rewards" | "chat" | "sessions" | "online_live" | "gen_store" | "security";
 
 interface OnlineSession {
   user_id: string;
