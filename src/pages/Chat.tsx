@@ -316,7 +316,7 @@ export default function Chat() {
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from("chat-files")
-          .upload(path, imageFile, { contentType: imageFile.type, upsert: false });
+          .upload(path, imageFile, { contentType: imageFile.type || "application/octet-stream", upsert: false });
         if (upErr) throw upErr;
         imagePath = path;
       }
