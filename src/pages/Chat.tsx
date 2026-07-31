@@ -225,10 +225,15 @@ export default function Chat() {
         if (!atBottom && row.user_id !== user?.id) setUnreadCount((c) => c + 1);
         else setTimeout(() => scrollToBottom(true), 30);
       })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "global_chat_messages" }, (payload) => {
+        const row = payload.new as ChatRow;
+        setMessages((prev) => prev.map((m) => (m.id === row.id ? { ...m, ...row } : m)));
+      })
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "global_chat_messages" }, (payload) => {
         const oldRow = payload.old as { id: string };
         setMessages((prev) => prev.filter((m) => m.id !== oldRow.id));
       })
+
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_message_reactions" }, (payload) => {
         const r = payload.new as Reaction;
         setReactions((prev) => (prev.some((x) => x.id === r.id) ? prev : [...prev, r]));
