@@ -13,6 +13,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import AccountBadges from "@/components/AccountBadges";
+import UserProfileDialog from "@/components/UserProfileDialog";
+import CallHistoryDialog from "@/components/CallHistoryDialog";
+import { useAccountBadges } from "@/hooks/useAccountBadges";
+import { buildEditedContent, parseMessage } from "@/lib/chatMeta";
 import {
   ArrowLeft,
   Send,
@@ -32,6 +37,9 @@ import {
   FileText,
   Download,
   Play,
+  Pencil,
+  History,
+  PhoneCall,
 } from "lucide-react";
 
 const AUDIO_RX = /\.(webm|ogg|mp3|m4a|wav|aac)(\?|$)/i;
@@ -44,7 +52,8 @@ const fileNameFromPath = (p: string) => {
   const raw = p.split("/").pop() || p;
   return raw.replace(/^\d+-[a-z0-9]+\./i, (m) => m.split(".").slice(1).join("."));
 };
-const MAX_FILE_MB = 50;
+const MAX_FILE_MB = 100;
+
 
 type ChatRow = {
   id: string;
