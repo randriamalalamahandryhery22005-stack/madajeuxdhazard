@@ -474,6 +474,15 @@ export default function Chat() {
               {onlineIds.size} en ligne · Utilisateurs en ligne uniquement
             </p>
           </div>
+          <button
+            onClick={() => setHistoryOpen(true)}
+            className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center"
+            title="Historique des appels"
+            aria-label="Historique des appels"
+          >
+            <PhoneCall className="w-4 h-4 text-emerald-300" />
+          </button>
+
         </div>
 
         <div className="max-w-2xl mx-auto px-3 pb-3">
