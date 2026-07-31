@@ -656,6 +656,12 @@ export default function Chat() {
                           <button onClick={() => setReplyTo(m)} className="text-[10px] text-slate-400 hover:text-white px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/10 inline-flex items-center gap-1">
                             <Reply className="w-3 h-3" /> Répondre
                           </button>
+                          {mine && !isAudioPath(m.image_url) && (
+                            <button onClick={() => startEdit(m)} className="text-[10px] text-slate-300 hover:text-white px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/10 inline-flex items-center gap-1">
+                              <Pencil className="w-3 h-3" /> Modifier
+                            </button>
+                          )}
+
                           {mine && (
                             <button onClick={() => setViewersFor(m)} className="text-[10px] text-slate-300 hover:text-white px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/10 inline-flex items-center gap-1">
                               {readCount > 0 ? <CheckCheck className="w-3 h-3 text-emerald-400" /> : <Check className="w-3 h-3" />}
