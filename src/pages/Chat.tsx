@@ -13,6 +13,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import AccountBadges from "@/components/AccountBadges";
+import UserProfileDialog from "@/components/UserProfileDialog";
+import CallHistoryDialog from "@/components/CallHistoryDialog";
+import { useAccountBadges } from "@/hooks/useAccountBadges";
+import { buildEditedContent, parseMessage } from "@/lib/chatMeta";
 import {
   ArrowLeft,
   Send,
@@ -32,6 +37,9 @@ import {
   FileText,
   Download,
   Play,
+  Pencil,
+  History,
+  PhoneCall,
 } from "lucide-react";
 
 const AUDIO_RX = /\.(webm|ogg|mp3|m4a|wav|aac)(\?|$)/i;
@@ -44,7 +52,8 @@ const fileNameFromPath = (p: string) => {
   const raw = p.split("/").pop() || p;
   return raw.replace(/^\d+-[a-z0-9]+\./i, (m) => m.split(".").slice(1).join("."));
 };
-const MAX_FILE_MB = 50;
+const MAX_FILE_MB = 100;
+
 
 type ChatRow = {
   id: string;
@@ -118,6 +127,13 @@ export default function Chat() {
   const [atBottom, setAtBottom] = useState(true);
   const [emojiPickerFor, setEmojiPickerFor] = useState<string | null>(null);
   const [viewersFor, setViewersFor] = useState<ChatRow | null>(null);
+  const [profileFor, setProfileFor] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const [originalFor, setOriginalFor] = useState<ChatRow | null>(null);
+  const { admins, premium } = useAccountBadges();
+
   const { openPanel: openCallPanel } = useCall();
   const setCallOpen = (v: boolean) => { if (v) openCallPanel(); };
 
@@ -209,10 +225,15 @@ export default function Chat() {
         if (!atBottom && row.user_id !== user?.id) setUnreadCount((c) => c + 1);
         else setTimeout(() => scrollToBottom(true), 30);
       })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "global_chat_messages" }, (payload) => {
+        const row = payload.new as ChatRow;
+        setMessages((prev) => prev.map((m) => (m.id === row.id ? { ...m, ...row } : m)));
+      })
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "global_chat_messages" }, (payload) => {
         const oldRow = payload.old as { id: string };
         setMessages((prev) => prev.filter((m) => m.id !== oldRow.id));
       })
+
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_message_reactions" }, (payload) => {
         const r = payload.new as Reaction;
         setReactions((prev) => (prev.some((x) => x.id === r.id) ? prev : [...prev, r]));
@@ -295,7 +316,7 @@ export default function Chat() {
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from("chat-files")
-          .upload(path, imageFile, { contentType: imageFile.type, upsert: false });
+          .upload(path, imageFile, { contentType: imageFile.type || "application/octet-stream", upsert: false });
         if (upErr) throw upErr;
         imagePath = path;
       }
@@ -323,6 +344,24 @@ export default function Chat() {
     const { error } = await supabase.from("global_chat_messages").delete().eq("id", id);
     if (error) toast.error("Suppression impossible");
   };
+
+  const startEdit = (m: ChatRow) => {
+    setEditingId(m.id);
+    setEditText(parseMessage(m.content).text);
+  };
+
+  const saveEdit = async (m: ChatRow) => {
+    const next = editText.trim();
+    const parsed = parseMessage(m.content);
+    if (!next || next === parsed.text) { setEditingId(null); return; }
+    const original = parsed.original ?? parsed.text;
+    const content = buildEditedContent(next, original);
+    const { error } = await supabase.from("global_chat_messages").update({ content }).eq("id", m.id);
+    if (error) { toast.error("Modification impossible"); return; }
+    setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, content } : x)));
+    setEditingId(null);
+  };
+
 
   const sendVoice = async (blob: Blob, durationMs: number) => {
     if (!user) return;
@@ -373,7 +412,7 @@ export default function Chat() {
   const filtered = useMemo(() => {
     if (!search.trim()) return visible;
     const q = search.toLowerCase();
-    return visible.filter((m) => m.content?.toLowerCase().includes(q));
+    return visible.filter((m) => parseMessage(m.content).text.toLowerCase().includes(q));
   }, [visible, search]);
 
   const grouped = useMemo(() => {
@@ -435,6 +474,15 @@ export default function Chat() {
               {onlineIds.size} en ligne · Utilisateurs en ligne uniquement
             </p>
           </div>
+          <button
+            onClick={() => setHistoryOpen(true)}
+            className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center"
+            title="Historique des appels"
+            aria-label="Historique des appels"
+          >
+            <PhoneCall className="w-4 h-4 text-emerald-300" />
+          </button>
+
         </div>
 
         <div className="max-w-2xl mx-auto px-3 pb-3">
@@ -476,23 +524,36 @@ export default function Chat() {
                   const msgReactions = reactionsByMsg[m.id] || {};
                   const msgReads = readsByMsg[m.id] || [];
                   const readCount = msgReads.filter((r) => r.user_id !== m.user_id).length;
+                  const parsed = parseMessage(m.content);
+
                   return (
                     <div key={m.id} className={`flex gap-2 group ${mine ? "flex-row-reverse" : ""}`} style={{ animation: "chat-in 0.25s ease-out" }}>
                       <div className="relative shrink-0">
-                        <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-800 ring-1 ring-white/10 flex items-center justify-center">
+                        <button
+                          onClick={() => setProfileFor(m.user_id)}
+                          className="w-8 h-8 rounded-full overflow-hidden bg-slate-800 ring-1 ring-white/10 flex items-center justify-center"
+                          title="Voir le profil"
+                        >
                           {p?.avatar_url ? (
                             <img src={p.avatar_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")} />
                           ) : (
                             <span className="text-[11px] font-bold uppercase">{initials(displayName(p))}</span>
                           )}
-                        </div>
+                        </button>
                         {online && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-950" />}
                       </div>
                       <div className={`max-w-[78%] flex flex-col ${mine ? "items-end" : "items-start"}`}>
                         <div className={`flex items-center gap-2 text-[11px] mb-1 ${mine ? "flex-row-reverse" : ""}`}>
-                          <span className="font-semibold text-slate-200 truncate max-w-[140px]">{mine ? "Vous" : displayName(p)}</span>
+                          <button
+                            onClick={() => setProfileFor(m.user_id)}
+                            className="font-semibold text-slate-200 truncate max-w-[150px] hover:underline"
+                          >
+                            {mine ? "Vous" : displayName(p)}
+                          </button>
+                          <AccountBadges userId={m.user_id} admins={admins} premium={premium} compact />
                           <span className="text-slate-500">{formatTime(m.created_at)}</span>
                         </div>
+
                         <div
                           className={`relative px-3 py-2 rounded-2xl text-[14px] leading-snug break-words shadow ${
                             mine ? "bg-gradient-to-br from-amber-600 to-emerald-600 text-white rounded-tr-sm" : "bg-white/[0.06] border border-white/10 text-slate-100 rounded-tl-sm"
@@ -503,7 +564,7 @@ export default function Chat() {
                               <div className="font-semibold opacity-80 truncate">
                                 {reply.user_id === user?.id ? "Vous" : displayName(replyAuthor ?? undefined)}
                               </div>
-                              <div className="opacity-70 truncate">{reply.content || (reply.image_url ? "📷 Image" : "")}</div>
+                              <div className="opacity-70 truncate">{parseMessage(reply.content).text || (reply.image_url ? "📷 Pièce jointe" : "")}</div>
                             </div>
                           )}
                           {imgUrl && isAudioPath(m.image_url) && (
@@ -530,8 +591,35 @@ export default function Chat() {
                               <Download className="w-4 h-4 shrink-0 opacity-80" />
                             </a>
                           )}
-                          {m.content && !isAudioPath(m.image_url) && <div className="whitespace-pre-wrap">{m.content}</div>}
-                          {m.content && isAudioPath(m.image_url) && <div className="text-[11px] opacity-70 mt-0.5">{m.content}</div>}
+                          {editingId === m.id ? (
+                            <div className="space-y-1.5">
+                              <textarea
+                                value={editText}
+                                onChange={(e) => setEditText(e.target.value)}
+                                rows={2}
+                                className="w-full min-w-[200px] resize-none rounded-xl bg-black/30 border border-white/20 px-2 py-1.5 text-[13px] text-white focus:outline-none"
+                              />
+                              <div className="flex gap-2 justify-end">
+                                <button onClick={() => setEditingId(null)} className="text-[11px] px-2 py-1 rounded-lg bg-white/10">Annuler</button>
+                                <button onClick={() => saveEdit(m)} className="text-[11px] px-2 py-1 rounded-lg bg-emerald-600 text-white font-semibold">Enregistrer</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {parsed.text && !isAudioPath(m.image_url) && <div className="whitespace-pre-wrap">{parsed.text}</div>}
+                              {parsed.text && isAudioPath(m.image_url) && <div className="text-[11px] opacity-70 mt-0.5">{parsed.text}</div>}
+                              {parsed.editedAt && (
+                                <button
+                                  onClick={() => setOriginalFor(m)}
+                                  className="mt-1 text-[10px] italic opacity-70 underline underline-offset-2"
+                                  title="Voir le message original"
+                                >
+                                  modifié · {new Date(parsed.editedAt).toLocaleString()}
+                                </button>
+                              )}
+                            </>
+                          )}
+
                         </div>
 
                         {/* Reactions */}
@@ -577,6 +665,12 @@ export default function Chat() {
                           <button onClick={() => setReplyTo(m)} className="text-[10px] text-slate-400 hover:text-white px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/10 inline-flex items-center gap-1">
                             <Reply className="w-3 h-3" /> Répondre
                           </button>
+                          {mine && !isAudioPath(m.image_url) && (
+                            <button onClick={() => startEdit(m)} className="text-[10px] text-slate-300 hover:text-white px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/10 inline-flex items-center gap-1">
+                              <Pencil className="w-3 h-3" /> Modifier
+                            </button>
+                          )}
+
                           {mine && (
                             <button onClick={() => setViewersFor(m)} className="text-[10px] text-slate-300 hover:text-white px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/10 inline-flex items-center gap-1">
                               {readCount > 0 ? <CheckCheck className="w-3 h-3 text-emerald-400" /> : <Check className="w-3 h-3" />}
@@ -659,7 +753,7 @@ export default function Chat() {
                 </label>
                 <label className="w-10 h-10 shrink-0 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center cursor-pointer transition" title="Envoyer un fichier">
                   <Paperclip className="w-4 h-4 text-amber-300" />
-                  <input type="file" className="hidden" onChange={(e) => { handleImagePick(e.target.files?.[0] || null); e.currentTarget.value = ""; }} />
+                  <input type="file" accept="*/*" className="hidden" onChange={(e) => { handleImagePick(e.target.files?.[0] || null); e.currentTarget.value = ""; }} />
                 </label>
                 <button
                   onClick={() => user && setCallOpen(true)}
@@ -731,7 +825,47 @@ export default function Chat() {
         </DialogContent>
       </Dialog>
 
+      {/* Message original (après modification) */}
+      <Dialog open={!!originalFor} onOpenChange={(o) => !o && setOriginalFor(null)}>
+        <DialogContent className="max-w-sm bg-slate-900 border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <History className="w-4 h-4" /> Message original
+            </DialogTitle>
+          </DialogHeader>
+          {originalFor && (
+            <div className="space-y-2 text-sm">
+              <div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 whitespace-pre-wrap">
+                {parseMessage(originalFor.content).original}
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Modifié le {new Date(parseMessage(originalFor.content).editedAt || originalFor.created_at).toLocaleString()}
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <UserProfileDialog
+        userId={profileFor}
+        open={!!profileFor}
+        onClose={() => setProfileFor(null)}
+        viewerIsAdmin={isAdmin}
+        admins={admins}
+        premium={premium}
+      />
+
+      {user && (
+        <CallHistoryDialog
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          userId={user.id}
+          profiles={profiles}
+        />
+      )}
+
       {/* Global VoiceCallPanel is rendered by GlobalCallRoot to persist across navigation */}
+
       <BottomNav />
       <style>{`
         @keyframes chat-in {

@@ -21,6 +21,10 @@ import GlobalCallRoot from "@/components/GlobalCallRoot";
 import ForceUpdateOverlay from "@/components/ForceUpdateOverlay";
 import TrialOverlay from "@/components/TrialOverlay";
 import AppPersonalizationRoot from "@/components/AppPersonalizationRoot";
+import BlockedAccountGate from "@/components/BlockedAccountGate";
+import PremiumSecurityRoot from "@/components/PremiumSecurityRoot";
+import "@/lib/safeVolume";
+
 
 function NotFoundComponent() {
   return (
@@ -155,6 +159,9 @@ function RootComponent() {
                 <AppPersonalizationRoot />
                 <GlobalCallRoot />
                 <TrialOverlay />
+                <PremiumSecurityRoot />
+                <BlockedAccountGate />
+
                 {/* Required: nested routes render here. */}
                 <Outlet />
               </NotificationsProvider>

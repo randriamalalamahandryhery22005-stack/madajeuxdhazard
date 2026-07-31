@@ -341,6 +341,7 @@ const Signup = () => {
           birth_date: formData.birthDate,
           avatar_url: avatarUrl,
           gender: formData.gender || null,
+          is_validated: true,
           phone: normalizePhone(formData.profilePhone || formData.phone) || null,
         } as never)
         .eq("user_id", userId);
