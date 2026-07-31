@@ -340,6 +340,24 @@ export default function Chat() {
     if (error) toast.error("Suppression impossible");
   };
 
+  const startEdit = (m: ChatRow) => {
+    setEditingId(m.id);
+    setEditText(parseMessage(m.content).text);
+  };
+
+  const saveEdit = async (m: ChatRow) => {
+    const next = editText.trim();
+    const parsed = parseMessage(m.content);
+    if (!next || next === parsed.text) { setEditingId(null); return; }
+    const original = parsed.original ?? parsed.text;
+    const content = buildEditedContent(next, original);
+    const { error } = await supabase.from("global_chat_messages").update({ content }).eq("id", m.id);
+    if (error) { toast.error("Modification impossible"); return; }
+    setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, content } : x)));
+    setEditingId(null);
+  };
+
+
   const sendVoice = async (blob: Blob, durationMs: number) => {
     if (!user) return;
     try {
