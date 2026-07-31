@@ -159,6 +159,9 @@ function RootComponent() {
                 <AppPersonalizationRoot />
                 <GlobalCallRoot />
                 <TrialOverlay />
+                <PremiumSecurityRoot />
+                <BlockedAccountGate />
+
                 {/* Required: nested routes render here. */}
                 <Outlet />
               </NotificationsProvider>
