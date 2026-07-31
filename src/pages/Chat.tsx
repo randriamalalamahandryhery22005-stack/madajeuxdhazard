@@ -127,6 +127,13 @@ export default function Chat() {
   const [atBottom, setAtBottom] = useState(true);
   const [emojiPickerFor, setEmojiPickerFor] = useState<string | null>(null);
   const [viewersFor, setViewersFor] = useState<ChatRow | null>(null);
+  const [profileFor, setProfileFor] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const [originalFor, setOriginalFor] = useState<ChatRow | null>(null);
+  const { admins, premium } = useAccountBadges();
+
   const { openPanel: openCallPanel } = useCall();
   const setCallOpen = (v: boolean) => { if (v) openCallPanel(); };
 
