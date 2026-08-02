@@ -210,6 +210,36 @@
   }
 }
 
+/* ============================================================
+   MODE CLAIR — couche de compatibilité
+   Certaines vues historiques utilisent des couleurs sombres
+   codées en dur ; on les remappe sur les tokens sémantiques
+   pour garantir la lisibilité en thème clair.
+   ============================================================ */
+@layer utilities {
+  html:not(.dark) .text-white,
+  html:not(.dark) .text-slate-50,
+  html:not(.dark) .text-slate-100,
+  html:not(.dark) .text-slate-200 { color: hsl(var(--foreground)); }
+
+  html:not(.dark) .text-slate-300,
+  html:not(.dark) .text-slate-400,
+  html:not(.dark) .text-slate-500 { color: hsl(var(--muted-foreground)); }
+
+  html:not(.dark) .bg-black\/20,
+  html:not(.dark) .bg-black\/30,
+  html:not(.dark) .bg-black\/40,
+  html:not(.dark) .bg-black\/50 { background-color: hsl(var(--card) / 0.85); }
+
+  html:not(.dark) .bg-white\/5,
+  html:not(.dark) .bg-white\/10 { background-color: hsl(var(--secondary) / 0.7); }
+
+  html:not(.dark) .border-white\/5,
+  html:not(.dark) .border-white\/10,
+  html:not(.dark) .border-white\/20 { border-color: hsl(var(--border)); }
+}
+
+
 
 @layer base {
   /* Luxe casino ambient backdrop — emerald depth with gold aurora */
