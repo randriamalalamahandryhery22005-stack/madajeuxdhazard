@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronDown, Lock, Rocket, Zap } from "lucide-react";
 import { toast } from "sonner";
 import onexbetLogo from "@/assets/1xbet-logo.png";
-import aviatorLogo from "@/assets/logo-aviator.png";
+import { aviatorLogo } from "@/lib/gameLogos";
 import aviatorStudioLogo from "@/assets/logo-aviator-studio.png";
 import aviatorSpribeLogo from "@/assets/logo-aviator-spribe.png";
 import type { GameStats } from "@/hooks/useGameStats";

@@ -5,9 +5,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import bet261Logo from "@/assets/bet261-logo.png";
-import aviatorLogo from "@/assets/logo-aviator.png";
-import cosmoxLogo from "@/assets/logo-cosmox.png";
-import jetxLogo from "@/assets/logo-jetx.png";
+import { aviatorLogo } from "@/lib/gameLogos";
+import { cosmoxLogo } from "@/lib/gameLogos";
+import { jetxLogo } from "@/lib/gameLogos";
 
 import type { GameStats } from "@/hooks/useGameStats";
 
