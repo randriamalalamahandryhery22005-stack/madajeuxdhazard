@@ -1,3 +1,4 @@
+import AccountReviewWizard from "@/components/AccountReviewWizard";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
