@@ -22,6 +22,7 @@ import ForceUpdateOverlay from "@/components/ForceUpdateOverlay";
 import TrialOverlay from "@/components/TrialOverlay";
 import AppPersonalizationRoot from "@/components/AppPersonalizationRoot";
 import BlockedAccountGate from "@/components/BlockedAccountGate";
+import RestrictedAccountGate from "@/components/RestrictedAccountGate";
 import PremiumSecurityRoot from "@/components/PremiumSecurityRoot";
 import "@/lib/safeVolume";
 
@@ -161,6 +162,7 @@ function RootComponent() {
                 <TrialOverlay />
                 <PremiumSecurityRoot />
                 <BlockedAccountGate />
+                <RestrictedAccountGate />
 
                 {/* Required: nested routes render here. */}
                 <Outlet />
