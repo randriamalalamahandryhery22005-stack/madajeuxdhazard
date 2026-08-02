@@ -403,11 +403,10 @@ export default function Chat() {
     setEmojiPickerFor(null);
   };
 
-  // Filter: only messages from currently online users (plus your own)
-  const visible = useMemo(
-    () => messages.filter((m) => onlineIds.has(m.user_id) || m.user_id === user?.id),
-    [messages, onlineIds, user?.id]
-  );
+  // Tous les messages du chat global sont visibles (l'historique ne doit pas
+  // disparaître lorsqu'un auteur se déconnecte).
+  const visible = messages;
+
 
   const filtered = useMemo(() => {
     if (!search.trim()) return visible;
