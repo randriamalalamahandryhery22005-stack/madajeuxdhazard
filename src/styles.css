@@ -126,7 +126,7 @@
     --sidebar-ring: 42 65% 54%;
   }
 
-  .dark, :root {
+  .dark {
     /* Émeraude Prestige — Luxe casino dark */
     --background: 158 55% 5%;
     --foreground: 45 40% 96%;
