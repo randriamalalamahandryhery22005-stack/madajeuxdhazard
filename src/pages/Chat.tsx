@@ -312,8 +312,12 @@ export default function Chat() {
     try {
       let imagePath: string | null = null;
       if (imageFile) {
-        const ext = imageFile.name.split(".").pop() || "jpg";
-        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const rawName = imageFile.name || "fichier";
+        const hasExt = /\.[a-z0-9]{1,8}$/i.test(rawName);
+        const ext = hasExt ? rawName.split(".").pop()! : (imageFile.type.split("/")[1] || "bin");
+        const safeName = rawName.replace(/[^\w.\-]+/g, "_");
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}${hasExt ? "" : `.${ext}`}`;
+
         const { error: upErr } = await supabase.storage
           .from("chat-files")
           .upload(path, imageFile, { contentType: imageFile.type || "application/octet-stream", upsert: false });
@@ -366,11 +370,14 @@ export default function Chat() {
   const sendVoice = async (blob: Blob, durationMs: number) => {
     if (!user) return;
     try {
-      const path = `${user.id}/voice-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webm`;
+      const mime = blob.type || "audio/webm";
+      const ext = /mp4|m4a|aac/i.test(mime) ? "m4a" : /ogg/i.test(mime) ? "ogg" : /mpeg|mp3/i.test(mime) ? "mp3" : "webm";
+      const path = `${user.id}/voice-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("chat-files")
-        .upload(path, blob, { contentType: blob.type || "audio/webm", upsert: false });
+        .upload(path, blob, { contentType: mime, upsert: false });
       if (upErr) throw upErr;
+
       const { error } = await supabase.from("global_chat_messages").insert({
         user_id: user.id,
         content: `🎤 Message vocal · ${Math.max(1, Math.round(durationMs / 1000))}s`,
@@ -403,11 +410,10 @@ export default function Chat() {
     setEmojiPickerFor(null);
   };
 
-  // Filter: only messages from currently online users (plus your own)
-  const visible = useMemo(
-    () => messages.filter((m) => onlineIds.has(m.user_id) || m.user_id === user?.id),
-    [messages, onlineIds, user?.id]
-  );
+  // Tous les messages du chat global sont visibles (l'historique ne doit pas
+  // disparaître lorsqu'un auteur se déconnecte).
+  const visible = messages;
+
 
   const filtered = useMemo(() => {
     if (!search.trim()) return visible;

@@ -202,23 +202,39 @@ export function playNotificationSound(kind: SoundKind, opts: { force?: boolean }
 /** Sonnerie continue (appel entrant). Retourne une fonction d'arrêt. */
 export function startRingtone(): () => void {
   if (typeof window === "undefined") return () => {};
-  const s = readSoundSettings();
   let stopped = false;
   let timer: number | null = null;
+  let vibrateTimer: number | null = null;
 
+  // Un appel entrant doit toujours sonner : on force la reprise du contexte
+  // audio à chaque cycle (il peut être suspendu par le navigateur) et on
+  // ignore volontairement l'anti-spam.
   const tick = () => {
     if (stopped) return;
-    if (s.enabled) {
-      try { playDesign("ring", Math.max(0.35, s.volume), true); } catch { /* noop */ }
-    }
+    const s = readSoundSettings();
+    const c = getCtx();
+    if (c && c.state === "suspended") c.resume().catch(() => {});
+    try { playDesign("ring", Math.max(0.4, s.volume), true); } catch { /* noop */ }
     timer = window.setTimeout(tick, 1400);
   };
   tick();
-  if (navigator.vibrate) navigator.vibrate([300, 200, 300, 200, 300]);
+
+  const vibrate = () => {
+    if (stopped) return;
+    try { navigator.vibrate?.([300, 200, 300, 200, 300]); } catch { /* noop */ }
+    vibrateTimer = window.setTimeout(vibrate, 1600);
+  };
+  vibrate();
+
+  const onVisible = () => { if (!stopped) tick(); };
+  document.addEventListener("visibilitychange", onVisible);
 
   return () => {
     stopped = true;
     if (timer) window.clearTimeout(timer);
-    if (navigator.vibrate) navigator.vibrate(0);
+    if (vibrateTimer) window.clearTimeout(vibrateTimer);
+    document.removeEventListener("visibilitychange", onVisible);
+    try { navigator.vibrate?.(0); } catch { /* noop */ }
   };
 }
+

@@ -14,6 +14,7 @@ import {
 import AdminOnlineUsersPanel from "@/components/AdminOnlineUsersPanel";
 import AdminGenStorePanel from "@/components/AdminGenStorePanel";
 import AdminSecurityPanel from "@/components/AdminSecurityPanel";
+import AdminReviewsPanel from "@/components/AdminReviewsPanel";
 import AdminPremiumBonusPanel from "@/components/AdminPremiumBonusPanel";
 
 import { toast } from "sonner";
@@ -42,7 +43,7 @@ interface GameAccess {
 interface AppUpdate { id: string; title: string; update_url: string; is_active: boolean; created_at: string; }
 interface UserPoints { user_id: string; total: number; }
 
-type Tab = "dashboard" | "users" | "codes" | "resets" | "premium" | "bonuses" | "settings" | "points" | "notifications" | "rewards" | "chat" | "sessions" | "online_live" | "gen_store" | "security";
+type Tab = "dashboard" | "users" | "codes" | "resets" | "premium" | "bonuses" | "settings" | "points" | "notifications" | "rewards" | "chat" | "sessions" | "online_live" | "gen_store" | "security" | "reviews";
 
 interface OnlineSession {
   user_id: string;
@@ -420,6 +421,7 @@ const Admin = () => {
     { id: "online_live", label: "En ligne", icon: <Activity className="w-3.5 h-3.5" /> },
     { id: "gen_store", label: "J&H Store", icon: <ImageIcon className="w-3.5 h-3.5" /> },
     { id: "security", label: "Sécurité", icon: <Shield className="w-3.5 h-3.5" /> },
+    { id: "reviews", label: "Examens", icon: <Shield className="w-3.5 h-3.5" /> },
     
   ];
 
@@ -429,7 +431,7 @@ const Admin = () => {
     { title: "Vue d'ensemble", items: ["dashboard", "online_live", "sessions", "points"] },
     { title: "Utilisateurs & accès", items: ["users", "premium", "bonuses", "rewards", "resets"] },
     { title: "Contenu & comm.", items: ["chat", "notifications", "gen_store"] },
-    { title: "Configuration", items: ["codes", "settings", "security"] },
+    { title: "Configuration", items: ["codes", "settings", "security", "reviews"] },
   ];
   const tabsById = Object.fromEntries(tabs.map((t) => [t.id, t]));
   const pendingTotal = pendingAccess.length + resets.filter(r => r.status === "pending").length + chatMessages.filter(m => m.status === "pending").length;
@@ -1410,6 +1412,11 @@ const Admin = () => {
         {tab === "security" && (
           <div style={{ animation: "fade-up 0.4s ease forwards" }}>
             <AdminSecurityPanel />
+          </div>
+        )}
+        {tab === "reviews" && (
+          <div style={{ animation: "fade-up 0.4s ease forwards" }}>
+            <AdminReviewsPanel />
           </div>
         )}
         {tab === "bonuses" && (

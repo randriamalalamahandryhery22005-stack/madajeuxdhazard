@@ -1,3 +1,4 @@
+import AccountReviewWizard from "@/components/AccountReviewWizard";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -386,7 +387,18 @@ const Profile = () => {
           ))}
         </section>
 
+        {/* Vérification du compte — examen en 5 étapes */}
+        <section id="verification" className="rounded-3xl border border-border bg-card/50 backdrop-blur-sm p-5 space-y-3">
+          <h2 className="text-sm font-bold">Vérification du compte</h2>
+          <p className="text-[11px] text-muted-foreground">
+            Un profil incomplet restreint l'accès aux fonctionnalités. Complétez les cinq étapes pour envoyer
+            une demande d'examen à l'administrateur.
+          </p>
+          <AccountReviewWizard />
+        </section>
+
         {/* Danger zone — delete account */}
+
         <section id="danger" className="rounded-3xl border border-destructive/30 bg-destructive/5 backdrop-blur-sm p-5 space-y-3">
           <div className="flex items-center gap-2">
             <Trash2 className="w-4 h-4 text-destructive" />
