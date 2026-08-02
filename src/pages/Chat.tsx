@@ -312,8 +312,12 @@ export default function Chat() {
     try {
       let imagePath: string | null = null;
       if (imageFile) {
-        const ext = imageFile.name.split(".").pop() || "jpg";
-        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const rawName = imageFile.name || "fichier";
+        const hasExt = /\.[a-z0-9]{1,8}$/i.test(rawName);
+        const ext = hasExt ? rawName.split(".").pop()! : (imageFile.type.split("/")[1] || "bin");
+        const safeName = rawName.replace(/[^\w.\-]+/g, "_");
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}${hasExt ? "" : `.${ext}`}`;
+
         const { error: upErr } = await supabase.storage
           .from("chat-files")
           .upload(path, imageFile, { contentType: imageFile.type || "application/octet-stream", upsert: false });
