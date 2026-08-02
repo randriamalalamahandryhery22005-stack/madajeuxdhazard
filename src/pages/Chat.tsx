@@ -366,11 +366,14 @@ export default function Chat() {
   const sendVoice = async (blob: Blob, durationMs: number) => {
     if (!user) return;
     try {
-      const path = `${user.id}/voice-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webm`;
+      const mime = blob.type || "audio/webm";
+      const ext = /mp4|m4a|aac/i.test(mime) ? "m4a" : /ogg/i.test(mime) ? "ogg" : /mpeg|mp3/i.test(mime) ? "mp3" : "webm";
+      const path = `${user.id}/voice-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("chat-files")
-        .upload(path, blob, { contentType: blob.type || "audio/webm", upsert: false });
+        .upload(path, blob, { contentType: mime, upsert: false });
       if (upErr) throw upErr;
+
       const { error } = await supabase.from("global_chat_messages").insert({
         user_id: user.id,
         content: `🎤 Message vocal · ${Math.max(1, Math.round(durationMs / 1000))}s`,
