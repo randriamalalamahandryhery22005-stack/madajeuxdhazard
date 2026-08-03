@@ -206,7 +206,10 @@ export default function Chat() {
       setReactions((reactRes.data || []) as Reaction[]);
       setReads((readRes.data || []) as ReadRow[]);
       await loadProfiles(rows.map((m) => m.user_id));
-      rows.forEach((m) => m.image_url && resolveImage(m.image_url));
+      rows.forEach((m) => {
+        if (m.image_url) resolveImage(m.image_url);
+        parseMessage(m.content).attachments.forEach((a) => resolveImage(a));
+      });
       setLoading(false);
       setTimeout(() => scrollToBottom(false), 50);
     })();
@@ -223,6 +226,7 @@ export default function Chat() {
         setMessages((prev) => (prev.some((m) => m.id === row.id) ? prev : [...prev, row]));
         loadProfiles([row.user_id]);
         if (row.image_url) resolveImage(row.image_url);
+        parseMessage(row.content).attachments.forEach((a) => resolveImage(a));
         if (!atBottom && row.user_id !== user?.id) setUnreadCount((c) => c + 1);
         else setTimeout(() => scrollToBottom(true), 30);
       })
