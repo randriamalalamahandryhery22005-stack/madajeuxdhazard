@@ -299,8 +299,10 @@ const Signup = () => {
         throw authError;
       }
       if (!authData.user) throw new Error("Erreur lors de la création du compte");
+      await registerDeviceAccount(authData.user.id);
 
       let userId = authData.user.id;
+
       if (!authData.session) {
         const { data: signInData, error: signInError } =
           signupMethod === "email"
