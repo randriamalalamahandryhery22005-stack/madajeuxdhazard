@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import AccountReviewWizard from "@/components/AccountReviewWizard";
 import { getMyReview, missingProfileFields, restrictAccount, type ProfileLike } from "@/lib/accountReview";
-import { ShieldAlert, X } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 
 /**
  * Surveille la conformité du profil : un compte incomplet devient restreint,
@@ -65,26 +65,20 @@ export default function RestrictedAccountGate() {
   return (
     <div className="fixed inset-0 z-[110] bg-background/95 backdrop-blur-md overflow-y-auto">
       <div className="max-w-md mx-auto px-4 py-8 space-y-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center">
-              <ShieldAlert className="w-6 h-6 text-amber-400" />
-            </div>
-            <div>
-              <h1 className="text-base font-bold">Compte restreint</h1>
-              <p className="text-xs text-muted-foreground">Vérification requise pour débloquer l'application.</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center">
+            <ShieldAlert className="w-6 h-6 text-amber-400" />
           </div>
-          <button
-            onClick={() => setOpen(false)}
-            aria-label="Fermer temporairement"
-            className="w-9 h-9 rounded-xl border border-border flex items-center justify-center"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div>
+            <h1 className="text-base font-bold">Compte restreint</h1>
+            <p className="text-xs text-muted-foreground">
+              L'application reste inaccessible tant que votre demande d'examen n'a pas été validée par l'administrateur.
+            </p>
+          </div>
         </div>
         <AccountReviewWizard />
       </div>
     </div>
   );
 }
+

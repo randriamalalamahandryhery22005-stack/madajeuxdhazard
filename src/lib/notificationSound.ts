@@ -179,6 +179,15 @@ const lastPlay: Record<string, number> = {};
 function playDesign(kind: SoundKind, volume: number, force = false) {
   const c = getCtx();
   if (!c) return;
+  // Le contexte peut être suspendu (onglet en arrière-plan, politique
+  // d'autoplay) : on le réveille puis on rejoue au prochain tick.
+  if (c.state === "suspended") {
+    c.resume()
+      .then(() => window.setTimeout(() => playDesign(kind, volume, true), 40))
+      .catch(() => {});
+    return;
+  }
+
   const now = c.currentTime;
   const design = DESIGNS[kind];
   if (!design) return;

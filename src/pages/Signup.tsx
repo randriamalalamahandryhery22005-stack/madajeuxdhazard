@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { z } from "zod";
+import { canCreateAccountOnDevice, registerDeviceAccount, MAX_ACCOUNTS_PER_DEVICE } from "@/lib/deviceAccounts";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -261,8 +263,14 @@ const Signup = () => {
 
     setLoading(true);
     try {
+      if (!(await canCreateAccountOnDevice())) {
+        throw new Error(
+          `Limite atteinte : ${MAX_ACCOUNTS_PER_DEVICE} comptes maximum peuvent être créés depuis cet appareil. Connectez-vous à un compte existant.`,
+        );
+      }
       const cleanEmail = formData.email.trim().toLowerCase();
       const cleanPhone = normalizePhone(formData.phone);
+
 
       const signUpParams: any =
         signupMethod === "email"
@@ -291,8 +299,10 @@ const Signup = () => {
         throw authError;
       }
       if (!authData.user) throw new Error("Erreur lors de la création du compte");
+      await registerDeviceAccount(authData.user.id);
 
       let userId = authData.user.id;
+
       if (!authData.session) {
         const { data: signInData, error: signInError } =
           signupMethod === "email"

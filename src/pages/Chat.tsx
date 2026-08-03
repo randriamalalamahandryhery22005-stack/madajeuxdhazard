@@ -17,7 +17,7 @@ import AccountBadges from "@/components/AccountBadges";
 import UserProfileDialog from "@/components/UserProfileDialog";
 import CallHistoryDialog from "@/components/CallHistoryDialog";
 import { useAccountBadges } from "@/hooks/useAccountBadges";
-import { buildEditedContent, parseMessage } from "@/lib/chatMeta";
+import { buildEditedContent, parseMessage, withAttachments } from "@/lib/chatMeta";
 import {
   ArrowLeft,
   Send,
@@ -119,8 +119,9 @@ export default function Chat() {
   const [loading, setLoading] = useState(true);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+
   const [replyTo, setReplyTo] = useState<ChatRow | null>(null);
   const [search, setSearch] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
@@ -205,7 +206,10 @@ export default function Chat() {
       setReactions((reactRes.data || []) as Reaction[]);
       setReads((readRes.data || []) as ReadRow[]);
       await loadProfiles(rows.map((m) => m.user_id));
-      rows.forEach((m) => m.image_url && resolveImage(m.image_url));
+      rows.forEach((m) => {
+        if (m.image_url) resolveImage(m.image_url);
+        parseMessage(m.content).attachments.forEach((a) => resolveImage(a));
+      });
       setLoading(false);
       setTimeout(() => scrollToBottom(false), 50);
     })();
@@ -222,6 +226,7 @@ export default function Chat() {
         setMessages((prev) => (prev.some((m) => m.id === row.id) ? prev : [...prev, row]));
         loadProfiles([row.user_id]);
         if (row.image_url) resolveImage(row.image_url);
+        parseMessage(row.content).attachments.forEach((a) => resolveImage(a));
         if (!atBottom && row.user_id !== user?.id) setUnreadCount((c) => c + 1);
         else setTimeout(() => scrollToBottom(true), 30);
       })
@@ -296,45 +301,77 @@ export default function Chat() {
     if (near) setUnreadCount(0);
   };
 
-  const handleImagePick = (f: File | null) => {
-    if (!f) { setImageFile(null); setImagePreview(null); return; }
-    if (f.size > MAX_FILE_MB * 1024 * 1024) { toast.error(`Fichier trop volumineux (max ${MAX_FILE_MB}MB)`); return; }
-    setImageFile(f);
-    if (f.type.startsWith("image/")) setImagePreview(URL.createObjectURL(f));
-    else setImagePreview(null);
+  const MAX_IMAGES = 5;
+
+  const clearFiles = () => {
+    previews.forEach((u) => { try { URL.revokeObjectURL(u); } catch { /* noop */ } });
+    setFiles([]);
+    setPreviews([]);
+  };
+
+  const handlePick = (picked: File[]) => {
+    if (!picked.length) return;
+    const tooBig = picked.find((f) => f.size > MAX_FILE_MB * 1024 * 1024);
+    if (tooBig) { toast.error(`Fichier trop volumineux (max ${MAX_FILE_MB}MB)`); return; }
+
+    const allImages = picked.every((f) => f.type.startsWith("image/"));
+    if (!allImages) {
+      if (picked.length > 1) { toast.error("Un seul fichier par message (hors images)"); return; }
+      clearFiles();
+      setFiles([picked[0]]);
+      setPreviews([]);
+      return;
+    }
+
+    const current = files.every((f) => f.type.startsWith("image/")) ? files : [];
+    const merged = [...current, ...picked].slice(0, MAX_IMAGES);
+    if (current.length + picked.length > MAX_IMAGES) toast.info(`${MAX_IMAGES} images maximum par message`);
+    previews.forEach((u) => { try { URL.revokeObjectURL(u); } catch { /* noop */ } });
+    setFiles(merged);
+    setPreviews(merged.map((f) => URL.createObjectURL(f)));
+  };
+
+  const removeFile = (index: number) => {
+    const next = files.filter((_, i) => i !== index);
+    previews.forEach((u) => { try { URL.revokeObjectURL(u); } catch { /* noop */ } });
+    setFiles(next);
+    setPreviews(next.filter((f) => f.type.startsWith("image/")).map((f) => URL.createObjectURL(f)));
+  };
+
+  const uploadOne = async (file: File, userId: string) => {
+    const rawName = file.name || "fichier";
+    const hasExt = /\.[a-z0-9]{1,8}$/i.test(rawName);
+    const ext = hasExt ? rawName.split(".").pop()! : (file.type.split("/")[1] || "bin");
+    const safeName = rawName.replace(/[^\w.\-]+/g, "_");
+    const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}${hasExt ? "" : `.${ext}`}`;
+    const { error } = await supabase.storage
+      .from("chat-files")
+      .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+    if (error) throw error;
+    return path;
   };
 
   const send = async () => {
     if (!user) return;
     const text = input.trim();
-    if (!text && !imageFile) return;
+    if (!text && files.length === 0) return;
     setSending(true);
     try {
-      let imagePath: string | null = null;
-      if (imageFile) {
-        const rawName = imageFile.name || "fichier";
-        const hasExt = /\.[a-z0-9]{1,8}$/i.test(rawName);
-        const ext = hasExt ? rawName.split(".").pop()! : (imageFile.type.split("/")[1] || "bin");
-        const safeName = rawName.replace(/[^\w.\-]+/g, "_");
-        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}${hasExt ? "" : `.${ext}`}`;
+      const paths: string[] = [];
+      for (const f of files) paths.push(await uploadOne(f, user.id));
 
-        const { error: upErr } = await supabase.storage
-          .from("chat-files")
-          .upload(path, imageFile, { contentType: imageFile.type || "application/octet-stream", upsert: false });
-        if (upErr) throw upErr;
-        imagePath = path;
-      }
+      const content = withAttachments(text, paths.slice(1));
       const { error } = await supabase.from("global_chat_messages").insert({
         user_id: user.id,
-        content: text,
-        image_url: imagePath,
+        content,
+        image_url: paths[0] ?? null,
         reply_to_id: replyTo?.id ?? null,
       });
       if (error) throw error;
       setInput("");
-      setImageFile(null);
-      setImagePreview(null);
+      clearFiles();
       setReplyTo(null);
+      paths.forEach((p) => resolveImage(p));
       setTimeout(() => scrollToBottom(true), 30);
     } catch (e) {
       toast.error("Échec de l'envoi");
@@ -343,6 +380,7 @@ export default function Chat() {
       setSending(false);
     }
   };
+
 
   const deleteMessage = async (id: string) => {
     const { error } = await supabase.from("global_chat_messages").delete().eq("id", id);
@@ -359,11 +397,13 @@ export default function Chat() {
     const parsed = parseMessage(m.content);
     if (!next || next === parsed.text) { setEditingId(null); return; }
     const original = parsed.original ?? parsed.text;
-    const content = buildEditedContent(next, original);
+    const content = withAttachments(buildEditedContent(next, original), parsed.attachments);
     const { error } = await supabase.from("global_chat_messages").update({ content }).eq("id", m.id);
-    if (error) { toast.error("Modification impossible"); return; }
+    if (error) { toast.error("Modification impossible"); console.error(error); return; }
     setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, content } : x)));
+    setEditText("");
     setEditingId(null);
+
   };
 
 
@@ -477,7 +517,7 @@ export default function Chat() {
           <div className="flex-1 min-w-0">
             <h1 className="text-[15px] font-semibold leading-tight">J&H Chats</h1>
             <p className="text-[11px] text-slate-400">
-              {onlineIds.size} en ligne · Utilisateurs en ligne uniquement
+              {onlineIds.size} en ligne · Communauté Jeux d&apos;Hazard
             </p>
           </div>
           <button
@@ -548,7 +588,7 @@ export default function Chat() {
                         </button>
                         {online && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-950" />}
                       </div>
-                      <div className={`max-w-[78%] flex flex-col ${mine ? "items-end" : "items-start"}`}>
+                      <div className={`max-w-[78%] min-w-0 flex flex-col ${mine ? "items-end" : "items-start"}`}>
                         <div className={`flex items-center gap-2 text-[11px] mb-1 ${mine ? "flex-row-reverse" : ""}`}>
                           <button
                             onClick={() => setProfileFor(m.user_id)}
@@ -561,8 +601,10 @@ export default function Chat() {
                         </div>
 
                         <div
-                          className={`relative px-3 py-2 rounded-2xl text-[14px] leading-snug break-words shadow ${
-                            mine ? "bg-gradient-to-br from-amber-600 to-emerald-600 text-white rounded-tr-sm" : "bg-white/[0.06] border border-white/10 text-slate-100 rounded-tl-sm"
+                          className={`relative w-full min-w-0 max-w-full overflow-hidden px-3.5 py-2.5 rounded-2xl text-[14px] leading-relaxed break-words [overflow-wrap:anywhere] shadow-lg backdrop-blur-sm ${
+                            mine
+                              ? "bg-gradient-to-br from-amber-500/90 to-emerald-600/90 text-white rounded-br-sm ring-1 ring-white/20"
+                              : "bg-white/[0.07] border border-white/10 text-slate-100 rounded-bl-sm"
                           }`}
                         >
                           {reply && (
@@ -576,11 +618,34 @@ export default function Chat() {
                           {imgUrl && isAudioPath(m.image_url) && (
                             <VoiceMessagePlayer src={imgUrl} variant={mine ? "me" : "them"} cacheKey={m.id} />
                           )}
-                          {imgUrl && isImagePath(m.image_url) && (
-                            <a href={imgUrl} target="_blank" rel="noreferrer" className="block mb-1">
-                              <img src={imgUrl} alt="pièce jointe" className="rounded-xl max-h-64 object-cover" />
-                            </a>
-                          )}
+                          {(() => {
+                            const gallery = [m.image_url, ...parsed.attachments]
+                              .filter((x): x is string => !!x && isImagePath(x))
+                              .map((x) => signedUrls[x])
+                              .filter(Boolean);
+                            if (gallery.length === 0) return null;
+                            return (
+                              <div className={`grid gap-1 mb-1 ${gallery.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+                                {gallery.map((u, i) => (
+                                  <a
+                                    key={u + i}
+                                    href={u}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className={`block overflow-hidden rounded-xl ${gallery.length === 3 && i === 0 ? "col-span-2" : ""}`}
+                                  >
+                                    <img
+                                      src={u}
+                                      alt="pièce jointe"
+                                      loading="lazy"
+                                      className={`w-full object-cover ${gallery.length === 1 ? "max-h-64" : "h-32"}`}
+                                    />
+                                  </a>
+                                ))}
+                              </div>
+                            );
+                          })()}
+
                           {imgUrl && isVideoPath(m.image_url) && (
                             <video src={imgUrl} controls playsInline className="rounded-xl max-h-64 mb-1 bg-black" />
                           )}
@@ -729,38 +794,45 @@ export default function Chat() {
               </button>
             </div>
           )}
-          {imageFile && (
-            <div className="flex items-center gap-2">
-              {imagePreview ? (
-                <div className="relative inline-block">
-                  <img src={imagePreview} alt="aperçu" className="max-h-24 rounded-xl border border-white/10" />
-                  <button onClick={() => handleImagePick(null)} className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-slate-900 border border-white/20 flex items-center justify-center">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <div className="relative inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 pr-8 max-w-full">
-                  {imageFile.type.startsWith("video/") ? <Play className="w-4 h-4 text-amber-300 shrink-0" /> : <FileText className="w-4 h-4 text-amber-300 shrink-0" />}
-                  <span className="text-xs text-slate-200 truncate max-w-[220px]">{imageFile.name}</span>
-                  <span className="text-[10px] text-slate-500">{(imageFile.size / (1024 * 1024)).toFixed(1)} MB</span>
-                  <button onClick={() => handleImagePick(null)} className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-slate-900 border border-white/20 flex items-center justify-center">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+          {files.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {files.map((f, i) => {
+                const preview = f.type.startsWith("image/") ? previews[i] : null;
+                return preview ? (
+                  <div key={`${f.name}-${i}`} className="relative inline-block">
+                    <img src={preview} alt="aperçu" className="h-20 w-20 object-cover rounded-xl border border-white/10" />
+                    <button onClick={() => removeFile(i)} className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-slate-900 border border-white/20 flex items-center justify-center">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div key={`${f.name}-${i}`} className="relative inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 pr-8 max-w-full">
+                    {f.type.startsWith("video/") ? <Play className="w-4 h-4 text-amber-300 shrink-0" /> : <FileText className="w-4 h-4 text-amber-300 shrink-0" />}
+                    <span className="text-xs text-slate-200 truncate max-w-[200px]">{f.name}</span>
+                    <span className="text-[10px] text-slate-500">{(f.size / (1024 * 1024)).toFixed(1)} MB</span>
+                    <button onClick={() => removeFile(i)} className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-slate-900 border border-white/20 flex items-center justify-center">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+              {files.every((f) => f.type.startsWith("image/")) && (
+                <span className="text-[10px] text-slate-500">{files.length}/5 images</span>
               )}
             </div>
           )}
           <div className="flex items-end gap-2">
             {!voiceActive && (
               <>
-                <label className="w-10 h-10 shrink-0 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center cursor-pointer transition" title="Envoyer une image ou une vidéo">
+                <label className="w-10 h-10 shrink-0 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center cursor-pointer transition" title="Envoyer jusqu'à 5 images">
                   <ImagePlus className="w-4 h-4 text-amber-300" />
-                  <input type="file" accept="image/*,video/*" className="hidden" onChange={(e) => { handleImagePick(e.target.files?.[0] || null); e.currentTarget.value = ""; }} />
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => { handlePick(Array.from(e.target.files || [])); e.currentTarget.value = ""; }} />
                 </label>
-                <label className="w-10 h-10 shrink-0 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center cursor-pointer transition" title="Envoyer un fichier">
+                <label className="w-10 h-10 shrink-0 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center cursor-pointer transition" title="Envoyer un fichier (vidéo, PDF, APK...)">
                   <Paperclip className="w-4 h-4 text-amber-300" />
-                  <input type="file" accept="*/*" className="hidden" onChange={(e) => { handleImagePick(e.target.files?.[0] || null); e.currentTarget.value = ""; }} />
+                  <input type="file" accept="*/*" className="hidden" onChange={(e) => { handlePick(Array.from(e.target.files || []).slice(0, 1)); e.currentTarget.value = ""; }} />
                 </label>
+
                 <button
                   onClick={() => user && setCallOpen(true)}
                   disabled={!user}
@@ -784,7 +856,7 @@ export default function Chat() {
                   disabled={!user || sending}
                   className="flex-1 min-w-0 max-h-32 resize-none rounded-2xl bg-white/[0.06] border border-white/10 px-3 py-2.5 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
                 />
-                <button onClick={send} disabled={sending || !user || (!input.trim() && !imageFile)} className="w-10 h-10 shrink-0 rounded-2xl bg-gradient-to-br from-amber-600 to-emerald-600 hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition" aria-label="Envoyer">
+                <button onClick={send} disabled={sending || !user || (!input.trim() && files.length === 0)} className="w-10 h-10 shrink-0 rounded-2xl bg-gradient-to-br from-amber-600 to-emerald-600 hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition" aria-label="Envoyer">
                   {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </button>
               </>
