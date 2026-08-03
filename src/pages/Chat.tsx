@@ -601,8 +601,10 @@ export default function Chat() {
                         </div>
 
                         <div
-                          className={`relative px-3 py-2 rounded-2xl text-[14px] leading-snug break-words shadow ${
-                            mine ? "bg-gradient-to-br from-amber-600 to-emerald-600 text-white rounded-tr-sm" : "bg-white/[0.06] border border-white/10 text-slate-100 rounded-tl-sm"
+                          className={`relative w-full min-w-0 max-w-full overflow-hidden px-3.5 py-2.5 rounded-2xl text-[14px] leading-relaxed break-words [overflow-wrap:anywhere] shadow-lg backdrop-blur-sm ${
+                            mine
+                              ? "bg-gradient-to-br from-amber-500/90 to-emerald-600/90 text-white rounded-br-sm ring-1 ring-white/20"
+                              : "bg-white/[0.07] border border-white/10 text-slate-100 rounded-bl-sm"
                           }`}
                         >
                           {reply && (
@@ -616,11 +618,34 @@ export default function Chat() {
                           {imgUrl && isAudioPath(m.image_url) && (
                             <VoiceMessagePlayer src={imgUrl} variant={mine ? "me" : "them"} cacheKey={m.id} />
                           )}
-                          {imgUrl && isImagePath(m.image_url) && (
-                            <a href={imgUrl} target="_blank" rel="noreferrer" className="block mb-1">
-                              <img src={imgUrl} alt="pièce jointe" className="rounded-xl max-h-64 object-cover" />
-                            </a>
-                          )}
+                          {(() => {
+                            const gallery = [m.image_url, ...parsed.attachments]
+                              .filter((x): x is string => !!x && isImagePath(x))
+                              .map((x) => signedUrls[x])
+                              .filter(Boolean);
+                            if (gallery.length === 0) return null;
+                            return (
+                              <div className={`grid gap-1 mb-1 ${gallery.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+                                {gallery.map((u, i) => (
+                                  <a
+                                    key={u + i}
+                                    href={u}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className={`block overflow-hidden rounded-xl ${gallery.length === 3 && i === 0 ? "col-span-2" : ""}`}
+                                  >
+                                    <img
+                                      src={u}
+                                      alt="pièce jointe"
+                                      loading="lazy"
+                                      className={`w-full object-cover ${gallery.length === 1 ? "max-h-64" : "h-32"}`}
+                                    />
+                                  </a>
+                                ))}
+                              </div>
+                            );
+                          })()}
+
                           {imgUrl && isVideoPath(m.image_url) && (
                             <video src={imgUrl} controls playsInline className="rounded-xl max-h-64 mb-1 bg-black" />
                           )}
