@@ -261,8 +261,14 @@ const Signup = () => {
 
     setLoading(true);
     try {
+      if (!(await canCreateAccountOnDevice())) {
+        throw new Error(
+          `Limite atteinte : ${MAX_ACCOUNTS_PER_DEVICE} comptes maximum peuvent être créés depuis cet appareil. Connectez-vous à un compte existant.`,
+        );
+      }
       const cleanEmail = formData.email.trim().toLowerCase();
       const cleanPhone = normalizePhone(formData.phone);
+
 
       const signUpParams: any =
         signupMethod === "email"
