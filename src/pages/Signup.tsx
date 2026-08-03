@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { z } from "zod";
+import { canCreateAccountOnDevice, registerDeviceAccount, MAX_ACCOUNTS_PER_DEVICE } from "@/lib/deviceAccounts";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
