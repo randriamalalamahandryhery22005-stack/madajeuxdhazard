@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import AccountReviewWizard from "@/components/AccountReviewWizard";
 import { getMyReview, missingProfileFields, restrictAccount, type ProfileLike } from "@/lib/accountReview";
-import { ShieldAlert, X } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 
 /**
  * Surveille la conformité du profil : un compte incomplet devient restreint,
