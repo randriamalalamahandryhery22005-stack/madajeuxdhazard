@@ -393,11 +393,13 @@ export default function Chat() {
     const parsed = parseMessage(m.content);
     if (!next || next === parsed.text) { setEditingId(null); return; }
     const original = parsed.original ?? parsed.text;
-    const content = buildEditedContent(next, original);
+    const content = withAttachments(buildEditedContent(next, original), parsed.attachments);
     const { error } = await supabase.from("global_chat_messages").update({ content }).eq("id", m.id);
-    if (error) { toast.error("Modification impossible"); return; }
+    if (error) { toast.error("Modification impossible"); console.error(error); return; }
     setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, content } : x)));
+    setEditText("");
     setEditingId(null);
+
   };
 
 
