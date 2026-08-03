@@ -517,7 +517,7 @@ export default function Chat() {
           <div className="flex-1 min-w-0">
             <h1 className="text-[15px] font-semibold leading-tight">J&H Chats</h1>
             <p className="text-[11px] text-slate-400">
-              {onlineIds.size} en ligne · Utilisateurs en ligne uniquement
+              {onlineIds.size} en ligne · Communauté Jeux d&apos;Hazard
             </p>
           </div>
           <button
@@ -588,7 +588,7 @@ export default function Chat() {
                         </button>
                         {online && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-950" />}
                       </div>
-                      <div className={`max-w-[78%] flex flex-col ${mine ? "items-end" : "items-start"}`}>
+                      <div className={`max-w-[78%] min-w-0 flex flex-col ${mine ? "items-end" : "items-start"}`}>
                         <div className={`flex items-center gap-2 text-[11px] mb-1 ${mine ? "flex-row-reverse" : ""}`}>
                           <button
                             onClick={() => setProfileFor(m.user_id)}
