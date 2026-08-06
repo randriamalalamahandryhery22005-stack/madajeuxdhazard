@@ -109,7 +109,7 @@ export default function SecurityChatPanel({
     return () => {
       aliveRef.current = false;
       window.removeEventListener("focus", onFocus);
-      window.removeEventListener("focus", onFocus);
+
       try {
         supabase.removeChannel(ch);
       } catch {
