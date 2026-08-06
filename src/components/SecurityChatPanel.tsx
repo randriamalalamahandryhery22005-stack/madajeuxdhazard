@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Loader2, Send } from "lucide-react";
 
 type Msg = {
@@ -8,7 +9,11 @@ type Msg = {
   sender_id: string;
   content: string | null;
   created_at: string;
+  pending?: boolean;
 };
+
+const sortByDate = (list: Msg[]) =>
+  [...list].sort((a, b) => (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0));
 
 /** Chat privé de sécurité entre l'administrateur et le titulaire du compte. */
 export default function SecurityChatPanel({
@@ -25,22 +30,47 @@ export default function SecurityChatPanel({
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const aliveRef = useRef(true);
 
-  useEffect(() => {
-    let alive = true;
-    const load = async () => {
-      const { data } = await supabase
+  const scrollToEnd = useCallback((behavior: ScrollBehavior = "smooth") => {
+    setTimeout(() => endRef.current?.scrollIntoView({ behavior, block: "end" }), 40);
+  }, []);
+
+  /** Recharge l'historique et fusionne avec les messages optimistes en attente. */
+  const load = useCallback(
+    async (initial = false) => {
+      const { data, error } = await supabase
         .from("messages")
         .select("id,conversation_id,sender_id,content,created_at")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: true })
-        .limit(200);
-      if (!alive) return;
-      setMsgs((data || []) as Msg[]);
-      setLoading(false);
-      setTimeout(() => endRef.current?.scrollIntoView({ behavior: "auto" }), 30);
-    };
-    load();
+        .limit(300);
+      if (!aliveRef.current) return;
+      if (error) {
+        if (initial) setLoading(false);
+        return;
+      }
+      const rows = (data || []) as Msg[];
+      setMsgs((prev) => {
+        const stillPending = prev.filter(
+          (m) => m.pending && !rows.some((r) => r.sender_id === m.sender_id && r.content === m.content),
+        );
+        return sortByDate([...rows, ...stillPending]);
+      });
+      if (initial) {
+        setLoading(false);
+        scrollToEnd("auto");
+      }
+    },
+    [conversationId, scrollToEnd],
+  );
+
+  useEffect(() => {
+    aliveRef.current = true;
+    setLoading(true);
+    setMsgs([]);
+    void load(true);
+
     const ch = supabase
       .channel(`sec-chat-${conversationId}-${Math.random().toString(36).slice(2)}`)
       .on(
@@ -48,22 +78,90 @@ export default function SecurityChatPanel({
         { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
         (payload) => {
           const row = payload.new as Msg;
-          setMsgs((prev) => (prev.some((m) => m.id === row.id) ? prev : [...prev, row]));
-          setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 30);
-        }
+          setMsgs((prev) => {
+            if (prev.some((m) => m.id === row.id)) return prev;
+            // Remplace l'éventuel message optimiste correspondant.
+            const withoutPending = prev.filter(
+              (m) => !(m.pending && m.sender_id === row.sender_id && m.content === row.content),
+            );
+            return sortByDate([...withoutPending, row]);
+          });
+          scrollToEnd();
+        },
       )
-      .subscribe();
-    return () => { alive = false; try { supabase.removeChannel(ch); } catch { /* noop */ } };
-  }, [conversationId]);
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+        (payload) => {
+          const old = payload.old as { id?: string };
+          if (!old?.id) return;
+          setMsgs((prev) => prev.filter((m) => m.id !== old.id));
+        },
+      )
+      .subscribe((status) => {
+        // Resynchronise après une reconnexion pour ne perdre aucun message.
+        if (status === "SUBSCRIBED") void load();
+      });
+
+    const onFocus = () => void load();
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      aliveRef.current = false;
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("focus", onFocus);
+      try {
+        supabase.removeChannel(ch);
+      } catch {
+        /* noop */
+      }
+    };
+  }, [conversationId, load, scrollToEnd]);
 
   const send = async () => {
     const value = text.trim();
-    if (!value) return;
+    if (!value || sending) return;
     setSending(true);
-    await supabase.from("messages").insert({ conversation_id: conversationId, sender_id: meId, content: value });
+    const tempId = `tmp-${Math.random().toString(36).slice(2)}`;
+    const optimistic: Msg = {
+      id: tempId,
+      conversation_id: conversationId,
+      sender_id: meId,
+      content: value,
+      created_at: new Date().toISOString(),
+      pending: true,
+    };
+    setMsgs((prev) => sortByDate([...prev, optimistic]));
     setText("");
+    scrollToEnd();
+
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({ conversation_id: conversationId, sender_id: meId, content: value })
+      .select("id,conversation_id,sender_id,content,created_at")
+      .maybeSingle();
+
+    if (!aliveRef.current) return;
     setSending(false);
+
+    if (error) {
+      setMsgs((prev) => prev.filter((m) => m.id !== tempId));
+      setText(value);
+      toast.error("Message non envoyé", { description: error.message });
+      return;
+    }
+
+    if (data) {
+      const row = data as Msg;
+      setMsgs((prev) =>
+        prev.some((m) => m.id === row.id)
+          ? prev.filter((m) => m.id !== tempId)
+          : sortByDate([...prev.filter((m) => m.id !== tempId), row]),
+      );
+    }
+    scrollToEnd();
   };
+
 
   return (
     <div className="flex flex-col rounded-2xl border border-white/10 bg-black/20 overflow-hidden">
