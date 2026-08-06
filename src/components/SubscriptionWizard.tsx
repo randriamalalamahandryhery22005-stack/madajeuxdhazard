@@ -10,6 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { grantSubscriptionCoins } from "@/lib/coins";
+import { buildYasUssd, AIRTEL_USSD, launchUssd } from "@/lib/ussd";
+
 
 export interface SubscriptionWizardProps {
   gameMode: string;
