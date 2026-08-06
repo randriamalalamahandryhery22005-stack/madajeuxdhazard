@@ -130,9 +130,14 @@ const Premium = () => {
               }`}
             >
               {p.popular && (
-                <div className="absolute -top-2.5 right-3 luxe-badge-premium">Populaire</div>
+                <div className="mb-3 flex">
+                  <span className="luxe-badge-premium flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5" /> Populaire
+                  </span>
+                </div>
               )}
               <div className="flex items-start justify-between gap-3">
+
                 <div className="min-w-0">
                   <div className="text-[9px] uppercase tracking-widest text-white/55 font-semibold">{p.label}</div>
                   <div className="text-2xl font-black mt-0.5 leading-none flex items-baseline gap-1 text-white">
