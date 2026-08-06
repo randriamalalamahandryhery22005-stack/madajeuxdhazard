@@ -319,6 +319,20 @@ const SubscriptionWizard = ({
             )}
           </div>
 
+          {/* Résumé montant / durée / opérateur */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { l: "Montant", v: `${price.toLocaleString()} Ar` },
+              { l: "Durée", v: lifetime ? "À vie" : `${days} j` },
+              { l: "Moyen", v: op ? op.name.split(" ")[0] : "—" },
+            ].map((c) => (
+              <div key={c.l} className="rounded-2xl border border-border/50 bg-card/50 p-3 text-center">
+                <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">{c.l}</p>
+                <p className="text-sm font-black mt-0.5 truncate">{c.v}</p>
+              </div>
+            ))}
+          </div>
+
           <div>
             <p className="text-xs font-bold mb-2">1. Choisissez l'opérateur</p>
             <div className="grid grid-cols-2 gap-2.5">
@@ -327,7 +341,7 @@ const SubscriptionWizard = ({
                 return (
                   <button
                     key={o.id}
-                    onClick={() => setOperator(o.id)}
+                    onClick={() => { setOperator(o.id); setDialed(false); }}
                     className={`rounded-2xl border-2 p-3 text-left transition-all active:scale-[0.97] ${
                       selected
                         ? o.tone === "amber"
@@ -349,33 +363,53 @@ const SubscriptionWizard = ({
 
           {op && (
             <div className="space-y-3 animate-fade-in">
-              <p className="text-xs font-bold">2. Envoyez le paiement</p>
-              <button
-                onClick={() => copy(op.number, "num")}
-                className="w-full flex items-center justify-between px-4 py-4 rounded-2xl bg-background/60 border border-primary/30 active:scale-[0.99] transition"
-              >
-                <div className="text-left">
-                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Numéro {op.name}</p>
-                  <p className="text-2xl font-mono font-black tracking-wider">{op.display}</p>
+              <p className="text-xs font-bold">2. Payer directement depuis l'application</p>
+
+              <div className="rounded-2xl border border-primary/30 bg-background/60 p-4 space-y-2">
+                <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Code USSD {op.name}</p>
+                <p className="text-base font-mono font-black tracking-wide break-all text-primary">{ussdCode}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {operator === "yas"
+                    ? "Le montant et le numéro destinataire sont déjà inclus. Après le lancement, saisissez simplement votre code secret Yas Money."
+                    : `Le menu Airtel Money s'ouvre : suivez les étapes affichées et envoyez ${price.toLocaleString()} Ar au ${op.display}.`}
+                </p>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={() => copy(ussdCode, "ussd")}
+                    className="flex items-center gap-1 px-3 py-2 rounded-xl bg-primary/15 text-primary text-xs font-bold"
+                  >
+                    {copied === "ussd" ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {copied === "ussd" ? "Copié" : "Copier le code"}
+                  </button>
+                  <button
+                    onClick={() => copy(op.number, "num")}
+                    className="flex items-center gap-1 px-3 py-2 rounded-xl bg-secondary/60 text-xs font-bold"
+                  >
+                    {copied === "num" ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    N° {op.display}
+                  </button>
                 </div>
-                <span className="flex items-center gap-1 px-3 py-2 rounded-xl bg-primary/15 text-primary text-xs font-bold">
-                  {copied === "num" ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  {copied === "num" ? "Copié" : "Copier"}
-                </span>
-              </button>
-              <button
-                onClick={() => copy(String(price), "amt")}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-background/60 border border-primary/30 active:scale-[0.99] transition"
+              </div>
+
+              <Button
+                variant="premium"
+                className="w-full h-14 text-base font-bold"
+                disabled={dialing}
+                onClick={startPayment}
               >
-                <div className="text-left">
-                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Montant exact</p>
-                  <p className="text-xl font-black gold-text">{price.toLocaleString()} <span className="text-sm">Ar</span></p>
+                {dialing ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Phone className="w-5 h-5 mr-2" />}
+                {dialing ? "Ouverture du composeur…" : `Payer ${price.toLocaleString()} Ar avec ${op.name}`}
+              </Button>
+
+              {dialed && (
+                <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-center space-y-2 animate-fade-in">
+                  <BadgeCheck className="w-8 h-8 text-emerald-400 mx-auto" />
+                  <p className="text-sm font-bold">Paiement lancé</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Terminez la confirmation sur votre téléphone, puis continuez pour envoyer la preuve.
+                  </p>
                 </div>
-                <span className="flex items-center gap-1 px-3 py-2 rounded-xl bg-primary/15 text-primary text-xs font-bold">
-                  {copied === "amt" ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  {copied === "amt" ? "Copié" : "Copier"}
-                </span>
-              </button>
+              )}
             </div>
           )}
 
@@ -394,6 +428,7 @@ const SubscriptionWizard = ({
           </div>
         </div>
       )}
+
 
       {/* ÉTAPE 3 — Preuve */}
       {step === "proof" && (
