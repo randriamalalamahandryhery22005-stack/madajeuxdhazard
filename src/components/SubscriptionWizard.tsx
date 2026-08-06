@@ -72,6 +72,24 @@ const SubscriptionWizard = ({
     [requestId]
   );
   const op = OPERATORS.find((o) => o.id === operator) ?? null;
+  const ussdCode = operator === "yas" ? buildYasUssd(price, op?.number) : AIRTEL_USSD;
+
+  /** Lance le composeur avec le code USSD pré-rempli puis passe à l'étape suivante. */
+  const startPayment = () => {
+    if (!op) return;
+    setDialing(true);
+    const mobile = launchUssd(ussdCode);
+    if (!mobile) {
+      toast.info("Composez le code sur votre téléphone", { description: ussdCode });
+    }
+    setTimeout(() => {
+      setDialing(false);
+      setDialed(true);
+      setTimeout(() => setStep("proof"), 1200);
+    }, 1400);
+  };
+
+
 
   const fetchMessages = useCallback(async () => {
     if (!user) return;
