@@ -178,9 +178,12 @@ const Premium = () => {
             onClick={() => handleSelect(p)}
             className="relative w-full text-left luxe-card luxe-card-lg luxe-card-gold p-4 active:scale-[0.98] transition"
           >
-            <div className="absolute -top-2.5 left-4 luxe-badge-premium flex items-center gap-1">
-              <Gem className="w-2.5 h-2.5" /> Offre à vie
+            <div className="mb-3 flex">
+              <span className="luxe-badge-premium flex items-center gap-1">
+                <Gem className="w-2.5 h-2.5" /> Offre à vie
+              </span>
             </div>
+
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="text-[10px] uppercase tracking-widest text-white/55 font-semibold">{p.label}</div>
