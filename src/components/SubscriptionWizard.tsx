@@ -61,7 +61,10 @@ const SubscriptionWizard = ({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatText, setChatText] = useState("");
   const [sendingChat, setSendingChat] = useState(false);
+  const [dialing, setDialing] = useState(false);
+  const [dialed, setDialed] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+
 
   const stepIdx = STEPS.findIndex((s) => s.key === step);
   const reference = useMemo(
