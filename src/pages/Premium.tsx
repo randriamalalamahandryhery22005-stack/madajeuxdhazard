@@ -32,6 +32,9 @@ interface Plan {
   tagline: string;
   popular?: boolean;
   lifetime?: boolean;
+  /** Description courte affichée sous la formule. */
+  description: string;
+  perks: string[];
 }
 
 const DAILY_RATE = 30000 / 31; // Ar / jour
@@ -40,10 +43,26 @@ const priceFor = (d: number) => Math.round(d * DAILY_RATE);
 export const LIFETIME_PRICE = 45000;
 
 const PLANS: Plan[] = [
-  { id: "premium-global", days: 7,   price: priceFor(7),   label: "Découverte",   tagline: "1 semaine" },
-  { id: "premium-global", days: 15,  price: priceFor(15),  label: "Standard",     tagline: "2 semaines" },
-  { id: "premium-global", days: 30,  price: priceFor(30),  label: "Mensuel",      tagline: "1 mois", popular: true },
-  { id: "premium-lifetime", days: 0, price: LIFETIME_PRICE, label: "À Vie", tagline: "Accès permanent, sans expiration", lifetime: true },
+  {
+    id: "premium-global", days: 7, price: priceFor(7), label: "Découverte", tagline: "1 semaine",
+    description: "Idéal pour tester tous les moteurs de prédiction pendant 7 jours.",
+    perks: ["Tous les jeux Premium", "Prédictions illimitées"],
+  },
+  {
+    id: "premium-global", days: 15, price: priceFor(15), label: "Standard", tagline: "2 semaines",
+    description: "Deux semaines complètes pour suivre vos stratégies sur la durée.",
+    perks: ["Tous les jeux Premium", "Support prioritaire"],
+  },
+  {
+    id: "premium-global", days: 30, price: priceFor(30), label: "Mensuel", tagline: "1 mois", popular: true,
+    description: "Le meilleur rapport qualité-prix : un mois entier sans interruption.",
+    perks: ["Tous les jeux Premium", "Support prioritaire", "Meilleur tarif journalier"],
+  },
+  {
+    id: "premium-lifetime", days: 0, price: LIFETIME_PRICE, label: "À Vie", tagline: "Accès permanent, sans expiration", lifetime: true,
+    description: "Paiement unique, accès définitif à tous les services Premium — sans renouvellement.",
+    perks: ["Accès permanent", "Toutes les futures fonctionnalités", "Support VIP"],
+  },
 ];
 
 const renderCell = (v: boolean | string, premium: boolean) => {
@@ -100,27 +119,49 @@ const Premium = () => {
     <div className="space-y-8">
       <section className="space-y-3">
         <h2 className="text-xs uppercase tracking-widest text-muted-foreground font-bold">Choisissez la durée</h2>
-        <p className="text-[11px] text-muted-foreground -mt-1">Sélectionnez une formule, puis suivez les étapes : paiement → preuve → validation admin.</p>
-        <div className="grid grid-cols-2 gap-2.5">
+        <p className="text-[11px] text-muted-foreground -mt-1">Sélectionnez une formule : le paiement Yas Money ou Airtel Money se lance directement dans l'application, puis la validation est automatique.</p>
+        <div className="space-y-3">
           {PLANS.filter((p) => !p.lifetime).map((p, i) => (
             <button
               key={i}
               onClick={() => handleSelect(p)}
-              className={`relative text-left luxe-card p-3 transition-all active:scale-[0.97] ${
+              className={`relative w-full text-left luxe-card p-4 transition-all active:scale-[0.98] ${
                 p.popular ? "luxe-card-gold" : "luxe-card-emerald"
               }`}
             >
               {p.popular && (
-                <div className="absolute -top-2 right-2 luxe-badge-premium">Populaire</div>
+                <div className="absolute -top-2.5 right-3 luxe-badge-premium">Populaire</div>
               )}
-              <div className="text-[9px] uppercase tracking-widest text-white/55 font-semibold">{p.label}</div>
-              <div className="text-2xl font-black mt-0.5 leading-none flex items-baseline gap-1 text-white">
-                {p.days}<span className="text-xs font-medium text-white/50">j</span>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[9px] uppercase tracking-widest text-white/55 font-semibold">{p.label}</div>
+                  <div className="text-2xl font-black mt-0.5 leading-none flex items-baseline gap-1 text-white">
+                    {p.days}<span className="text-xs font-medium text-white/50">jours</span>
+                  </div>
+                  <div className="text-[10px] text-white/55 mt-0.5">{p.tagline}</div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-lg font-black luxe-gold-text leading-none">
+                    {p.price.toLocaleString()}<span className="text-[10px]"> Ar</span>
+                  </div>
+                  <div className="text-[9px] text-white/50 mt-0.5">
+                    {Math.round(p.price / p.days).toLocaleString()} Ar/jour
+                  </div>
+                </div>
               </div>
-              <div className="text-[9px] text-white/55 mt-0.5">{p.tagline}</div>
-              <div className="mt-2 pt-2 border-t border-white/10">
-                <div className="text-base font-black luxe-gold-text leading-none">{p.price.toLocaleString()}<span className="text-[10px]"> Ar</span></div>
-                <div className="text-[8px] text-white/50 mt-0.5">{Math.round(p.price / p.days).toLocaleString()} Ar/jour</div>
+              <p className="text-[11px] text-white/65 leading-snug mt-2.5">{p.description}</p>
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
+                {p.perks.map((perk) => (
+                  <span
+                    key={perk}
+                    className="inline-flex items-center gap-1 text-[9px] font-semibold text-white/70 px-2 py-1 rounded-full bg-white/[0.06] border border-white/10"
+                  >
+                    <Check className="w-2.5 h-2.5 text-emerald-400" /> {perk}
+                  </span>
+                ))}
+              </div>
+              <div className="flex items-center gap-1 text-[10px] font-bold luxe-gold-text mt-3">
+                Choisir cette formule <ArrowRight className="w-3 h-3" />
               </div>
             </button>
           ))}
@@ -148,6 +189,20 @@ const Premium = () => {
                 <div className="text-[9px] text-white/50">paiement unique</div>
               </div>
             </div>
+            <p className="text-[11px] text-white/65 leading-snug mt-2.5">{p.description}</p>
+            <div className="flex flex-wrap gap-1.5 mt-2.5">
+              {p.perks.map((perk) => (
+                <span
+                  key={perk}
+                  className="inline-flex items-center gap-1 text-[9px] font-semibold text-white/70 px-2 py-1 rounded-full bg-white/[0.06] border border-white/10"
+                >
+                  <Check className="w-2.5 h-2.5 text-amber-300" /> {perk}
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-1 text-[10px] font-bold luxe-gold-text mt-3">
+              Choisir l'offre à vie <ArrowRight className="w-3 h-3" />
+            </div>
           </button>
         ))}
 
@@ -160,7 +215,7 @@ const Premium = () => {
           {[
             { t: "Présentation Premium", d: "Découvrez tous les avantages inclus." },
             { t: "Choix de la durée", d: "Sélectionnez une formule ou l'option À Vie." },
-            { t: "Moyen de paiement", d: "Yas ou Airtel Money — numéros affichés." },
+            { t: "Moyen de paiement", d: "Yas Money (#111…) ou Airtel Money (*436#) lancés depuis l'app." },
             { t: "Confirmation du paiement", d: "Numéro de transaction + capture d'écran." },
             { t: "Vérification", d: "Contrôle automatique de votre paiement." },
             { t: "Activation", d: "Tous les services Premium débloqués." },

@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -24,6 +25,7 @@ import AppPersonalizationRoot from "@/components/AppPersonalizationRoot";
 import BlockedAccountGate from "@/components/BlockedAccountGate";
 import RestrictedAccountGate from "@/components/RestrictedAccountGate";
 import PremiumSecurityRoot from "@/components/PremiumSecurityRoot";
+import ProfileViewerRoot from "@/components/ProfileViewerRoot";
 import "@/lib/safeVolume";
 
 
@@ -137,6 +139,7 @@ function RootShell({ children }: { children: ReactNode }) {
       <body>
         {children}
         <Scripts />
+        <SpeedInsights />
       </body>
     </html>
   );
@@ -163,6 +166,7 @@ function RootComponent() {
                 <PremiumSecurityRoot />
                 <BlockedAccountGate />
                 <RestrictedAccountGate />
+                <ProfileViewerRoot />
 
                 {/* Required: nested routes render here. */}
                 <Outlet />

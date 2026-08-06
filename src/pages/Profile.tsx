@@ -1,7 +1,7 @@
-import AccountReviewWizard from "@/components/AccountReviewWizard";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import AccountVerificationFlow from "@/components/AccountVerificationFlow";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { COUNTRIES } from "@/lib/countries";
 import { processAvatar } from "@/lib/avatarImage";
+import { enforceUniqueIdentity } from "@/lib/deviceAccounts";
+
 
 
 type EditField = "email" | "phone" | "password" | null;
@@ -165,14 +167,30 @@ const Profile = () => {
         avatar_url: avatarUrl,
       })
       .eq("user_id", user.id);
-    setSavingProfile(false);
     if (error) {
+      setSavingProfile(false);
       toast.error(error.message);
+      return;
+    }
+
+    let restricted = false;
+    try {
+      restricted = await enforceUniqueIdentity({
+        userId: user.id,
+        fullName,
+        phone: profile?.phone ?? null,
+      });
+    } catch { /* non bloquant */ }
+    setSavingProfile(false);
+
+    if (restricted) {
+      toast.error("Informations déjà utilisées par un autre compte : votre compte est restreint.");
     } else {
       toast.success("Profil mis à jour");
-      await refreshProfile();
     }
+    await refreshProfile();
   };
+
 
   const openEdit = (field: EditField) => {
     setEditField(field);
@@ -359,6 +377,8 @@ const Profile = () => {
         </section>
 
 
+        <AccountVerificationFlow />
+
         {/* Verified edits */}
         <section className="rounded-3xl border border-border/40 bg-card/80 backdrop-blur-sm p-5 space-y-3">
           <div className="flex items-center gap-2 mb-1">
@@ -387,18 +407,7 @@ const Profile = () => {
           ))}
         </section>
 
-        {/* Vérification du compte — examen en 5 étapes */}
-        <section id="verification" className="rounded-3xl border border-border bg-card/50 backdrop-blur-sm p-5 space-y-3">
-          <h2 className="text-sm font-bold">Vérification du compte</h2>
-          <p className="text-[11px] text-muted-foreground">
-            Un profil incomplet restreint l'accès aux fonctionnalités. Complétez les cinq étapes pour envoyer
-            une demande d'examen à l'administrateur.
-          </p>
-          <AccountReviewWizard />
-        </section>
-
         {/* Danger zone — delete account */}
-
         <section id="danger" className="rounded-3xl border border-destructive/30 bg-destructive/5 backdrop-blur-sm p-5 space-y-3">
           <div className="flex items-center gap-2">
             <Trash2 className="w-4 h-4 text-destructive" />

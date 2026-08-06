@@ -2,16 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Crown, CheckCircle2, Copy, ShieldCheck, Wallet, Phone, Upload, Clock,
   ArrowRight, ArrowLeft, Sparkles, Send, MessageSquare, Image as ImageIcon,
-  Loader2, X, Infinity as InfinityIcon, BadgeCheck,
+  Loader2, X, Infinity as InfinityIcon, BadgeCheck, Smartphone, PhoneCall, KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadWithProgress } from "@/lib/uploadWithProgress";
 import { toast } from "sonner";
 import { grantSubscriptionCoins } from "@/lib/coins";
-import { buildYasUssd, AIRTEL_USSD, launchUssd } from "@/lib/ussd";
-
 
 export interface SubscriptionWizardProps {
   gameMode: string;
@@ -32,9 +31,46 @@ const STEPS: { key: StepKey; label: string }[] = [
   { key: "track", label: "Suivi" },
 ];
 
-const OPERATORS = [
-  { id: "airtel", name: "Airtel Money", number: "0336756185", display: "0336 756 185", tone: "amber" as const },
-  { id: "yas", name: "Yas Money", number: "0383955105", display: "0383 955 105", tone: "emerald" as const },
+interface Operator {
+  id: string;
+  name: string;
+  number: string;
+  display: string;
+  tone: "amber" | "emerald";
+  /** Construit le code USSD à composer (le montant est injecté automatiquement). */
+  ussd: (amount: number) => string;
+  guide: string[];
+}
+
+const OPERATORS: Operator[] = [
+  {
+    id: "yas",
+    name: "Yas Money",
+    number: "0383955105",
+    display: "0383 955 105",
+    tone: "emerald",
+    ussd: (amount) => `#111*1*2*0383955105*${amount}*2*21#`,
+    guide: [
+      "Appuyez sur « Lancer le paiement » : le code USSD est composé automatiquement avec le montant de votre formule.",
+      "Saisissez votre code secret Mvola / Yas Money pour confirmer le transfert.",
+      "Attendez le SMS de confirmation du paiement.",
+      "Revenez ici : l'application continue automatiquement vers la validation de l'abonnement.",
+    ],
+  },
+  {
+    id: "airtel",
+    name: "Airtel Money",
+    number: "0336756185",
+    display: "0336 756 185",
+    tone: "amber",
+    ussd: () => "*436#",
+    guide: [
+      "Appuyez sur « Lancer le paiement » : le menu Airtel Money (*436#) s'ouvre directement.",
+      "Choisissez « Transfert d'argent » puis saisissez le numéro destinataire 0336 756 185.",
+      "Entrez le montant exact de votre formule, puis votre code secret Airtel Money.",
+      "Après le SMS de confirmation, l'application poursuit la validation de l'abonnement.",
+    ],
+  },
 ];
 
 interface ChatMessage {
@@ -53,20 +89,19 @@ const SubscriptionWizard = ({
   const [step, setStep] = useState<StepKey>("recap");
   const [operator, setOperator] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [ussdLaunched, setUssdLaunched] = useState(false);
   const [creating, setCreating] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [senderPhone, setSenderPhone] = useState("");
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [proofPct, setProofPct] = useState<number | null>(null);
   const [proofSent, setProofSent] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatText, setChatText] = useState("");
   const [sendingChat, setSendingChat] = useState(false);
-  const [dialing, setDialing] = useState(false);
-  const [dialed, setDialed] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
-
 
   const stepIdx = STEPS.findIndex((s) => s.key === step);
   const reference = useMemo(
@@ -74,24 +109,22 @@ const SubscriptionWizard = ({
     [requestId]
   );
   const op = OPERATORS.find((o) => o.id === operator) ?? null;
-  const ussdCode = operator === "yas" ? buildYasUssd(price, op?.number) : AIRTEL_USSD;
+  const ussd = op ? op.ussd(price) : "";
 
-  /** Lance le composeur avec le code USSD pré-rempli puis passe à l'étape suivante. */
-  const startPayment = () => {
+  /** Compose le code USSD depuis l'application, puis enchaîne sur la preuve de paiement. */
+  const launchUssd = () => {
     if (!op) return;
-    setDialing(true);
-    const mobile = launchUssd(ussdCode);
-    if (!mobile) {
-      toast.info("Composez le code sur votre téléphone", { description: ussdCode });
+    setUssdLaunched(true);
+    try {
+      window.location.href = `tel:${ussd.replace(/#/g, "%23")}`;
+    } catch {
+      toast.error("Impossible de lancer le code USSD", { description: "Composez-le manuellement." });
     }
-    setTimeout(() => {
-      setDialing(false);
-      setDialed(true);
-      setTimeout(() => setStep("proof"), 1200);
-    }, 1400);
+    toast.success(`Paiement ${op.name} lancé`, {
+      description: "Saisissez votre code secret pour confirmer, puis revenez pour finaliser.",
+    });
+    window.setTimeout(() => setStep("proof"), 6000);
   };
-
-
 
   const fetchMessages = useCallback(async () => {
     if (!user) return;
@@ -202,9 +235,17 @@ const SubscriptionWizard = ({
     setUploading(true);
     const ext = proofFile.name.split(".").pop() || "jpg";
     const path = `${user.id}/${requestId}.${ext}`;
-    const { error: upErr } = await supabase.storage
-      .from("payment-proofs").upload(path, proofFile, { upsert: true });
-    if (upErr) { toast.error("Envoi impossible", { description: upErr.message }); setUploading(false); return; }
+    try {
+      setProofPct(0);
+      await uploadWithProgress("payment-proofs", path, proofFile, {
+        contentType: proofFile.type || "image/jpeg",
+        upsert: true,
+        onProgress: setProofPct,
+      });
+    } catch (e: any) {
+      toast.error("Envoi impossible", { description: e?.message });
+      setUploading(false); setProofPct(null); return;
+    }
     const { data: signed } = await supabase.storage
       .from("payment-proofs").createSignedUrl(path, 60 * 60 * 24 * 365);
     const proofUrl = signed?.signedUrl ?? null;
@@ -222,6 +263,7 @@ const SubscriptionWizard = ({
     });
 
     setUploading(false);
+    setProofPct(null);
     setProofSent(true);
     setStep("track");
     fetchMessages();
@@ -342,20 +384,6 @@ const SubscriptionWizard = ({
             )}
           </div>
 
-          {/* Résumé montant / durée / opérateur */}
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { l: "Montant", v: `${price.toLocaleString()} Ar` },
-              { l: "Durée", v: lifetime ? "À vie" : `${days} j` },
-              { l: "Moyen", v: op ? op.name.split(" ")[0] : "—" },
-            ].map((c) => (
-              <div key={c.l} className="rounded-2xl border border-border/50 bg-card/50 p-3 text-center">
-                <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">{c.l}</p>
-                <p className="text-sm font-black mt-0.5 truncate">{c.v}</p>
-              </div>
-            ))}
-          </div>
-
           <div>
             <p className="text-xs font-bold mb-2">1. Choisissez l'opérateur</p>
             <div className="grid grid-cols-2 gap-2.5">
@@ -364,7 +392,7 @@ const SubscriptionWizard = ({
                 return (
                   <button
                     key={o.id}
-                    onClick={() => { setOperator(o.id); setDialed(false); }}
+                    onClick={() => setOperator(o.id)}
                     className={`rounded-2xl border-2 p-3 text-left transition-all active:scale-[0.97] ${
                       selected
                         ? o.tone === "amber"
@@ -386,50 +414,65 @@ const SubscriptionWizard = ({
 
           {op && (
             <div className="space-y-3 animate-fade-in">
-              <p className="text-xs font-bold">2. Payer directement depuis l'application</p>
+              <p className="text-xs font-bold">2. Payez sans quitter l'application</p>
 
-              <div className="rounded-2xl border border-primary/30 bg-background/60 p-4 space-y-2">
-                <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Code USSD {op.name}</p>
-                <p className="text-base font-mono font-black tracking-wide break-all text-primary">{ussdCode}</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {operator === "yas"
-                    ? "Le montant et le numéro destinataire sont déjà inclus. Après le lancement, saisissez simplement votre code secret Yas Money."
-                    : `Le menu Airtel Money s'ouvre : suivez les étapes affichées et envoyez ${price.toLocaleString()} Ar au ${op.display}.`}
-                </p>
-                <div className="flex gap-2 pt-1">
-                  <button
-                    onClick={() => copy(ussdCode, "ussd")}
-                    className="flex items-center gap-1 px-3 py-2 rounded-xl bg-primary/15 text-primary text-xs font-bold"
-                  >
-                    {copied === "ussd" ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    {copied === "ussd" ? "Copié" : "Copier le code"}
-                  </button>
-                  <button
-                    onClick={() => copy(op.number, "num")}
-                    className="flex items-center gap-1 px-3 py-2 rounded-xl bg-secondary/60 text-xs font-bold"
-                  >
-                    {copied === "num" ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    N° {op.display}
-                  </button>
+              <div className="rounded-2xl border border-primary/30 bg-background/60 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-primary" />
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                    Code USSD {op.name}
+                  </p>
                 </div>
+                <p className="text-lg font-mono font-black tracking-wider break-all text-foreground">{ussd}</p>
+                <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                  <span>
+                    Destinataire · <span className="font-mono font-bold text-foreground">{op.display}</span>
+                  </span>
+                  <span>
+                    Montant · <span className="font-bold gold-text">{price.toLocaleString()} Ar</span>
+                  </span>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="premium"
+                    className="flex-1 h-12 font-bold"
+                    onClick={launchUssd}
+                  >
+                    <PhoneCall className="w-4 h-4 mr-2" /> Lancer le paiement
+                  </Button>
+                  <Button variant="secondary" className="h-12 px-3" onClick={() => copy(ussd, "ussd")}>
+                    {copied === "ussd" ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  Si le lancement automatique est bloqué par votre téléphone, copiez le code et composez-le dans
+                  l'application Téléphone.
+                </p>
               </div>
 
-              <Button
-                variant="premium"
-                className="w-full h-14 text-base font-bold"
-                disabled={dialing}
-                onClick={startPayment}
-              >
-                {dialing ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Phone className="w-5 h-5 mr-2" />}
-                {dialing ? "Ouverture du composeur…" : `Payer ${price.toLocaleString()} Ar avec ${op.name}`}
-              </Button>
+              <div className="rounded-2xl border border-border/40 bg-secondary/20 p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-3.5 h-3.5 text-primary" />
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+                    Étapes guidées
+                  </p>
+                </div>
+                <ol className="space-y-1.5 text-[11px] text-muted-foreground">
+                  {op.guide.map((g, i) => (
+                    <li key={i}>
+                      {i + 1}. {g}
+                    </li>
+                  ))}
+                </ol>
+              </div>
 
-              {dialed && (
-                <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-center space-y-2 animate-fade-in">
-                  <BadgeCheck className="w-8 h-8 text-emerald-400 mx-auto" />
-                  <p className="text-sm font-bold">Paiement lancé</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Terminez la confirmation sur votre téléphone, puis continuez pour envoyer la preuve.
+              {ussdLaunched && (
+                <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 flex items-start gap-2 animate-fade-in">
+                  <BadgeCheck className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
+                  <p className="text-[11px] text-emerald-100/90">
+                    Paiement lancé. Dès que la confirmation {op.name} s'affiche, l'application poursuit
+                    automatiquement vers la validation de votre abonnement.
                   </p>
                 </div>
               )}
@@ -438,7 +481,7 @@ const SubscriptionWizard = ({
 
           <div className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
             <ShieldCheck className="w-3 h-3 text-primary" />
-            <span>Aucun paiement n'est prélevé dans l'application</span>
+            <span>Paiement sécurisé via votre opérateur Mobile Money</span>
           </div>
 
           <div className="flex gap-2">
@@ -451,7 +494,6 @@ const SubscriptionWizard = ({
           </div>
         </div>
       )}
-
 
       {/* ÉTAPE 3 — Preuve */}
       {step === "proof" && (
@@ -494,6 +536,17 @@ const SubscriptionWizard = ({
             <Button variant="secondary" className="h-12 px-4" onClick={() => setStep("pay")}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
+            {proofPct !== null && (
+              <div className="space-y-1 mb-2">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span>Transfert de la preuve…</span>
+                  <span className="font-semibold tabular-nums">{proofPct}%</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                  <div className="h-full rounded-full bg-primary transition-all duration-200" style={{ width: `${proofPct}%` }} />
+                </div>
+              </div>
+            )}
             <Button variant="premium" className="flex-1 h-12 font-bold" onClick={sendProof} disabled={!proofFile || uploading}>
               {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
               {uploading ? "Envoi…" : "Envoyer la preuve"}

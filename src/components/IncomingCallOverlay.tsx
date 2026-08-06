@@ -38,7 +38,7 @@ export default function IncomingCallOverlay({
       .toUpperCase() || "?";
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+    <div role="dialog" aria-modal="true" aria-label="Appel entrant" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200 px-3 safe-area-bottom">
       <div className="w-full max-w-sm mx-4 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-950 to-black shadow-2xl overflow-hidden">
         <div className="relative p-6 pb-4 text-center">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/15 via-transparent to-violet-500/15 pointer-events-none" />
@@ -63,6 +63,7 @@ export default function IncomingCallOverlay({
         <div className="p-6 pt-4 flex items-center justify-around">
           <button
             onClick={() => onDecline(call)}
+            aria-label="Refuser l'appel"
             className="flex flex-col items-center gap-2 group"
           >
             <span className="w-16 h-16 rounded-full bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-[0_10px_30px_-5px_rgba(244,63,94,0.6)] group-active:scale-95 transition">
@@ -72,6 +73,7 @@ export default function IncomingCallOverlay({
           </button>
           <button
             onClick={() => onAccept(call)}
+            aria-label="Accepter l'appel"
             className="flex flex-col items-center gap-2 group"
           >
             <span className="relative w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-[0_10px_30px_-5px_rgba(52,211,153,0.6)] group-active:scale-95 transition">

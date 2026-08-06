@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { ChevronRight, History, Trophy, TrendingUp, Clock, BarChart3, Plane, Rocket, Zap, Globe2, Target, Clapperboard } from "lucide-react";
-import { aviatorLogo } from "@/lib/gameLogos";
-import { cosmoxLogo } from "@/lib/gameLogos";
-import { jetxLogo } from "@/lib/gameLogos";
+import aviatorLogo from "@/assets/aviator-logo.png";
+import cosmoxLogo from "@/assets/cosmox-logo.png";
+import jetxLogo from "@/assets/jetx-logo.png";
 
 import aviatorPremiumLogo from "@/assets/aviator-premium-logo.png";
 

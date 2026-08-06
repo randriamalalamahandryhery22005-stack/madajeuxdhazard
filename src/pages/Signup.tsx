@@ -2,8 +2,6 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { z } from "zod";
-import { canCreateAccountOnDevice, registerDeviceAccount, MAX_ACCOUNTS_PER_DEVICE } from "@/lib/deviceAccounts";
-
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -30,9 +28,17 @@ import {
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
 import { supabase } from "@/integrations/supabase/client";
+import { processAvatar } from "@/lib/avatarImage";
 import { toast } from "sonner";
 import jhLogo from "@/assets/jh-logo.png";
 import { rememberCurrentAccount } from "@/lib/savedAccounts";
+import {
+  canCreateAccountOnDevice,
+  enforceUniqueIdentity,
+  registerDeviceAccount,
+  MAX_ACCOUNTS_PER_DEVICE,
+} from "@/lib/deviceAccounts";
+
 
 /* ------------------------------------------------------------------ */
 /*  Validation (unchanged business logic)                             */
@@ -263,11 +269,13 @@ const Signup = () => {
 
     setLoading(true);
     try {
-      if (!(await canCreateAccountOnDevice())) {
+      const { allowed, count } = await canCreateAccountOnDevice();
+      if (!allowed) {
         throw new Error(
-          `Limite atteinte : ${MAX_ACCOUNTS_PER_DEVICE} comptes maximum peuvent être créés depuis cet appareil. Connectez-vous à un compte existant.`,
+          `Limite atteinte : ${count} comptes ont déjà été créés depuis cet appareil (maximum ${MAX_ACCOUNTS_PER_DEVICE}). Connectez-vous à un compte existant.`,
         );
       }
+
       const cleanEmail = formData.email.trim().toLowerCase();
       const cleanPhone = normalizePhone(formData.phone);
 
@@ -299,10 +307,8 @@ const Signup = () => {
         throw authError;
       }
       if (!authData.user) throw new Error("Erreur lors de la création du compte");
-      await registerDeviceAccount(authData.user.id);
 
       let userId = authData.user.id;
-
       if (!authData.session) {
         const { data: signInData, error: signInError } =
           signupMethod === "email"
@@ -318,26 +324,10 @@ const Signup = () => {
 
       let avatarUrl: string | null = null;
       if (formData.profilePhoto) {
-        const fileExt = (formData.profilePhoto.name.split(".").pop() || "jpg").toLowerCase();
-        const filePath = `${userId}/avatar-${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from("avatars")
-          .upload(filePath, formData.profilePhoto, {
-            upsert: true,
-            contentType: formData.profilePhoto.type || undefined,
-          });
-        if (!uploadError) {
-          const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-          avatarUrl = urlData.publicUrl;
-        } else {
-          const fbPath = `avatars/${filePath}`;
-          const { error: fbErr } = await supabase.storage
-            .from("gen-store")
-            .upload(fbPath, formData.profilePhoto, { upsert: true });
-          if (!fbErr) {
-            const { data: pub } = supabase.storage.from("gen-store").getPublicUrl(fbPath);
-            avatarUrl = pub.publicUrl;
-          }
+        try {
+          avatarUrl = await processAvatar(formData.profilePhoto, { size: 512, quality: 0.9 });
+        } catch {
+          avatarUrl = null;
         }
       }
 
@@ -356,6 +346,21 @@ const Signup = () => {
         } as never)
         .eq("user_id", userId);
       if (profileErr) throw new Error("Impossible d'enregistrer le profil : " + profileErr.message);
+
+      // Sécurité : appareil rattaché au compte + détection d'informations déjà utilisées
+      try {
+        await registerDeviceAccount();
+      } catch { /* non bloquant */ }
+      let restricted = false;
+      try {
+        restricted = await enforceUniqueIdentity({
+          userId,
+          fullName: formData.fullName,
+          phone: normalizePhone(formData.profilePhone || formData.phone),
+        });
+      } catch { /* non bloquant */ }
+
+
 
       // Permet la connexion indifféremment par e-mail ou par téléphone :
       // on synchronise le numéro sur le compte d'authentification.
@@ -376,8 +381,14 @@ const Signup = () => {
           displayName: formData.fullName,
         });
       } catch { /* non-blocking */ }
+      if (restricted) {
+        toast.error("Compte restreint : informations déjà utilisées. Envoyez une demande d'examen depuis votre profil.");
+        navigate("/profile");
+        return;
+      }
       toast.success("Bienvenue chez Jeux d'Hazard");
       navigate("/games");
+
     } catch (err: any) {
       setError(err.message || "Erreur lors de l'inscription");
     } finally {

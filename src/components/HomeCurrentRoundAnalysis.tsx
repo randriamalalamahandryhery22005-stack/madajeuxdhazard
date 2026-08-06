@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Target, ChevronLeft, Radar } from "lucide-react";
 import CurrentRoundAnalysis, { type GameKey } from "@/components/CurrentRoundAnalysis";
-import { aviatorLogo } from "@/lib/gameLogos";
-import { cosmoxLogo } from "@/lib/gameLogos";
-import { jetxLogo } from "@/lib/gameLogos";
+import aviatorLogo from "@/assets/logo-aviator.png";
+import cosmoxLogo from "@/assets/logo-cosmox.png";
+import jetxLogo from "@/assets/logo-jetx.png";
 import analysisLogo from "@/assets/logo-aviator-premium.png";
 
 type HomeGame = Extract<GameKey, "aviator-premium" | "cosmox" | "jetx">;

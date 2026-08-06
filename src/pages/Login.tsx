@@ -471,10 +471,38 @@ const Login = () => {
             </div>
           )}
 
-          <p className="mt-8 flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-[0.3em] text-foreground/40">
+          <div className="mt-7 flex items-center justify-center gap-2.5">
+            <a
+              href="https://www.facebook.com/mahandry.hery.randriamalala"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+              className="inline-flex items-center gap-2 h-9 px-3.5 rounded-full border border-[hsl(var(--gold)/0.2)] bg-foreground/[0.04] hover:bg-foreground/[0.08] text-[11px] font-semibold text-foreground/60 hover:text-foreground/90 transition active:scale-[0.97]"
+            >
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-[#1877F2]" aria-hidden="true">
+                <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.23.2 2.23.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.91h-2.33V22c4.78-.79 8.45-4.94 8.45-9.94z" />
+              </svg>
+              Facebook
+            </a>
+            <a
+              href="https://wa.me/261379594257"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="WhatsApp"
+              className="inline-flex items-center gap-2 h-9 px-3.5 rounded-full border border-[hsl(var(--gold)/0.2)] bg-foreground/[0.04] hover:bg-foreground/[0.08] text-[11px] font-semibold text-foreground/60 hover:text-foreground/90 transition active:scale-[0.97]"
+            >
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-[#25D366]" aria-hidden="true">
+                <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm5.8 14.03c-.24.68-1.4 1.3-1.93 1.35-.53.05-1.03.07-1.77-.19-.74-.26-2.5-1-3.94-2.83-1.44-1.83-1.66-2.66-1.76-3.28-.1-.62.16-1.32.5-1.7.34-.38.72-.44.96-.44h.34c.24 0 .5-.02.74.5.24.52.82 1.94.9 2.08.08.14.13.3.02.5-.11.2-.42.6-.6.78-.18.18-.28.28-.14.55.14.27.62 1.05 1.35 1.7.94.83 1.72 1.09 1.98 1.22.26.13.42.11.58-.07.16-.18.66-.78.84-1.05.18-.27.36-.22.6-.13.24.09 1.54.73 1.8.86.26.13.44.2.5.31.06.11.06.65-.18 1.33z" />
+              </svg>
+              WhatsApp
+            </a>
+          </div>
+
+          <p className="mt-5 flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-[0.3em] text-foreground/40">
             <ShieldCheck className="w-3 h-3 text-[hsl(var(--gold))]" />
             Sécurisé · Chiffré · Jeux d'Hazard
           </p>
+
         </div>
       </main>
     </div>
