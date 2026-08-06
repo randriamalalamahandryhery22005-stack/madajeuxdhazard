@@ -10,12 +10,15 @@ import {
   Activity, UserCheck, UserX, Bell, Settings, ToggleLeft, ToggleRight, Timer,
   Star, TrendingUp, Award, Gift, Flame, BarChart3, Search, Gamepad2,
   MessageSquare, Image as ImageIcon, Sparkles, LogOut,
+  ShieldCheck,
 } from "lucide-react";
 import AdminOnlineUsersPanel from "@/components/AdminOnlineUsersPanel";
 import AdminGenStorePanel from "@/components/AdminGenStorePanel";
 import AdminSecurityPanel from "@/components/AdminSecurityPanel";
 import AdminReviewsPanel from "@/components/AdminReviewsPanel";
 import AdminRestrictedPanel from "@/components/AdminRestrictedPanel";
+import AdminCodesPanel from "@/components/AdminCodesPanel";
+
 import AdminPremiumBonusPanel from "@/components/AdminPremiumBonusPanel";
 
 import { toast } from "sonner";
@@ -422,8 +425,8 @@ const Admin = () => {
     { id: "online_live", label: "En ligne", icon: <Activity className="w-3.5 h-3.5" /> },
     { id: "gen_store", label: "J&H Store", icon: <ImageIcon className="w-3.5 h-3.5" /> },
     { id: "security", label: "Sécurité", icon: <Shield className="w-3.5 h-3.5" /> },
-    { id: "reviews", label: "Examens", icon: <Shield className="w-3.5 h-3.5" /> },
-    { id: "restricted", label: "Restreints", icon: <Shield className="w-3.5 h-3.5" /> },
+    { id: "reviews", label: "Examens", icon: <ShieldCheck className="w-3.5 h-3.5" /> },
+    { id: "restricted", label: "Comptes restreints", icon: <ShieldCheck className="w-3.5 h-3.5" /> },
     
   ];
 
@@ -432,8 +435,9 @@ const Admin = () => {
   const TAB_GROUPS: { title: string; items: Tab[] }[] = [
     { title: "Vue d'ensemble", items: ["dashboard", "online_live", "sessions", "points"] },
     { title: "Utilisateurs & accès", items: ["users", "premium", "bonuses", "rewards", "resets"] },
+    { title: "Vérifications", items: ["restricted", "reviews"] },
     { title: "Contenu & comm.", items: ["chat", "notifications", "gen_store"] },
-    { title: "Configuration", items: ["codes", "settings", "security", "reviews", "restricted"] },
+    { title: "Configuration", items: ["codes", "settings", "security"] },
   ];
   const tabsById = Object.fromEntries(tabs.map((t) => [t.id, t]));
   const pendingTotal = pendingAccess.length + resets.filter(r => r.status === "pending").length + chatMessages.filter(m => m.status === "pending").length;
@@ -443,9 +447,10 @@ const Admin = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <Sidebar collapsible="icon" className="border-r border-border/40">
-          <SidebarHeader className="px-3 py-4 border-b border-border/40">
+      <div className="min-h-screen flex w-full admin-shell">
+        <Sidebar collapsible="icon" className="border-r border-primary/15">
+          <SidebarHeader className="px-3 py-4 border-b border-primary/15">
+
             <div className="flex items-center gap-2">
               <div className="w-9 h-9 rounded-xl violet-gradient flex items-center justify-center shadow-md glow-violet flex-shrink-0">
                 <Crown className="w-5 h-5 text-white" />
@@ -476,7 +481,7 @@ const Admin = () => {
                           <SidebarMenuButton
                             isActive={isActive}
                             onClick={() => setTab(t.id)}
-                            className={isActive ? "bg-primary/15 text-primary border border-primary/40 font-semibold" : "hover:bg-secondary/60"}
+                            className={isActive ? "admin-nav-active" : "hover:bg-secondary/60 transition-colors"}
                           >
                             <span className="w-4 h-4 flex items-center justify-center">{t.icon}</span>
                             <span className="flex-1 truncate">{t.label}</span>
@@ -508,7 +513,7 @@ const Admin = () => {
         </Sidebar>
 
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="sticky top-0 z-30 h-14 flex items-center gap-2 px-3 sm:px-5 border-b border-border/50 bg-card/70 backdrop-blur-xl">
+          <header className="sticky top-0 z-30 h-14 flex items-center gap-2 px-3 sm:px-5 admin-topbar">
             <SidebarTrigger className="flex-shrink-0" />
             <div className="flex-1 min-w-0 flex items-center gap-2">
               <h1 className="text-sm sm:text-base font-black violet-text truncate">
@@ -534,17 +539,22 @@ const Admin = () => {
           <div className="px-3 sm:px-5 py-3 border-b border-primary/15 bg-gradient-to-br from-primary/10 via-emerald-900/10 to-transparent">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
-                { label: "Utilisateurs", value: profiles.length, icon: <Users className="w-3 h-3" />, color: "text-emerald-300", bg: "bg-emerald-500/10 border-emerald-500/25" },
-                { label: "Abos actifs", value: activeSubs, icon: <Crown className="w-3 h-3" />, color: "text-primary", bg: "bg-primary/10 border-primary/30" },
-                { label: "En ligne", value: onlineCount, icon: <Activity className="w-3 h-3" />, color: "text-emerald-200", bg: "bg-emerald-400/10 border-emerald-400/25" },
-                { label: "En attente", value: pendingAccess.length, icon: <Clock className="w-3 h-3" />, color: "text-primary/90", bg: "bg-primary/5 border-primary/20" },
-              ].map((s) => (
-                <div key={s.label} className={`p-2.5 rounded-xl border backdrop-blur-sm shadow-sm ${s.bg}`}>
+                { label: "Utilisateurs", value: profiles.length, icon: <Users className="w-3 h-3" />, color: "text-emerald-300" },
+                { label: "Abos actifs", value: activeSubs, icon: <Crown className="w-3 h-3" />, color: "text-primary" },
+                { label: "En ligne", value: onlineCount, icon: <Activity className="w-3 h-3" />, color: "text-emerald-200" },
+                { label: "En attente", value: pendingAccess.length, icon: <Clock className="w-3 h-3" />, color: "text-primary/90" },
+              ].map((s, i) => (
+                <div
+                  key={s.label}
+                  className="admin-card p-2.5"
+                  style={{ animation: "fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both", animationDelay: `${i * 50}ms` }}
+                >
                   <div className={`flex items-center gap-1 ${s.color} mb-0.5`}>{s.icon}<span className="text-[9px] font-semibold uppercase tracking-wider truncate">{s.label}</span></div>
-                  <p className="text-lg font-black leading-none">{s.value}</p>
+                  <p className="text-lg font-black leading-none tabular-nums">{s.value}</p>
                 </div>
               ))}
             </div>
+
           </div>
 
           <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 space-y-3">
@@ -869,40 +879,8 @@ const Admin = () => {
         )}
 
         {/* CODES TAB */}
-        {tab === "codes" && (
-          <>
-            <div className="p-3 rounded-xl bg-primary/5 border border-primary/15 flex items-center gap-2">
-              <Key className="w-4 h-4 text-primary flex-shrink-0" />
-              <p className="text-[11px] text-muted-foreground">Code vide = accès libre. Seul le mode Basique utilise un code.</p>
-            </div>
-            {displayCodes.map((c, i) => (
-              <div key={c.id} className="p-4 rounded-2xl bg-card/80 border border-border/40 backdrop-blur-sm space-y-3"
-                style={{ animation: `fade-up 0.3s ease ${i * 60}ms forwards`, opacity: 0 }}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center"><Key className="w-4 h-4 text-muted-foreground" /></div>
-                    <span className="text-xs font-bold uppercase tracking-wider">{c.code_name === "basic" ? "Mode Basique" : c.code_name}</span>
-                  </div>
-                  <span className={`text-[10px] px-2.5 py-1 rounded-full font-semibold ${c.code_value ? "bg-primary/10 text-primary" : "bg-emerald-500/10 text-emerald-300"}`}>
-                    {c.code_value ? "Protégé" : "Libre"}
-                  </span>
-                </div>
-                {editingCode === c.id ? (
-                  <div className="flex gap-2">
-                    <Input value={newCodeValue} onChange={(e) => setNewCodeValue(e.target.value)} className="h-11 bg-secondary/80 border-border/40 text-sm font-mono" placeholder="Vide = accès libre" />
-                    <Button size="sm" variant="premium" onClick={() => updateCode(c.id)} className="h-11 px-3"><Check className="w-4 h-4" /></Button>
-                    <Button size="sm" variant="ghost" onClick={() => setEditingCode(null)} className="h-11 px-3"><X className="w-4 h-4" /></Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/40 border border-border/20">
-                    <code className="text-sm font-mono font-bold text-primary">{c.code_value || <span className="text-emerald-300 italic text-xs">Accès libre</span>}</code>
-                    <Button size="sm" variant="ghost" onClick={() => { setEditingCode(c.id); setNewCodeValue(c.code_value); }} className="h-8 text-xs font-medium">Modifier</Button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </>
-        )}
+        {tab === "codes" && <AdminCodesPanel />}
+
 
         {/* RESETS TAB */}
         {tab === "resets" && (
@@ -1411,9 +1389,9 @@ const Admin = () => {
             <AdminGenStorePanel />
           </div>
         )}
-        {tab === "security" && (
+        {tab === "restricted" && (
           <div style={{ animation: "fade-up 0.4s ease forwards" }}>
-            <AdminSecurityPanel />
+            <AdminRestrictedPanel />
           </div>
         )}
         {tab === "reviews" && (
@@ -1421,9 +1399,9 @@ const Admin = () => {
             <AdminReviewsPanel />
           </div>
         )}
-        {tab === "restricted" && (
+        {tab === "security" && (
           <div style={{ animation: "fade-up 0.4s ease forwards" }}>
-            <AdminRestrictedPanel />
+            <AdminSecurityPanel />
           </div>
         )}
         {tab === "bonuses" && (

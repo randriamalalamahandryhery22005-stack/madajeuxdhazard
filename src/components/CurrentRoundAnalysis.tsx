@@ -247,15 +247,10 @@ const CurrentRoundAnalysis = ({ game }: { game: GameKey }) => {
     try {
       const dataUrl = await fileToDataUrl(file);
       setPreview(dataUrl);
-      const FN_URL = "https://c--5d9b40d2-8554-4a07-a4f7-76b480355a73-prod.lovable.cloud/functions/v1/extract-multipliers";
-      const FN_KEY = "sb_publishable_5P_Qwz3M6XDrVmHZANYQcA_Ihu-45kf";
-      const resp = await fetch(FN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", apikey: FN_KEY },
-        body: JSON.stringify({ imageBase64: dataUrl, game }),
+      const { data, error: fnError } = await supabase.functions.invoke("extract-multipliers", {
+        body: { imageBase64: dataUrl, game },
       });
-      if (!resp.ok) throw new Error(`Requête échouée (${resp.status})`);
-      const data = await resp.json();
+      if (fnError) throw new Error(fnError.message || "Analyse indisponible pour le moment.");
       const res = data as { valid: boolean; multipliers: number[]; reason: string };
       if (!res?.valid || !Array.isArray(res.multipliers) || res.multipliers.length < 3) {
         setError(

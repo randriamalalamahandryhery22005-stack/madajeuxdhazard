@@ -3,11 +3,17 @@
 // à la volée sans dépendance à un fichier binaire (fonctionne toujours,
 // même hors ligne).
 
+import ringtoneAsset from "@/assets/ringtone-call.ogg.asset.json";
+
 export type SoundKind =
   | "message"
   | "voice"
   | "call"
   | "ring"
+  | "outgoing"
+  | "missed"
+  | "hangup"
+  | "notification"
   | "subscription"
   | "validation"
   | "download"
@@ -149,6 +155,29 @@ const DESIGNS: Record<SoundKind, Design> = {
     { freq: 987, delay: 0.44, dur: 0.20, gain: 0.45, type: "sine" },
     { freq: 1568, delay: 0.66, dur: 0.32, gain: 0.42, type: "sine" },
   ],
+  // Outgoing call: soft ringback pulse (looped via startOutgoingRingback)
+  outgoing: [
+    { freq: 440, delay: 0.00, dur: 0.55, gain: 0.24, type: "sine" },
+    { freq: 480, delay: 0.00, dur: 0.55, gain: 0.18, type: "triangle" },
+  ],
+  // Missed call: melancholic descending pair
+  missed: [
+    { freq: 784, delay: 0.00, dur: 0.22, gain: 0.32, type: "sine" },
+    { freq: 587, delay: 0.18, dur: 0.28, gain: 0.30, type: "sine" },
+    { freq: 392, delay: 0.40, dur: 0.36, gain: 0.26, type: "sine" },
+  ],
+  // Call ended: short muted double blip
+  hangup: [
+    { freq: 520, delay: 0.00, dur: 0.12, gain: 0.26, type: "sine" },
+    { freq: 380, delay: 0.11, dur: 0.16, gain: 0.24, type: "sine" },
+  ],
+  // Generic notification: airy glass chime
+  notification: [
+    { freq: 1245, delay: 0.00, dur: 0.22, gain: 0.26, type: "sine" },
+    { freq: 1661, delay: 0.05, dur: 0.28, gain: 0.20, type: "sine" },
+    { freq: 2489, delay: 0.11, dur: 0.30, gain: 0.12, type: "sine" },
+    { freq: 830, delay: 0.16, dur: 0.44, gain: 0.16, type: "triangle" },
+  ],
   // Notification / subscription: crisp bell chime
   subscription: [
     { freq: 1567, delay: 0.00, dur: 0.30, gain: 0.30, type: "sine" },
@@ -179,15 +208,6 @@ const lastPlay: Record<string, number> = {};
 function playDesign(kind: SoundKind, volume: number, force = false) {
   const c = getCtx();
   if (!c) return;
-  // Le contexte peut être suspendu (onglet en arrière-plan, politique
-  // d'autoplay) : on le réveille puis on rejoue au prochain tick.
-  if (c.state === "suspended") {
-    c.resume()
-      .then(() => window.setTimeout(() => playDesign(kind, volume, true), 40))
-      .catch(() => {});
-    return;
-  }
-
   const now = c.currentTime;
   const design = DESIGNS[kind];
   if (!design) return;
@@ -211,39 +231,88 @@ export function playNotificationSound(kind: SoundKind, opts: { force?: boolean }
 /** Sonnerie continue (appel entrant). Retourne une fonction d'arrêt. */
 export function startRingtone(): () => void {
   if (typeof window === "undefined") return () => {};
+  const s = readSoundSettings();
   let stopped = false;
   let timer: number | null = null;
-  let vibrateTimer: number | null = null;
+  let fallbackTimer: number | null = null;
+  let retryHandler: (() => void) | null = null;
 
-  // Un appel entrant doit toujours sonner : on force la reprise du contexte
-  // audio à chaque cycle (il peut être suspendu par le navigateur) et on
-  // ignore volontairement l'anti-spam.
-  const tick = () => {
-    if (stopped) return;
-    const s = readSoundSettings();
-    const c = getCtx();
-    if (c && c.state === "suspended") c.resume().catch(() => {});
-    try { playDesign("ring", Math.max(0.4, s.volume), true); } catch { /* noop */ }
-    timer = window.setTimeout(tick, 1400);
+  // Fallback synthesized ring (used if the audio file fails or is blocked)
+  const startSynthFallback = () => {
+    if (fallbackTimer !== null || stopped) return;
+    const tick = () => {
+      if (stopped) return;
+      if (s.enabled) {
+        try { playDesign("ring", Math.max(0.35, s.volume), true); } catch { /* noop */ }
+      }
+      fallbackTimer = window.setTimeout(tick, 1400);
+    };
+    tick();
   };
-  tick();
 
-  const vibrate = () => {
-    if (stopped) return;
-    try { navigator.vibrate?.([300, 200, 300, 200, 300]); } catch { /* noop */ }
-    vibrateTimer = window.setTimeout(vibrate, 1600);
-  };
-  vibrate();
+  let audio: HTMLAudioElement | null = null;
+  try {
+    audio = new Audio(ringtoneAsset.url);
+  } catch {
+    audio = null;
+  }
 
-  const onVisible = () => { if (!stopped) tick(); };
-  document.addEventListener("visibilitychange", onVisible);
+  if (audio && s.enabled) {
+    audio.loop = true;
+    audio.volume = Math.max(0.35, s.volume);
+    audio.addEventListener("error", () => { if (!stopped) startSynthFallback(); });
+    const play = () => {
+      audio?.play().catch(() => {
+        // Autoplay blocked: retry on the very next user gesture, never throw.
+        if (retryHandler || stopped) return;
+        retryHandler = () => {
+          if (stopped) return;
+          audio?.play().catch(() => startSynthFallback());
+        };
+        window.addEventListener("pointerdown", retryHandler, { once: true });
+        window.addEventListener("keydown", retryHandler, { once: true });
+        // Also make sure something audible happens even before the gesture.
+        startSynthFallback();
+      });
+    };
+    play();
+  } else if (s.enabled) {
+    startSynthFallback();
+  }
+
+  if (navigator.vibrate) {
+    try { navigator.vibrate([300, 200, 300, 200, 300]); } catch { /* noop */ }
+  }
 
   return () => {
     stopped = true;
     if (timer) window.clearTimeout(timer);
-    if (vibrateTimer) window.clearTimeout(vibrateTimer);
-    document.removeEventListener("visibilitychange", onVisible);
-    try { navigator.vibrate?.(0); } catch { /* noop */ }
+    if (fallbackTimer) window.clearTimeout(fallbackTimer);
+    if (audio) { try { audio.pause(); audio.currentTime = 0; } catch { /* noop */ } }
+    if (retryHandler) {
+      window.removeEventListener("pointerdown", retryHandler);
+      window.removeEventListener("keydown", retryHandler);
+    }
+    if (navigator.vibrate) { try { navigator.vibrate(0); } catch { /* noop */ } }
   };
 }
 
+/** Tonalité d'appel sortant (ringback). Retourne une fonction d'arrêt. */
+export function startOutgoingRingback(): () => void {
+  if (typeof window === "undefined") return () => {};
+  let stopped = false;
+  let timer: number | null = null;
+  const tick = () => {
+    if (stopped) return;
+    const s = readSoundSettings();
+    if (s.enabled) {
+      try { playDesign("outgoing", Math.max(0.25, s.volume), true); } catch { /* noop */ }
+    }
+    timer = window.setTimeout(tick, 2400);
+  };
+  tick();
+  return () => {
+    stopped = true;
+    if (timer) window.clearTimeout(timer);
+  };
+}

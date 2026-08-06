@@ -3,9 +3,9 @@ import { ArrowLeft, Radar, Target } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import CurrentRoundAnalysis, { type GameKey } from "@/components/CurrentRoundAnalysis";
 import { useAuth } from "@/contexts/AuthContext";
-import { aviatorLogo } from "@/lib/gameLogos";
-import { cosmoxLogo } from "@/lib/gameLogos";
-import { jetxLogo } from "@/lib/gameLogos";
+import aviatorLogo from "@/assets/logo-aviator.png";
+import cosmoxLogo from "@/assets/logo-cosmox.png";
+import jetxLogo from "@/assets/logo-jetx.png";
 
 type HomeGame = Extract<GameKey, "aviator-premium" | "cosmox" | "jetx">;
 

@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import SecurityChatPanel from "@/components/SecurityChatPanel";
 import { ensureSecurityConversation, listAccountDevices, unblockAccount, PREMIUM_DEVICE_LIMIT } from "@/lib/accountSecurity";
 import { toast } from "sonner";
+import { openUserProfile } from "@/lib/profileViewer";
 import { ShieldAlert, Smartphone, Unlock, MessageSquare, XCircle } from "lucide-react";
 
 type Row = {
@@ -93,9 +94,14 @@ export default function AdminSecurityPanel() {
         {rows.map((r) => (
           <div key={r.user_id} className="rounded-xl border border-border/40 bg-card/60 p-3 space-y-2">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-muted flex items-center justify-center text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => openUserProfile(r.user_id)}
+                title="Voir le profil"
+                className="w-9 h-9 rounded-full overflow-hidden bg-muted flex items-center justify-center text-xs font-bold"
+              >
                 {r.avatar_url ? <img src={r.avatar_url} alt="" className="w-full h-full object-cover" /> : (r.full_name || r.name || "?").slice(0, 2).toUpperCase()}
-              </div>
+              </button>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold truncate">{r.full_name || r.name}</p>
                 <p className="text-[11px] text-muted-foreground flex items-center gap-1">

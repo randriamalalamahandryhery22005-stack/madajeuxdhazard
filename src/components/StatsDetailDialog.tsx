@@ -43,7 +43,7 @@ const StatsDetailDialog = ({ open, onOpenChange, kind }: Props) => {
 
       if (kind === "accounts") {
         const { data } = await supabase
-          .from("profiles")
+          .from("public_profiles")
           .select("user_id, full_name, name, avatar_url, created_at")
           .order("created_at", { ascending: false })
           .limit(100);
@@ -71,7 +71,7 @@ const StatsDetailDialog = ({ open, onOpenChange, kind }: Props) => {
         const map = new Map<string, { full_name: string | null; avatar_url: string | null }>();
         if (ids.length) {
           const { data: profs } = await supabase
-            .from("profiles")
+            .from("public_profiles")
             .select("user_id, full_name, name, avatar_url")
             .in("user_id", ids);
           (profs || []).forEach((p: any) =>

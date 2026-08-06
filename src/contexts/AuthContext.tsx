@@ -14,6 +14,7 @@ const rpc = (name: string, args?: Record<string, unknown>) =>
 
 interface UserProfile {
   id: string;
+  user_id?: string;
   full_name: string;
   name?: string | null;
   email?: string | null;
@@ -22,6 +23,10 @@ interface UserProfile {
   birth_date: string | null;
   avatar_url: string | null;
   trial_started_at?: string | null;
+  status?: string | null;
+  is_validated?: boolean | null;
+  gender?: string | null;
+  phone?: string | null;
 }
 
 export const TRIAL_DURATION_MS = 15 * 60 * 1000;

@@ -73,40 +73,6 @@ const AboutSection = () => {
         </p>
       </div>
 
-      {/* Nouveautés de la version 0.0.2 */}
-      <div className="rounded-2xl border border-border/40 glass-card p-5 space-y-2">
-        <div className="flex items-center gap-2 mb-1">
-          <Zap className="w-4 h-4 text-primary" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Nouveautés · version 0.0.2
-          </h3>
-        </div>
-        <ul className="text-xs text-foreground/85 space-y-1.5 list-disc pl-4">
-          <li>Chat repensé : images, vidéos, APK, archives, documents et messages vocaux.</li>
-          <li>Appels vocaux avec sonnerie fiable, notification globale et historique.</li>
-          <li>Mode clair et mode sombre entièrement compatibles sur toutes les pages.</li>
-          <li>Vérification de compte en 5 étapes et gestion des comptes restreints.</li>
-          <li>Nouveaux logos officiels Aviator, CosmoX et JetX.</li>
-        </ul>
-      </div>
-
-      {/* Informations légales */}
-      <div className="rounded-2xl border border-border/40 glass-card p-5 space-y-2">
-        <div className="flex items-center gap-2 mb-1">
-          <Lock className="w-4 h-4 text-primary" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Informations & confidentialité</h3>
-        </div>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          Application réservée aux personnes majeures. Les prédictions sont fournies à titre indicatif et
-          ne garantissent aucun gain. Vos données personnelles (e-mail, date de naissance) restent privées :
-          seul l'administrateur officiel y accède dans le cadre de la vérification des comptes.
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Éditeur : J&H Studio · Antananarivo, Madagascar · Support : jeuxdhazardmada@gmail.com
-        </p>
-      </div>
-
-
       {/* Features */}
       <div className="rounded-2xl border border-border/40 glass-card overflow-hidden">
         <div className="flex items-center gap-2 px-5 py-3 border-b border-border/30 bg-secondary/20">

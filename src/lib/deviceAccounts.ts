@@ -1,68 +1,54 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getDeviceId } from "@/hooks/usePresence";
 
-/**
- * Limitation du nombre de comptes créés depuis un même appareil.
- * Deux comptes maximum : au-delà, la création est refusée.
- */
+/** Nombre maximum de comptes pouvant être créés depuis un même appareil. */
 export const MAX_ACCOUNTS_PER_DEVICE = 2;
 
-const LOCAL_KEY = "jh_device_accounts";
+const rpc = (name: string, args?: Record<string, unknown>) =>
+  (supabase.rpc as unknown as (n: string, a?: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>)(
+    name,
+    args,
+  );
 
-function readLocal(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(LOCAL_KEY);
-    const list = raw ? (JSON.parse(raw) as string[]) : [];
-    return Array.isArray(list) ? list.filter(Boolean) : [];
-  } catch {
-    return [];
-  }
+/** Vérifie que l'appareil courant n'a pas atteint la limite de comptes. */
+export async function canCreateAccountOnDevice(): Promise<{ allowed: boolean; count: number }> {
+  const deviceId = getDeviceId();
+  const { data, error } = await rpc("device_account_count", { _device_id: deviceId });
+  if (error) return { allowed: true, count: 0 };
+  const count = Number(data ?? 0);
+  return { allowed: count < MAX_ACCOUNTS_PER_DEVICE, count };
 }
 
-function writeLocal(list: string[]) {
-  try {
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(Array.from(new Set(list))));
-  } catch {
-    /* noop */
-  }
+/** Associe le compte connecté à l'appareil courant. */
+export async function registerDeviceAccount(): Promise<void> {
+  await rpc("register_device_account", { _device_id: getDeviceId() });
 }
 
-/** Nombre de comptes déjà créés depuis cet appareil (local + serveur). */
-export async function countDeviceAccounts(): Promise<number> {
-  const ids = new Set(readLocal());
-  try {
-    const deviceId = getDeviceId();
-    const { data } = await supabase
-      .from("login_history")
-      .select("user_id")
-      .eq("session_id", deviceId)
-      .eq("event_type", "signup")
-      .limit(50);
-    for (const row of (data || []) as { user_id: string }[]) ids.add(row.user_id);
-  } catch {
-    /* hors-ligne : on se base sur le stockage local */
-  }
-  return ids.size;
-}
+/**
+ * Détecte l'utilisation d'informations déjà utilisées par un autre compte
+ * (nom complet ou numéro). Si c'est le cas, le compte est restreint et une
+ * notification invite l'utilisateur à envoyer une demande d'examen.
+ */
+export async function enforceUniqueIdentity(opts: {
+  userId: string;
+  fullName?: string | null;
+  phone?: string | null;
+}): Promise<boolean> {
+  const { data, error } = await rpc("profile_info_conflict", {
+    _name: opts.fullName ?? "",
+    _phone: opts.phone ?? "",
+  });
+  if (error || data !== true) return false;
 
-/** Vrai si un nouveau compte peut encore être créé depuis cet appareil. */
-export async function canCreateAccountOnDevice(): Promise<boolean> {
-  return (await countDeviceAccounts()) < MAX_ACCOUNTS_PER_DEVICE;
-}
-
-/** Enregistre un compte fraîchement créé sur cet appareil. */
-export async function registerDeviceAccount(userId: string) {
-  writeLocal([...readLocal(), userId]);
-  try {
-    const deviceId = getDeviceId();
-    await supabase.from("login_history").insert({
-      user_id: userId,
-      event_type: "signup",
-      session_id: deviceId,
-      device_info: `${navigator.platform || ""} · ${navigator.userAgent.slice(0, 90)}`,
-    });
-  } catch {
-    /* noop */
-  }
+  await supabase.from("profiles").update({ status: "restricted", is_validated: false }).eq("user_id", opts.userId);
+  await supabase.from("notifications").insert({
+    title: "Compte restreint · informations déjà utilisées",
+    message:
+      "Certaines de vos informations (nom ou numéro de compte) sont déjà utilisées par un autre compte. " +
+      "Votre compte est en accès restreint : envoyez une demande d'examen depuis votre profil et attendez la validation de l'administrateur.",
+    is_global: false,
+    target_user_id: opts.userId,
+    created_by: opts.userId,
+  });
+  return true;
 }

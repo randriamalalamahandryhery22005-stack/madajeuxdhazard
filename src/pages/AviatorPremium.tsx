@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import PremiumPaywall from "@/components/PremiumPaywall";
 import { PREMIUM_GAME_MODES, computeTrial } from "@/lib/premiumAccess";
-import AviatorRealtimeMode from "@/components/AviatorRealtimeMode";
+import AviatorAnalysisFlow from "@/components/aviator/AviatorAnalysisFlow";
 import { Button } from "@/components/ui/button";
 
 const AviatorPremium = () => {
@@ -90,7 +90,7 @@ const AviatorPremium = () => {
 
   return (
     <>
-      <AviatorRealtimeMode
+      <AviatorAnalysisFlow
         showSeconds={showSeconds}
         accessStart={accessStart}
         accessExpiry={accessExpiry}
