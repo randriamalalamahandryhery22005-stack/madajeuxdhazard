@@ -82,7 +82,7 @@ async function ensureRunning(): Promise<AudioContext | null> {
   if (!c) return null;
   if (c.state === "running") return c;
   try { await c.resume(); } catch { /* noop */ }
-  return c.state === "running" ? c : null;
+  return (c.state as string) === "running" ? c : null;
 }
 
 export function unlockAudioPlayback() {
