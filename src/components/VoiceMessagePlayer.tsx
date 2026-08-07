@@ -42,20 +42,29 @@ export default function VoiceMessagePlayer({
   useEffect(() => {
     const a = ref.current;
     if (!a) return;
+    a.volume = 1;
     const onT = () => setCur(a.currentTime);
     const onD = () => setDur(a.duration || 0);
-    const onEnd = () => { setPlaying(false); setCur(0); };
+    const onEnd = () => { setPlaying(false); setCur(0); if (currentPlayer === a) currentPlayer = null; };
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
     a.addEventListener("timeupdate", onT);
     a.addEventListener("loadedmetadata", onD);
     a.addEventListener("durationchange", onD);
     a.addEventListener("ended", onEnd);
+    a.addEventListener("play", onPlay);
+    a.addEventListener("pause", onPause);
     return () => {
       a.removeEventListener("timeupdate", onT);
       a.removeEventListener("loadedmetadata", onD);
       a.removeEventListener("durationchange", onD);
       a.removeEventListener("ended", onEnd);
+      a.removeEventListener("play", onPlay);
+      a.removeEventListener("pause", onPause);
+      if (currentPlayer === a) currentPlayer = null;
     };
   }, [src]);
+
 
   const toggle = () => {
     const a = ref.current;
