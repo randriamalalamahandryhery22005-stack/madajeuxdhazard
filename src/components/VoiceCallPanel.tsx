@@ -112,11 +112,21 @@ export default function VoiceCallPanel({
   useEffect(() => { onJoinedChange?.(joined); }, [joined, onJoinedChange]);
 
   // Ringback: play while alone in the room
+  const wasConnectedRef = useRef(false);
   useEffect(() => {
-    if (!joined) { stopRingback(); return; }
-    if (participants.length <= 1) startRingback();
-    else stopRingback();
+    if (!joined) { stopRingback(); wasConnectedRef.current = false; return; }
+    if (participants.length <= 1) {
+      startRingback();
+      wasConnectedRef.current = false;
+    } else {
+      stopRingback();
+      if (!wasConnectedRef.current) {
+        wasConnectedRef.current = true;
+        playNotificationSound("validation", { force: true });
+      }
+    }
   }, [joined, participants, startRingback, stopRingback]);
+
 
 
   // Monitor speaking via local audio level (simple)
