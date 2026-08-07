@@ -60,9 +60,22 @@ export default function VoiceMessagePlayer({
   const toggle = () => {
     const a = ref.current;
     if (!a) return;
-    if (playing) { a.pause(); setPlaying(false); }
-    else { a.play().then(() => setPlaying(true)).catch(() => {}); }
+    if (playing) { a.pause(); setPlaying(false); return; }
+    if (currentPlayer && currentPlayer !== a) {
+      try { currentPlayer.pause(); } catch { /* noop */ }
+    }
+    currentPlayer = a;
+    a.volume = 1;
+    a.muted = false;
+    a.play()
+      .then(() => setPlaying(true))
+      .catch(() => {
+        // Nouvelle tentative après rechargement de la source (iOS/Safari).
+        try { a.load(); } catch { /* noop */ }
+        a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+      });
   };
+
 
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
     const a = ref.current;
