@@ -289,6 +289,8 @@ export default function VoiceCallPanel({
     const wasInitiator = activeRoom?.initiated_by === userId;
     const wasAlone = participants.length <= 1;
     cleanup();
+    playNotificationSound("hangup", { force: true });
+
     // Only the initiator ends the room when the last participant leaves
     if (wasInitiator && wasAlone) {
       try { await endRoom(); } catch { /* ignore */ }
