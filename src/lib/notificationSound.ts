@@ -63,7 +63,6 @@ export function subscribeSoundSettings(cb: (s: SoundSettings) => void) {
 
 /* ----------------------- Web Audio infrastructure ----------------------- */
 let ctx: AudioContext | null = null;
-let unlocked = false;
 
 function getCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -74,32 +73,52 @@ function getCtx(): AudioContext | null {
       ctx = new AC();
     } catch { ctx = null; }
   }
-  if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
   return ctx;
 }
 
+/** Garantit un contexte audio « running » (résout la suspension iOS/Chrome). */
+async function ensureRunning(): Promise<AudioContext | null> {
+  const c = getCtx();
+  if (!c) return null;
+  if (c.state === "running") return c;
+  try { await c.resume(); } catch { /* noop */ }
+  return (c.state as string) === "running" ? c : null;
+}
+
 export function unlockAudioPlayback() {
-  if (unlocked) return;
   const c = getCtx();
   if (!c) return;
-  unlocked = true;
-  try {
-    const buf = c.createBuffer(1, 1, 22050);
-    const src = c.createBufferSource();
-    src.buffer = buf;
-    src.connect(c.destination);
-    src.start(0);
-  } catch { /* noop */ }
+  const kick = () => {
+    try {
+      const buf = c.createBuffer(1, 1, 22050);
+      const src = c.createBufferSource();
+      src.buffer = buf;
+      src.connect(c.destination);
+      src.start(0);
+    } catch { /* noop */ }
+  };
+  if (c.state === "running") { kick(); return; }
+  c.resume().then(kick).catch(() => {});
 }
 
 if (typeof window !== "undefined") {
+  // Les écouteurs restent actifs tant que le contexte n'est pas réellement
+  // « running » (un premier geste peut échouer selon la plateforme).
   const evts: (keyof WindowEventMap)[] = ["pointerdown", "touchstart", "keydown", "click"];
   const h = () => {
     unlockAudioPlayback();
-    evts.forEach((e) => window.removeEventListener(e, h));
+    if (ctx && ctx.state === "running") {
+      evts.forEach((e) => window.removeEventListener(e, h));
+    }
   };
   evts.forEach((e) => window.addEventListener(e, h, { passive: true } as any));
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && ctx && ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+  });
 }
+
 
 /** One shaped tone with attack/decay envelope. */
 function playTone(
@@ -206,14 +225,21 @@ const DESIGNS: Record<SoundKind, Design> = {
 const lastPlay: Record<string, number> = {};
 
 function playDesign(kind: SoundKind, volume: number, force = false) {
-  const c = getCtx();
-  if (!c) return;
-  const now = c.currentTime;
   const design = DESIGNS[kind];
   if (!design) return;
   const vol = Math.min(1, Math.max(0, volume));
-  for (const v of design) {
-    playTone(c, v.freq, now + v.delay, v.dur, v.gain * vol, v.type ?? "sine", v.slide ?? 1);
+  const emit = (c: AudioContext) => {
+    const now = c.currentTime;
+    for (const v of design) {
+      playTone(c, v.freq, now + v.delay, v.dur, v.gain * vol, v.type ?? "sine", v.slide ?? 1);
+    }
+  };
+  const c = getCtx();
+  if (c && c.state === "running") {
+    emit(c);
+  } else {
+    // Contexte suspendu (politique d'autoplay) : on le réveille puis on joue.
+    void ensureRunning().then((rc) => { if (rc) { try { emit(rc); } catch { /* noop */ } } });
   }
   if (!force) lastPlay[kind] = Date.now();
 }
@@ -228,9 +254,11 @@ export function playNotificationSound(kind: SoundKind, opts: { force?: boolean }
   try { playDesign(kind, s.volume, !!opts.force); } catch { /* noop */ }
 }
 
+
 /** Sonnerie continue (appel entrant). Retourne une fonction d'arrêt. */
 export function startRingtone(): () => void {
   if (typeof window === "undefined") return () => {};
+  unlockAudioPlayback();
   const s = readSoundSettings();
   let stopped = false;
   let timer: number | null = null;
@@ -300,6 +328,7 @@ export function startRingtone(): () => void {
 /** Tonalité d'appel sortant (ringback). Retourne une fonction d'arrêt. */
 export function startOutgoingRingback(): () => void {
   if (typeof window === "undefined") return () => {};
+  unlockAudioPlayback();
   let stopped = false;
   let timer: number | null = null;
   const tick = () => {

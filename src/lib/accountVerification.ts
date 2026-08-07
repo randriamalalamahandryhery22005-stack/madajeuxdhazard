@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Vérification des comptes (v0.0.2).
+ * Vérification des comptes (v0.0.3).
  *
  * Un compte doit reprendre toutes les informations saisies à la création. S'il
  * manque une information obligatoire, le compte reçoit une notification et

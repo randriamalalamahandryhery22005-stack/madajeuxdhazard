@@ -599,6 +599,9 @@ const SubscriptionFlow = ({ gameMode, gameName, onAccessGranted, onCancel, fixed
                       <div className="text-left">
                         <p className="text-[9px] text-muted-foreground uppercase tracking-widest">Numéro</p>
                         <p className={`text-2xl font-mono font-black ${c.text2} tracking-wider`}>{numberDisplay}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Bénéficiaire · <span className="font-bold text-foreground">Mahandry Hery RANDRIAMALALA</span>
+                        </p>
                       </div>
                       <div className={`flex items-center gap-1 px-3 py-2 rounded-xl ${c.chipBg} text-xs font-bold`}>
                         {copied === "num" ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -630,7 +633,7 @@ const SubscriptionFlow = ({ gameMode, gameName, onAccessGranted, onCancel, fixed
                 </p>
                 <ol className="space-y-2 text-xs text-muted-foreground">
                   <li className="flex gap-2"><span className="w-5 h-5 shrink-0 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center">1</span>Ouvrez l'application <b className="text-foreground">{provider}</b> sur votre téléphone.</li>
-                  <li className="flex gap-2"><span className="w-5 h-5 shrink-0 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center">2</span>Effectuez un transfert de <b className="text-foreground">{price.toLocaleString()} Ar</b> vers le numéro <b className="text-foreground">{numberDisplay}</b>.</li>
+                  <li className="flex gap-2"><span className="w-5 h-5 shrink-0 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center">2</span>Effectuez un transfert de <b className="text-foreground">{price.toLocaleString()} Ar</b> vers le numéro <b className="text-foreground">{numberDisplay}</b> au nom de <b className="text-foreground">Mahandry Hery RANDRIAMALALA</b>.</li>
                   <li className="flex gap-2"><span className="w-5 h-5 shrink-0 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center">3</span>Faites une capture d'écran de la confirmation.</li>
                   <li className="flex gap-2"><span className="w-5 h-5 shrink-0 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center">4</span>Envoyez la preuve à l'étape suivante pour activation.</li>
                 </ol>

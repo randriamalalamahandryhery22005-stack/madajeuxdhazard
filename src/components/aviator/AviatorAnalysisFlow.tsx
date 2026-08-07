@@ -36,6 +36,13 @@ type Step = "capture" | "levels" | "run";
 /** Nombre minimum de tours exigés dans la capture avant le choix du niveau. */
 const MIN_ROUNDS = 30;
 
+/** Base statistique neutre utilisée lorsque la capture est ignorée. */
+const BASELINE_HISTORY = [
+  1.42, 2.31, 1.08, 3.75, 1.96, 1.21, 5.42, 2.08, 1.34, 1.77,
+  2.64, 1.12, 4.19, 1.53, 1.89, 2.95, 1.27, 1.66, 7.31, 1.44,
+  2.22, 1.05, 3.08, 1.71, 1.38, 2.47, 1.19, 6.02, 1.58, 2.13,
+];
+
 const fileToDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -95,6 +102,20 @@ const AviatorAnalysisFlow = ({ showSeconds, accessStart, accessExpiry, onBack }:
       setLoading(false);
     }
   }, []);
+
+  /**
+   * Étape facultative : l'utilisateur peut choisir un niveau sans capture.
+   * Le moteur démarre alors sur une base statistique neutre de référence.
+   */
+  const skipCapture = () => {
+    setError(null);
+    setPreview(null);
+    setMultipliers(null);
+    const s = analyzeHistory(BASELINE_HISTORY);
+    setStats(s);
+    setReco(recommendLevel(s));
+    setStep("levels");
+  };
 
   const resetCapture = () => {
     setPreview(null);
@@ -191,15 +212,15 @@ const AviatorAnalysisFlow = ({ showSeconds, accessStart, accessExpiry, onBack }:
                   <Camera className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[9px] uppercase tracking-[0.22em] luxe-emerald font-bold">Étape obligatoire</p>
+                  <p className="text-[9px] uppercase tracking-[0.22em] luxe-emerald font-bold">Étape facultative</p>
                   <h2 className="text-base font-black text-white leading-tight">Capture des 30 derniers tours</h2>
                 </div>
               </div>
               <p className="relative text-[11px] text-white/62 leading-relaxed mt-3">
                 Envoyez une capture d'écran affichant clairement au minimum les 30 derniers coefficients (30 tours ou
-                plus). Une capture incomplète sera refusée. Le moteur
-                analyse automatiquement les données puis détermine le niveau d'analyse le plus adapté. Aucune prédiction
-                n'est possible sans cette capture.
+                plus) : une capture incomplète sera refusée. Le moteur analyse automatiquement les données puis
+                détermine le niveau le plus adapté. Vous pouvez aussi passer cette étape et choisir directement un
+                niveau.
               </p>
 
               <input
@@ -230,6 +251,13 @@ const AviatorAnalysisFlow = ({ showSeconds, accessStart, accessExpiry, onBack }:
                   </Button>
                 )}
               </div>
+              <button
+                onClick={skipCapture}
+                disabled={loading}
+                className="relative mt-3 w-full text-[11px] font-bold luxe-gold hover:underline disabled:opacity-40"
+              >
+                Continuer sans capture · choisir un niveau directement
+              </button>
             </div>
 
             {loading && (
@@ -274,7 +302,19 @@ const AviatorAnalysisFlow = ({ showSeconds, accessStart, accessExpiry, onBack }:
 
         {step === "levels" && reco && stats && (
           <>
-            <CaptureSummary stats={stats} multipliers={multipliers ?? []} onNewCapture={resetCapture} />
+            {multipliers && multipliers.length > 0 ? (
+              <CaptureSummary stats={stats} multipliers={multipliers} onNewCapture={resetCapture} />
+            ) : (
+              <div className="luxe-card p-4 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 luxe-gold shrink-0" />
+                <p className="text-[11px] text-white/65 leading-relaxed">
+                  Aucune capture fournie : le moteur démarre sur une base statistique neutre.
+                </p>
+                <button onClick={resetCapture} className="ml-auto text-[10px] font-bold luxe-gold hover:underline shrink-0">
+                  Ajouter une capture
+                </button>
+              </div>
+            )}
             <AviatorLevelSelect
               recommendation={reco}
               onSelect={(l) => {
