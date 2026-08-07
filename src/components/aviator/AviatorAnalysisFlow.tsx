@@ -302,7 +302,19 @@ const AviatorAnalysisFlow = ({ showSeconds, accessStart, accessExpiry, onBack }:
 
         {step === "levels" && reco && stats && (
           <>
-            <CaptureSummary stats={stats} multipliers={multipliers ?? []} onNewCapture={resetCapture} />
+            {multipliers && multipliers.length > 0 ? (
+              <CaptureSummary stats={stats} multipliers={multipliers} onNewCapture={resetCapture} />
+            ) : (
+              <div className="luxe-card p-4 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 luxe-gold shrink-0" />
+                <p className="text-[11px] text-white/65 leading-relaxed">
+                  Aucune capture fournie : le moteur démarre sur une base statistique neutre.
+                </p>
+                <button onClick={resetCapture} className="ml-auto text-[10px] font-bold luxe-gold hover:underline shrink-0">
+                  Ajouter une capture
+                </button>
+              </div>
+            )}
             <AviatorLevelSelect
               recommendation={reco}
               onSelect={(l) => {
