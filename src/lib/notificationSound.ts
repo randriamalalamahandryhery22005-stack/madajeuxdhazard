@@ -27,7 +27,7 @@ export interface SoundSettings {
   volume: number; // 0..1
 }
 
-const DEFAULTS: SoundSettings = { enabled: true, volume: 0.6 };
+const DEFAULTS: SoundSettings = { enabled: true, volume: 0.85 };
 
 export function readSoundSettings(): SoundSettings {
   if (typeof window === "undefined") return DEFAULTS;
