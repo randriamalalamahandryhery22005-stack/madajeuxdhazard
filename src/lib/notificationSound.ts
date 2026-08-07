@@ -225,14 +225,21 @@ const DESIGNS: Record<SoundKind, Design> = {
 const lastPlay: Record<string, number> = {};
 
 function playDesign(kind: SoundKind, volume: number, force = false) {
-  const c = getCtx();
-  if (!c) return;
-  const now = c.currentTime;
   const design = DESIGNS[kind];
   if (!design) return;
   const vol = Math.min(1, Math.max(0, volume));
-  for (const v of design) {
-    playTone(c, v.freq, now + v.delay, v.dur, v.gain * vol, v.type ?? "sine", v.slide ?? 1);
+  const emit = (c: AudioContext) => {
+    const now = c.currentTime;
+    for (const v of design) {
+      playTone(c, v.freq, now + v.delay, v.dur, v.gain * vol, v.type ?? "sine", v.slide ?? 1);
+    }
+  };
+  const c = getCtx();
+  if (c && c.state === "running") {
+    emit(c);
+  } else {
+    // Contexte suspendu (politique d'autoplay) : on le réveille puis on joue.
+    void ensureRunning().then((rc) => { if (rc) { try { emit(rc); } catch { /* noop */ } } });
   }
   if (!force) lastPlay[kind] = Date.now();
 }
@@ -246,6 +253,7 @@ export function playNotificationSound(kind: SoundKind, opts: { force?: boolean }
   if (!opts.force && (lastPlay[kind] || 0) + 1200 > now) return;
   try { playDesign(kind, s.volume, !!opts.force); } catch { /* noop */ }
 }
+
 
 /** Sonnerie continue (appel entrant). Retourne une fonction d'arrêt. */
 export function startRingtone(): () => void {
