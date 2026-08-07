@@ -51,47 +51,19 @@ export default function VoiceCallPanel({
   const callIdRef = useRef<string>("");
   const peersRef = useRef<Record<string, PeerState>>({});
   const audioContainerRef = useRef<HTMLDivElement>(null);
-  const ringbackRef = useRef<{ ctx: AudioContext; stop: () => void } | null>(null);
+  const ringbackRef = useRef<(() => void) | null>(null);
 
   const stopRingback = useCallback(() => {
-    try { ringbackRef.current?.stop(); } catch {}
+    try { ringbackRef.current?.(); } catch { /* noop */ }
     ringbackRef.current = null;
   }, []);
 
   const startRingback = useCallback(() => {
     if (ringbackRef.current) return;
-    try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const gain = ctx.createGain();
-      gain.gain.value = 0;
-      gain.connect(ctx.destination);
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      osc1.frequency.value = 440;
-      osc2.frequency.value = 480;
-      osc1.connect(gain); osc2.connect(gain);
-      osc1.start(); osc2.start();
-      let timer: number | null = null;
-      const cycle = () => {
-        const t = ctx.currentTime;
-        gain.gain.cancelScheduledValues(t);
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(0.15, t + 0.05);
-        gain.gain.setValueAtTime(0.15, t + 1.8);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.9);
-      };
-      cycle();
-      timer = window.setInterval(cycle, 3000);
-      ringbackRef.current = {
-        ctx,
-        stop: () => {
-          if (timer) window.clearInterval(timer);
-          try { osc1.stop(); osc2.stop(); } catch {}
-          try { ctx.close(); } catch {}
-        },
-      };
-    } catch { /* ignore */ }
+    unlockAudioPlayback();
+    ringbackRef.current = startOutgoingRingback();
   }, []);
+
 
 
   const cleanup = useCallback(() => {
