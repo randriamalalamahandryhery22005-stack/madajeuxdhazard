@@ -171,12 +171,14 @@ function playTone(
   if (freqEndRatio !== 1) {
     osc.frequency.exponentialRampToValueAtTime(freq * freqEndRatio, startAt + duration);
   }
-  g.gain.setValueAtTime(0, startAt);
-  g.gain.linearRampToValueAtTime(gain, startAt + 0.012);
+  const peak = Math.max(0.0002, Math.min(1, gain));
+  g.gain.setValueAtTime(0.0001, startAt);
+  g.gain.linearRampToValueAtTime(peak, startAt + 0.012);
   g.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
-  osc.connect(g).connect(c.destination);
+  osc.connect(g).connect(getMaster(c));
   osc.start(startAt);
-  osc.stop(startAt + duration + 0.02);
+  osc.stop(startAt + duration + 0.05);
+
 }
 
 interface Voice { freq: number; delay: number; dur: number; gain: number; type?: OscillatorType; slide?: number; }
