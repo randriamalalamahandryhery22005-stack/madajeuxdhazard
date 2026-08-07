@@ -24,6 +24,8 @@ import { useGlobalChat, type ChatRow, type Profile } from "@/hooks/useGlobalChat
 import { buildEditedContent, parseMessage } from "@/lib/chatMeta";
 import MessageAttachments from "@/components/chat/MessageAttachments";
 import RichText from "@/components/chat/RichText";
+import { playNotificationSound, unlockAudioPlayback } from "@/lib/notificationSound";
+
 import {
   MAX_IMAGES_PER_MESSAGE,
   attachmentKind,
