@@ -406,6 +406,7 @@ const SubscriptionWizard = ({
                       <span className="text-sm font-bold">{o.name}</span>
                     </div>
                     <p className="text-[11px] font-mono text-muted-foreground mt-1 tracking-wider">{o.display}</p>
+                    <p className="text-[10px] text-muted-foreground/80 mt-0.5">Mahandry Hery RANDRIAMALALA</p>
                   </button>
                 );
               })}
@@ -427,6 +428,8 @@ const SubscriptionWizard = ({
                 <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
                   <span>
                     Destinataire · <span className="font-mono font-bold text-foreground">{op.display}</span>
+                    <br />
+                    <span className="font-bold text-foreground">Mahandry Hery RANDRIAMALALA</span>
                   </span>
                   <span>
                     Montant · <span className="font-bold gold-text">{price.toLocaleString()} Ar</span>
