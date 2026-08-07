@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCall } from "@/contexts/CallContext";
 import { Phone, PhoneOff, Mic, MicOff, Volume2, Users, X } from "lucide-react";
 import { toast } from "sonner";
+import { startOutgoingRingback, unlockAudioPlayback, playNotificationSound } from "@/lib/notificationSound";
+
 
 type Profile = {
   user_id: string;
@@ -51,47 +53,19 @@ export default function VoiceCallPanel({
   const callIdRef = useRef<string>("");
   const peersRef = useRef<Record<string, PeerState>>({});
   const audioContainerRef = useRef<HTMLDivElement>(null);
-  const ringbackRef = useRef<{ ctx: AudioContext; stop: () => void } | null>(null);
+  const ringbackRef = useRef<(() => void) | null>(null);
 
   const stopRingback = useCallback(() => {
-    try { ringbackRef.current?.stop(); } catch {}
+    try { ringbackRef.current?.(); } catch { /* noop */ }
     ringbackRef.current = null;
   }, []);
 
   const startRingback = useCallback(() => {
     if (ringbackRef.current) return;
-    try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const gain = ctx.createGain();
-      gain.gain.value = 0;
-      gain.connect(ctx.destination);
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      osc1.frequency.value = 440;
-      osc2.frequency.value = 480;
-      osc1.connect(gain); osc2.connect(gain);
-      osc1.start(); osc2.start();
-      let timer: number | null = null;
-      const cycle = () => {
-        const t = ctx.currentTime;
-        gain.gain.cancelScheduledValues(t);
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(0.15, t + 0.05);
-        gain.gain.setValueAtTime(0.15, t + 1.8);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.9);
-      };
-      cycle();
-      timer = window.setInterval(cycle, 3000);
-      ringbackRef.current = {
-        ctx,
-        stop: () => {
-          if (timer) window.clearInterval(timer);
-          try { osc1.stop(); osc2.stop(); } catch {}
-          try { ctx.close(); } catch {}
-        },
-      };
-    } catch { /* ignore */ }
+    unlockAudioPlayback();
+    ringbackRef.current = startOutgoingRingback();
   }, []);
+
 
 
   const cleanup = useCallback(() => {
@@ -138,11 +112,21 @@ export default function VoiceCallPanel({
   useEffect(() => { onJoinedChange?.(joined); }, [joined, onJoinedChange]);
 
   // Ringback: play while alone in the room
+  const wasConnectedRef = useRef(false);
   useEffect(() => {
-    if (!joined) { stopRingback(); return; }
-    if (participants.length <= 1) startRingback();
-    else stopRingback();
+    if (!joined) { stopRingback(); wasConnectedRef.current = false; return; }
+    if (participants.length <= 1) {
+      startRingback();
+      wasConnectedRef.current = false;
+    } else {
+      stopRingback();
+      if (!wasConnectedRef.current) {
+        wasConnectedRef.current = true;
+        playNotificationSound("validation", { force: true });
+      }
+    }
   }, [joined, participants, startRingback, stopRingback]);
+
 
 
   // Monitor speaking via local audio level (simple)
@@ -315,6 +299,8 @@ export default function VoiceCallPanel({
     const wasInitiator = activeRoom?.initiated_by === userId;
     const wasAlone = participants.length <= 1;
     cleanup();
+    playNotificationSound("hangup", { force: true });
+
     // Only the initiator ends the room when the last participant leaves
     if (wasInitiator && wasAlone) {
       try { await endRoom(); } catch { /* ignore */ }
