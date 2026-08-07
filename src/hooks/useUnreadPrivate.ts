@@ -55,7 +55,7 @@ export function useUnreadPrivate(userId: string | null | undefined) {
       debounce.current = window.setTimeout(() => void compute(), 250);
     };
     const ch = supabase
-      .channel(`unread-private-${userId}`)
+      .channel(`unread-private-${userId}-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, schedule)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "conversation_members", filter: `user_id=eq.${userId}` }, schedule)
       .subscribe();
