@@ -63,16 +63,39 @@ export function subscribeSoundSettings(cb: (s: SoundSettings) => void) {
 
 /* ----------------------- Web Audio infrastructure ----------------------- */
 let ctx: AudioContext | null = null;
+let master: GainNode | null = null;
+let comp: DynamicsCompressorNode | null = null;
+
+/** Chaîne de sortie commune : master gain -> limiteur -> destination. */
+function getMaster(c: AudioContext): GainNode {
+  if (!master || master.context !== c) {
+    master = c.createGain();
+    master.gain.value = 1;
+    comp = c.createDynamicsCompressor();
+    try {
+      comp.threshold.value = -10;
+      comp.knee.value = 12;
+      comp.ratio.value = 8;
+      comp.attack.value = 0.003;
+      comp.release.value = 0.18;
+    } catch { /* noop */ }
+    master.connect(comp).connect(c.destination);
+  }
+  return master;
+}
 
 function getCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
-  if (!ctx) {
+  if (!ctx || ctx.state === "closed") {
     try {
       const AC = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext | undefined;
       if (!AC) return null;
       ctx = new AC();
+      master = null;
+      comp = null;
     } catch { ctx = null; }
   }
+  if (ctx) getMaster(ctx);
   return ctx;
 }
 
@@ -85,6 +108,15 @@ async function ensureRunning(): Promise<AudioContext | null> {
   return (c.state as string) === "running" ? c : null;
 }
 
+/** Sons demandés alors que le contexte était bloqué : rejoués au déverrouillage. */
+const pending: Array<() => void> = [];
+
+function flushPending() {
+  if (!ctx || ctx.state !== "running") return;
+  const jobs = pending.splice(0, pending.length);
+  jobs.forEach((j) => { try { j(); } catch { /* noop */ } });
+}
+
 export function unlockAudioPlayback() {
   const c = getCtx();
   if (!c) return;
@@ -93,9 +125,10 @@ export function unlockAudioPlayback() {
       const buf = c.createBuffer(1, 1, 22050);
       const src = c.createBufferSource();
       src.buffer = buf;
-      src.connect(c.destination);
+      src.connect(getMaster(c));
       src.start(0);
     } catch { /* noop */ }
+    flushPending();
   };
   if (c.state === "running") { kick(); return; }
   c.resume().then(kick).catch(() => {});
@@ -104,7 +137,7 @@ export function unlockAudioPlayback() {
 if (typeof window !== "undefined") {
   // Les écouteurs restent actifs tant que le contexte n'est pas réellement
   // « running » (un premier geste peut échouer selon la plateforme).
-  const evts: (keyof WindowEventMap)[] = ["pointerdown", "touchstart", "keydown", "click"];
+  const evts: (keyof WindowEventMap)[] = ["pointerdown", "touchstart", "touchend", "keydown", "click"];
   const h = () => {
     unlockAudioPlayback();
     if (ctx && ctx.state === "running") {
@@ -114,10 +147,11 @@ if (typeof window !== "undefined") {
   evts.forEach((e) => window.addEventListener(e, h, { passive: true } as any));
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && ctx && ctx.state === "suspended") {
-      ctx.resume().catch(() => {});
+      ctx.resume().then(flushPending).catch(() => {});
     }
   });
 }
+
 
 
 /** One shaped tone with attack/decay envelope. */
