@@ -63,7 +63,6 @@ export function subscribeSoundSettings(cb: (s: SoundSettings) => void) {
 
 /* ----------------------- Web Audio infrastructure ----------------------- */
 let ctx: AudioContext | null = null;
-let unlocked = false;
 
 function getCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -74,32 +73,52 @@ function getCtx(): AudioContext | null {
       ctx = new AC();
     } catch { ctx = null; }
   }
-  if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
   return ctx;
 }
 
+/** Garantit un contexte audio « running » (résout la suspension iOS/Chrome). */
+async function ensureRunning(): Promise<AudioContext | null> {
+  const c = getCtx();
+  if (!c) return null;
+  if (c.state === "running") return c;
+  try { await c.resume(); } catch { /* noop */ }
+  return c.state === "running" ? c : null;
+}
+
 export function unlockAudioPlayback() {
-  if (unlocked) return;
   const c = getCtx();
   if (!c) return;
-  unlocked = true;
-  try {
-    const buf = c.createBuffer(1, 1, 22050);
-    const src = c.createBufferSource();
-    src.buffer = buf;
-    src.connect(c.destination);
-    src.start(0);
-  } catch { /* noop */ }
+  const kick = () => {
+    try {
+      const buf = c.createBuffer(1, 1, 22050);
+      const src = c.createBufferSource();
+      src.buffer = buf;
+      src.connect(c.destination);
+      src.start(0);
+    } catch { /* noop */ }
+  };
+  if (c.state === "running") { kick(); return; }
+  c.resume().then(kick).catch(() => {});
 }
 
 if (typeof window !== "undefined") {
+  // Les écouteurs restent actifs tant que le contexte n'est pas réellement
+  // « running » (un premier geste peut échouer selon la plateforme).
   const evts: (keyof WindowEventMap)[] = ["pointerdown", "touchstart", "keydown", "click"];
   const h = () => {
     unlockAudioPlayback();
-    evts.forEach((e) => window.removeEventListener(e, h));
+    if (ctx && ctx.state === "running") {
+      evts.forEach((e) => window.removeEventListener(e, h));
+    }
   };
   evts.forEach((e) => window.addEventListener(e, h, { passive: true } as any));
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && ctx && ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+  });
 }
+
 
 /** One shaped tone with attack/decay envelope. */
 function playTone(
