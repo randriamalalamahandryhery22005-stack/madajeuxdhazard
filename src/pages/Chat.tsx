@@ -173,10 +173,18 @@ export default function Chat() {
     bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
   }, []);
 
-  // Arrivée d'un message : suivre le fil ou signaler les non-lus.
+  // Arrivée d'un message : son, suivi du fil ou signalement des non-lus.
   useEffect(() => {
     onNewMessage.current = (row: ChatRow) => {
-      if (row.user_id === user?.id || atBottomRef.current) {
+      const mine = row.user_id === user?.id;
+      if (!mine) {
+        const paths = Array.isArray(row.attachments)
+          ? (row.attachments as Array<{ path?: string }>).map((a) => a?.path || "")
+          : [];
+        const voice = [row.image_url || "", ...paths].some((p) => isAudioPath(p));
+        playNotificationSound(voice ? "voice" : "message");
+      }
+      if (mine || atBottomRef.current) {
         window.setTimeout(() => scrollToBottom(true), 40);
       } else {
         setUnreadCount((c) => c + 1);
@@ -186,6 +194,7 @@ export default function Chat() {
       onNewMessage.current = null;
     };
   }, [onNewMessage, scrollToBottom, user?.id]);
+
 
   const firstPaint = useRef(true);
   useEffect(() => {
