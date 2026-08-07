@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCall } from "@/contexts/CallContext";
 import { Phone, PhoneOff, Mic, MicOff, Volume2, Users, X } from "lucide-react";
 import { toast } from "sonner";
+import { startOutgoingRingback, unlockAudioPlayback, playNotificationSound } from "@/lib/notificationSound";
+
 
 type Profile = {
   user_id: string;
