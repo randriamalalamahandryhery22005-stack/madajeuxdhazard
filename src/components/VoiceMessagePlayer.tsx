@@ -20,6 +20,10 @@ const fmt = (s: number) => {
   return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 };
 
+/** Un seul message vocal audible à la fois dans toute l'application. */
+let currentPlayer: HTMLAudioElement | null = null;
+
+
 export default function VoiceMessagePlayer({
   src,
   variant = "them",
