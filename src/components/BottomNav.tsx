@@ -44,7 +44,7 @@ const WHATSAPP_NUMBER = "+261 37 95 942 57";
 const WHATSAPP_RAW = "261379594257";
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_RAW}`;
 const APP_NAME = "Jeux d'Hazard";
-const APP_VERSION = "0.0.2";
+const APP_VERSION = "0.0.3";
 
 type SettingKey = "notifications" | "sound" | "darkMode";
 

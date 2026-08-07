@@ -3,7 +3,7 @@ import {
   Award, Code2, Sparkles, Target, Zap, Lock, Rocket, Heart, Star, Gamepad2, Store,
 } from "lucide-react";
 
-const APP_VERSION = "v0.0.2 · Émeraude Prestige";
+const APP_VERSION = "v0.0.3 · Émeraude Prestige";
 
 const contactItems = [
   { icon: UserRound, label: "Créateur", value: "J&H Studio" },

@@ -69,7 +69,7 @@ import { applyBackgroundMusic, applyStoredBackgroundMusic } from "@/lib/backgrou
 const WHATSAPP_LINK = "https://wa.me/261379594257";
 const EMAIL_LINK = "mailto:jeuxdhazardmada@gmail.com";
 const APP_NAME = "Jeux d'Hazard";
-const APP_VERSION = "0.0.2";
+const APP_VERSION = "0.0.3";
 
 type PanelKey =
   | "root"

@@ -258,6 +258,7 @@ export function playNotificationSound(kind: SoundKind, opts: { force?: boolean }
 /** Sonnerie continue (appel entrant). Retourne une fonction d'arrêt. */
 export function startRingtone(): () => void {
   if (typeof window === "undefined") return () => {};
+  unlockAudioPlayback();
   const s = readSoundSettings();
   let stopped = false;
   let timer: number | null = null;
@@ -327,6 +328,7 @@ export function startRingtone(): () => void {
 /** Tonalité d'appel sortant (ringback). Retourne une fonction d'arrêt. */
 export function startOutgoingRingback(): () => void {
   if (typeof window === "undefined") return () => {};
+  unlockAudioPlayback();
   let stopped = false;
   let timer: number | null = null;
   const tick = () => {

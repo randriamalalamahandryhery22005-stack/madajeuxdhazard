@@ -204,7 +204,7 @@ const Games = () => {
             <div className="flex items-center justify-center gap-1.5">
               <span className="text-[10px] font-black tracking-[0.18em]" style={{ color: "hsl(45 90% 65%)" }}>PREMIUM</span>
               <span className="w-1 h-1 rounded-full" style={{ background: "hsl(45 90% 65%)" }} />
-              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">v0.0.2</span>
+              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">v0.0.3</span>
             </div>
             <h1
               className="font-black text-[22px] leading-tight truncate"

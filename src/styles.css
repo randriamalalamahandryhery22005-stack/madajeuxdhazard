@@ -1028,7 +1028,7 @@
 }
 
 /* ============================================================
-   LIGHT MODE COMPATIBILITY LAYER (v0.0.2)
+   LIGHT MODE COMPATIBILITY LAYER (v0.0.3)
    L'application a été conçue en sombre : de nombreux écrans
    utilisent des couleurs figées (text-white, bg-black/xx…).
    Cette couche les remappe vers les tokens sémantiques dès que
