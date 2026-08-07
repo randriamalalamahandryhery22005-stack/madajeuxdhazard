@@ -263,9 +263,11 @@ const lastPlay: Record<string, number> = {};
 function playDesign(kind: SoundKind, volume: number, force = false) {
   const design = DESIGNS[kind];
   if (!design) return;
-  const vol = Math.min(1, Math.max(0, volume));
+  // Le volume utilisateur est amplifié (x1.8) puis limité : les sons restent
+  // clairement audibles même à un réglage moyen, sans jamais saturer.
+  const vol = Math.min(1.8, Math.max(0, volume) * 1.8);
   const emit = (c: AudioContext) => {
-    const now = c.currentTime;
+    const now = c.currentTime + 0.02;
     for (const v of design) {
       playTone(c, v.freq, now + v.delay, v.dur, v.gain * vol, v.type ?? "sine", v.slide ?? 1);
     }
@@ -274,21 +276,29 @@ function playDesign(kind: SoundKind, volume: number, force = false) {
   if (c && c.state === "running") {
     emit(c);
   } else {
-    // Contexte suspendu (politique d'autoplay) : on le réveille puis on joue.
-    void ensureRunning().then((rc) => { if (rc) { try { emit(rc); } catch { /* noop */ } } });
+    // Contexte suspendu (politique d'autoplay) : on tente de le réveiller,
+    // et si c'est refusé le son est mis en file pour le prochain geste.
+    void ensureRunning().then((rc) => {
+      if (rc) { try { emit(rc); } catch { /* noop */ } return; }
+      if (pending.length < 4) {
+        pending.push(() => { const c2 = getCtx(); if (c2) emit(c2); });
+      }
+    });
   }
   if (!force) lastPlay[kind] = Date.now();
 }
 
-/** Joue un son de notification (respecte préférences + anti-spam 1,2 s). */
+/** Joue un son de notification (respecte préférences + anti-spam court). */
 export function playNotificationSound(kind: SoundKind, opts: { force?: boolean } = {}) {
   if (typeof window === "undefined") return;
   const s = readSoundSettings();
   if (!s.enabled && !opts.force) return;
   const now = Date.now();
-  if (!opts.force && (lastPlay[kind] || 0) + 1200 > now) return;
+  // Anti-spam court (350 ms) : plusieurs messages rapprochés restent audibles.
+  if (!opts.force && (lastPlay[kind] || 0) + 350 > now) return;
   try { playDesign(kind, s.volume, !!opts.force); } catch { /* noop */ }
 }
+
 
 
 /** Sonnerie continue (appel entrant). Retourne une fonction d'arrêt. */
