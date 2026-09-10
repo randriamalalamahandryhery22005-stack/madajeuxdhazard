@@ -1,23 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import JetX from "@/pages/JetX";
+import UnifiedCalculator from "@/pages/UnifiedCalculator";
 import { RequirePremium } from "@/components/RouteGuards";
 
 export const Route = createFileRoute("/jetx")({
-  head: () => ({
-    meta: [
-      { title: "JetX — Jeux d'Hazard" },
-      { name: "description", content: "Prédictions et analyses JetX sur Jeux d'Hazard." },
-      { property: "og:title", content: "JetX — Jeux d'Hazard" },
-      { property: "og:description", content: "Prédictions et analyses JetX sur Jeux d'Hazard." },
-    ],
-  }),
+  head: () => ({ meta: [
+    { title: "JetX — Jeux d'Hazard" },
+    { name: "description", content: "Calculateur unifié et analyse statistique premium." },
+  ] }),
   component: RouteComponent,
 });
 
 function RouteComponent() {
   return (
     <RequirePremium>
-      <JetX />
+      <UnifiedCalculator defaultGame="jetx" />
     </RequirePremium>
   );
 }

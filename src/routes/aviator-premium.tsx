@@ -1,23 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import AviatorPremium from "@/pages/AviatorPremium";
+import UnifiedCalculator from "@/pages/UnifiedCalculator";
 import { RequirePremium } from "@/components/RouteGuards";
 
 export const Route = createFileRoute("/aviator-premium")({
-  head: () => ({
-    meta: [
-      { title: "Aviator Premium — Jeux d'Hazard" },
-      { name: "description", content: "Aviator Premium : le niveau d'analyse le plus complet de Jeux d'Hazard." },
-      { property: "og:title", content: "Aviator Premium — Jeux d'Hazard" },
-      { property: "og:description", content: "Aviator Premium : le niveau d'analyse le plus complet de Jeux d'Hazard." },
-    ],
-  }),
+  head: () => ({ meta: [
+    { title: "Aviator — Jeux d'Hazard" },
+    { name: "description", content: "Calculateur unifié et analyse statistique premium." },
+  ] }),
   component: RouteComponent,
 });
 
 function RouteComponent() {
   return (
     <RequirePremium>
-      <AviatorPremium />
+      <UnifiedCalculator defaultGame="aviator" />
     </RequirePremium>
   );
 }
