@@ -482,8 +482,8 @@ function HistoryPanel({ onClose }: { onClose: () => void }) {
 const FAVORABLE = [
   { path: "/games", title: "Jeux" },
   { path: "/aviator", title: "Aviator" },
-  { path: "/aviator?game=jetx", title: "JetX" },
-  { path: "/aviator?game=cosmox", title: "CosmoX" },
+  { path: "/jetx", title: "JetX" },
+  { path: "/cosmox", title: "CosmoX" },
   { path: "/premium", title: "Premium" },
   { path: "/gen-store", title: "Boutique" },
   { path: "/chat", title: "Chat" },

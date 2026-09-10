@@ -238,8 +238,10 @@ export function useGlobalChat(userId?: string | null) {
       }
     };
 
+    // Nom unique par montage : réutiliser un nom déjà abonné déclenche
+    // "cannot add postgres_changes callbacks after subscribe()".
     const channel = supabase
-      .channel("jh_global_chat")
+      .channel(`jh_global_chat_${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "global_chat_messages" },

@@ -35,9 +35,9 @@ const FREE_PERKS = [
 ];
 
 const QUICK_ACCESS = [
-  { name: "Aviator Premium", desc: "Précision élevée", to: "/aviator?game=aviator", Icon: Plane, tone: "emerald" as const },
-  { name: "CosmoX", desc: "Prédictions avancées", to: "/aviator?game=cosmox", Icon: Sparkles, tone: "emerald" as const },
-  { name: "JetX", desc: "Vol premium", to: "/aviator?game=jetx", Icon: Rocket, tone: "gold" as const },
+  { name: "Aviator Premium", desc: "Précision élevée", to: "/aviator-premium", Icon: Plane, tone: "emerald" as const },
+  { name: "CosmoX", desc: "Prédictions avancées", to: "/cosmox", Icon: Sparkles, tone: "emerald" as const },
+  { name: "JetX", desc: "Vol premium", to: "/jetx", Icon: Rocket, tone: "gold" as const },
 ];
 
 /** Compteurs d'utilisation réels de l'utilisateur (aujourd'hui / 7 jours / total). */

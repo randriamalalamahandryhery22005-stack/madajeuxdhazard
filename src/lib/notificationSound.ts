@@ -27,7 +27,7 @@ export interface SoundSettings {
   volume: number; // 0..1
 }
 
-const DEFAULTS: SoundSettings = { enabled: true, volume: 0.85 };
+const DEFAULTS: SoundSettings = { enabled: true, volume: 0.6 };
 
 export function readSoundSettings(): SoundSettings {
   if (typeof window === "undefined") return DEFAULTS;
@@ -63,96 +63,43 @@ export function subscribeSoundSettings(cb: (s: SoundSettings) => void) {
 
 /* ----------------------- Web Audio infrastructure ----------------------- */
 let ctx: AudioContext | null = null;
-let master: GainNode | null = null;
-let comp: DynamicsCompressorNode | null = null;
-
-/** Chaîne de sortie commune : master gain -> limiteur -> destination. */
-function getMaster(c: AudioContext): GainNode {
-  if (!master || master.context !== c) {
-    master = c.createGain();
-    master.gain.value = 1;
-    comp = c.createDynamicsCompressor();
-    try {
-      comp.threshold.value = -10;
-      comp.knee.value = 12;
-      comp.ratio.value = 8;
-      comp.attack.value = 0.003;
-      comp.release.value = 0.18;
-    } catch { /* noop */ }
-    master.connect(comp).connect(c.destination);
-  }
-  return master;
-}
+let unlocked = false;
 
 function getCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
-  if (!ctx || ctx.state === "closed") {
+  if (!ctx) {
     try {
       const AC = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext | undefined;
       if (!AC) return null;
       ctx = new AC();
-      master = null;
-      comp = null;
     } catch { ctx = null; }
   }
-  if (ctx) getMaster(ctx);
+  if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
   return ctx;
 }
 
-/** Garantit un contexte audio « running » (résout la suspension iOS/Chrome). */
-async function ensureRunning(): Promise<AudioContext | null> {
-  const c = getCtx();
-  if (!c) return null;
-  if (c.state === "running") return c;
-  try { await c.resume(); } catch { /* noop */ }
-  return (c.state as string) === "running" ? c : null;
-}
-
-/** Sons demandés alors que le contexte était bloqué : rejoués au déverrouillage. */
-const pending: Array<() => void> = [];
-
-function flushPending() {
-  if (!ctx || ctx.state !== "running") return;
-  const jobs = pending.splice(0, pending.length);
-  jobs.forEach((j) => { try { j(); } catch { /* noop */ } });
-}
-
 export function unlockAudioPlayback() {
+  if (unlocked) return;
   const c = getCtx();
   if (!c) return;
-  const kick = () => {
-    try {
-      const buf = c.createBuffer(1, 1, 22050);
-      const src = c.createBufferSource();
-      src.buffer = buf;
-      src.connect(getMaster(c));
-      src.start(0);
-    } catch { /* noop */ }
-    flushPending();
-  };
-  if (c.state === "running") { kick(); return; }
-  c.resume().then(kick).catch(() => {});
+  unlocked = true;
+  try {
+    const buf = c.createBuffer(1, 1, 22050);
+    const src = c.createBufferSource();
+    src.buffer = buf;
+    src.connect(c.destination);
+    src.start(0);
+  } catch { /* noop */ }
 }
 
 if (typeof window !== "undefined") {
-  // Les écouteurs restent actifs tant que le contexte n'est pas réellement
-  // « running » (un premier geste peut échouer selon la plateforme).
-  const evts: (keyof WindowEventMap)[] = ["pointerdown", "touchstart", "touchend", "keydown", "click"];
+  const evts: (keyof WindowEventMap)[] = ["pointerdown", "touchstart", "keydown", "click"];
   const h = () => {
     unlockAudioPlayback();
-    if (ctx && ctx.state === "running") {
-      evts.forEach((e) => window.removeEventListener(e, h));
-    }
+    evts.forEach((e) => window.removeEventListener(e, h));
   };
   evts.forEach((e) => window.addEventListener(e, h, { passive: true } as any));
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && ctx && ctx.state === "suspended") {
-      ctx.resume().then(flushPending).catch(() => {});
-    }
-  });
 }
-
-
 
 /** One shaped tone with attack/decay envelope. */
 function playTone(
@@ -171,14 +118,12 @@ function playTone(
   if (freqEndRatio !== 1) {
     osc.frequency.exponentialRampToValueAtTime(freq * freqEndRatio, startAt + duration);
   }
-  const peak = Math.max(0.0002, Math.min(1, gain));
-  g.gain.setValueAtTime(0.0001, startAt);
-  g.gain.linearRampToValueAtTime(peak, startAt + 0.012);
+  g.gain.setValueAtTime(0, startAt);
+  g.gain.linearRampToValueAtTime(gain, startAt + 0.012);
   g.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
-  osc.connect(g).connect(getMaster(c));
+  osc.connect(g).connect(c.destination);
   osc.start(startAt);
-  osc.stop(startAt + duration + 0.05);
-
+  osc.stop(startAt + duration + 0.02);
 }
 
 interface Voice { freq: number; delay: number; dur: number; gain: number; type?: OscillatorType; slide?: number; }
@@ -261,50 +206,31 @@ const DESIGNS: Record<SoundKind, Design> = {
 const lastPlay: Record<string, number> = {};
 
 function playDesign(kind: SoundKind, volume: number, force = false) {
+  const c = getCtx();
+  if (!c) return;
+  const now = c.currentTime;
   const design = DESIGNS[kind];
   if (!design) return;
-  // Le volume utilisateur est amplifié (x1.8) puis limité : les sons restent
-  // clairement audibles même à un réglage moyen, sans jamais saturer.
-  const vol = Math.min(1.8, Math.max(0, volume) * 1.8);
-  const emit = (c: AudioContext) => {
-    const now = c.currentTime + 0.02;
-    for (const v of design) {
-      playTone(c, v.freq, now + v.delay, v.dur, v.gain * vol, v.type ?? "sine", v.slide ?? 1);
-    }
-  };
-  const c = getCtx();
-  if (c && c.state === "running") {
-    emit(c);
-  } else {
-    // Contexte suspendu (politique d'autoplay) : on tente de le réveiller,
-    // et si c'est refusé le son est mis en file pour le prochain geste.
-    void ensureRunning().then((rc) => {
-      if (rc) { try { emit(rc); } catch { /* noop */ } return; }
-      if (pending.length < 4) {
-        pending.push(() => { const c2 = getCtx(); if (c2) emit(c2); });
-      }
-    });
+  const vol = Math.min(1, Math.max(0, volume));
+  for (const v of design) {
+    playTone(c, v.freq, now + v.delay, v.dur, v.gain * vol, v.type ?? "sine", v.slide ?? 1);
   }
   if (!force) lastPlay[kind] = Date.now();
 }
 
-/** Joue un son de notification (respecte préférences + anti-spam court). */
+/** Joue un son de notification (respecte préférences + anti-spam 1,2 s). */
 export function playNotificationSound(kind: SoundKind, opts: { force?: boolean } = {}) {
   if (typeof window === "undefined") return;
   const s = readSoundSettings();
   if (!s.enabled && !opts.force) return;
   const now = Date.now();
-  // Anti-spam court (350 ms) : plusieurs messages rapprochés restent audibles.
-  if (!opts.force && (lastPlay[kind] || 0) + 350 > now) return;
+  if (!opts.force && (lastPlay[kind] || 0) + 1200 > now) return;
   try { playDesign(kind, s.volume, !!opts.force); } catch { /* noop */ }
 }
-
-
 
 /** Sonnerie continue (appel entrant). Retourne une fonction d'arrêt. */
 export function startRingtone(): () => void {
   if (typeof window === "undefined") return () => {};
-  unlockAudioPlayback();
   const s = readSoundSettings();
   let stopped = false;
   let timer: number | null = null;
@@ -374,7 +300,6 @@ export function startRingtone(): () => void {
 /** Tonalité d'appel sortant (ringback). Retourne une fonction d'arrêt. */
 export function startOutgoingRingback(): () => void {
   if (typeof window === "undefined") return () => {};
-  unlockAudioPlayback();
   let stopped = false;
   let timer: number | null = null;
   const tick = () => {
