@@ -69,7 +69,7 @@ import { applyBackgroundMusic, applyStoredBackgroundMusic } from "@/lib/backgrou
 const WHATSAPP_LINK = "https://wa.me/261379594257";
 const EMAIL_LINK = "mailto:jeuxdhazardmada@gmail.com";
 const APP_NAME = "Jeux d'Hazard";
-const APP_VERSION = "0.0.3";
+const APP_VERSION = "0.0.2";
 
 type PanelKey =
   | "root"
@@ -387,6 +387,7 @@ function SettingsPanel() {
   const [notif, setNotif] = useState<boolean>(() => localStorage.getItem("jh.notif") !== "0");
   const [soundOn, setSoundOn] = useState<boolean>(() => readSoundSettings().enabled);
   const [soundVol, setSoundVol] = useState<number>(() => readSoundSettings().volume);
+  const [sound, setSound] = useState<boolean>(() => localStorage.getItem("jh.sound") !== "0");
 
   return (
     <div className="space-y-2">
@@ -408,6 +409,7 @@ function SettingsPanel() {
             />
           </div>
         )}
+        <SwitchRow icon={<Volume2 className="w-5 h-5 text-amber-300" />} label="Sons" checked={sound} onCheckedChange={(v) => { setSound(v); localStorage.setItem("jh.sound", v ? "1" : "0"); toast.success(v ? "Activés" : "Désactivés"); }} />
         <SwitchRow icon={p.darkMode !== false ? <Moon className="w-5 h-5 text-amber-300" /> : <Sun className="w-5 h-5 text-amber-300" />} label="Mode sombre" checked={p.darkMode !== false} onCheckedChange={(v) => { writePersonalization({ darkMode: v }); toast.success(v ? "Sombre" : "Clair"); }} />
       </Group>
     </div>
@@ -480,8 +482,8 @@ function HistoryPanel({ onClose }: { onClose: () => void }) {
 const FAVORABLE = [
   { path: "/games", title: "Jeux" },
   { path: "/aviator", title: "Aviator" },
-  { path: "/jetx", title: "JetX" },
-  { path: "/cosmox", title: "CosmoX" },
+  { path: "/aviator?game=jetx", title: "JetX" },
+  { path: "/aviator?game=cosmox", title: "CosmoX" },
   { path: "/premium", title: "Premium" },
   { path: "/gen-store", title: "Boutique" },
   { path: "/chat", title: "Chat" },
