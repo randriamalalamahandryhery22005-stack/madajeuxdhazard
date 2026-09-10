@@ -44,7 +44,7 @@ const WHATSAPP_NUMBER = "+261 37 95 942 57";
 const WHATSAPP_RAW = "261379594257";
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_RAW}`;
 const APP_NAME = "Jeux d'Hazard";
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "0.0.2";
 
 type SettingKey = "notifications" | "sound" | "darkMode";
 
@@ -154,7 +154,7 @@ const BottomNav = () => {
   return (
     <>
       <nav
-        className="fixed bottom-3 left-3 right-3 z-50 safe-area-bottom rounded-[26px] pb-[max(0px,env(safe-area-inset-bottom))]"
+        className="fixed bottom-3 left-3 right-3 z-50 safe-area-bottom rounded-[26px]"
         style={{
           background: "linear-gradient(180deg, hsl(0 0% 6% / 0.85), hsl(0 0% 3% / 0.95))",
           backdropFilter: "blur(28px) saturate(160%)",

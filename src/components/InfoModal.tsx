@@ -51,7 +51,7 @@ const InfoModal = () => {
 
   const goBasic = () => {
     close();
-    navigate("/aviator");
+    navigate("/aviator/basic");
   };
 
   if (!open) return null;
