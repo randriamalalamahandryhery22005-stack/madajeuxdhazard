@@ -23,8 +23,8 @@ export interface Bet261GameCard {
 
 export const BET261_GAMES: Bet261GameCard[] = [
   { id: "aviator",          name: "Aviator", logo: aviatorLogo,  description: "Basique & Pro",  available: true,  route: "/aviator" },
-  { id: "cosmox",           name: "CosmoX",  logo: cosmoxLogo,   description: "Cosmique",       available: true,  route: "/cosmox" },
-  { id: "jetx",             name: "JetX",    logo: jetxLogo,     description: "Vol premium",    available: true,  route: "/jetx" },
+  { id: "cosmox",           name: "CosmoX",  logo: cosmoxLogo,   description: "Cosmique",       available: true,  route: "/aviator?game=cosmox" },
+  { id: "jetx",             name: "JetX",    logo: jetxLogo,     description: "Vol premium",    available: true,  route: "/aviator?game=jetx" },
 ];
 
 interface Props {

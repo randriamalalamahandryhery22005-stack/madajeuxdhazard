@@ -21,8 +21,8 @@ export interface OnexbetGameCard {
 
 /** Aviator sub-modes revealed after tapping the Aviator card */
 export const AVIATOR_SUBGAMES: OnexbetGameCard[] = [
-  { id: "aviator-studio", name: "Studio", logo: aviatorStudioLogo, description: "Temps réel", available: true, premium: true, route: "/aviator-studio", tone: "orange" },
-  { id: "aviator-spribe", name: "Spribe", logo: aviatorSpribeLogo, description: "HH:MM:SS",   available: true, premium: true, route: "/aviator-spribe", tone: "magenta" },
+  { id: "aviator-studio", name: "Studio", logo: aviatorStudioLogo, description: "Temps réel", available: true, premium: true, route: "/aviator?game=aviator", tone: "orange" },
+  { id: "aviator-spribe", name: "Spribe", logo: aviatorSpribeLogo, description: "HH:MM:SS",   available: true, premium: true, route: "/aviator?game=aviator", tone: "magenta" },
 ];
 
 /** Kept for backward-compat with imports elsewhere (e.g. Games.tsx totals). */
