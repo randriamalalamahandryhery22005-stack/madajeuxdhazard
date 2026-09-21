@@ -66,7 +66,7 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
         if (remaining <= FADE_OUT_MS) {
           fadeStartedRef.current = true;
           const k = Math.max(0, Math.min(1, remaining / FADE_OUT_MS));
-          el.volume = Math.max(0, Math.sin((k * Math.PI) / 2));
+          el.volume = Math.min(1, Math.max(0, Math.sin((k * Math.PI) / 2)));
         }
       }
       if (p < 100) rafRef.current = requestAnimationFrame(tick);

@@ -32,7 +32,7 @@ const WelcomeIntro = ({ onComplete }: Props) => {
         const t0 = performance.now();
         const fade = (t: number) => {
           const k = Math.min(1, (t - t0) / FADE_MS);
-          el.volume = Math.max(0, from * (1 - k));
+          el.volume = Math.min(1, Math.max(0, from * (1 - k)));
           if (k < 1) requestAnimationFrame(fade);
           else el.pause();
         };

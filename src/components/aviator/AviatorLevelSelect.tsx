@@ -63,15 +63,14 @@ const LEVELS: LevelCardMeta[] = [
 ];
 
 interface Props {
-  recommendation: LevelRecommendation;
+  recommendation?: LevelRecommendation;
   onSelect: (level: LevelId) => void;
 }
 
 const AviatorLevelSelect = ({ recommendation, onSelect }: Props) => {
   return (
     <div className="space-y-4">
-      {/* Bandeau de recommandation */}
-      <div
+      {recommendation && <div
         className="luxe-card luxe-card-gold relative overflow-hidden p-4"
         style={{ animation: "fade-up 0.45s cubic-bezier(0.16,1,0.3,1) both" }}
       >
@@ -103,7 +102,7 @@ const AviatorLevelSelect = ({ recommendation, onSelect }: Props) => {
             </p>
           </div>
         </div>
-      </div>
+      </div>}
 
       <div className="flex items-center gap-2 px-1">
         <Sparkles className="w-3.5 h-3.5 luxe-gold" />
@@ -112,7 +111,7 @@ const AviatorLevelSelect = ({ recommendation, onSelect }: Props) => {
 
       <div className="grid grid-cols-1 gap-4">
         {LEVELS.map((lv, i) => {
-          const isReco = lv.id === recommendation.level;
+          const isReco = lv.id === recommendation?.level;
           return (
             <button
               key={lv.id}

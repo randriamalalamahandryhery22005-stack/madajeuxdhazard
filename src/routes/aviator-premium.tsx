@@ -9,6 +9,8 @@ export const Route = createFileRoute("/aviator-premium")({
       { name: "description", content: "Aviator Premium : le niveau d'analyse le plus complet de Jeux d'Hazard." },
       { property: "og:title", content: "Aviator Premium — Jeux d'Hazard" },
       { property: "og:description", content: "Aviator Premium : le niveau d'analyse le plus complet de Jeux d'Hazard." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: RouteComponent,

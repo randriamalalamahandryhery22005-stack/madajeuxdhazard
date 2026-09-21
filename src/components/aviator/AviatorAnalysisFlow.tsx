@@ -1,27 +1,33 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
-  Activity,
-  AlertTriangle,
   ArrowLeft,
-  Camera,
-  CheckCircle2,
-  ImageIcon,
-  Loader2,
+  Check,
+  ChevronRight,
+  CircleCheck,
+  Clock3,
+  Crown,
+  Gauge,
+  History,
   Radar,
+  RotateCcw,
+  ShieldCheck,
   Sparkles,
-  X,
+  Target,
+  TrendingUp,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import AnalysisSequence from "@/components/AnalysisSequence";
 import AviatorLevelSelect from "@/components/aviator/AviatorLevelSelect";
-import AviatorLevelRunner from "@/components/aviator/AviatorLevelRunner";
-import AviatorRealtimeMode from "@/components/AviatorRealtimeMode";
 import {
-  analyzeHistory,
-  recommendLevel,
+  formatCoeff,
+  loadAnalysisHistory,
+  pushAnalysisHistory,
+  runLevel,
   type HistoryStats,
   type LevelId,
-  type LevelRecommendation,
+  type LevelOutcome,
+  type StoredAnalysis,
 } from "@/lib/aviatorLevels";
 
 interface Props {
@@ -31,329 +37,235 @@ interface Props {
   onBack: () => void;
 }
 
-type Step = "capture" | "levels" | "run";
+type Step = "levels" | "prepare" | "analyzing" | "result";
 
-/** Nombre minimum de tours exigés dans la capture avant le choix du niveau. */
-const MIN_ROUNDS = 30;
+const SESSION_STATS: Record<LevelId, HistoryStats> = {
+  1: { count: 30, mean: 2.38, median: 1.82, max: 14.6, min: 1.01, volatility: 2.7, under2Ratio: 0.57, mid2to5Ratio: 0.3, high5plusRatio: 0.13, extreme20Ratio: 0, longestBlueStreak: 4, longestHotStreak: 2, roundsSinceHigh: 5, trend: "Stable" },
+  2: { count: 30, mean: 3.84, median: 2.45, max: 21.7, min: 1.03, volatility: 5.2, under2Ratio: 0.4, mid2to5Ratio: 0.37, high5plusRatio: 0.23, extreme20Ratio: 0.03, longestBlueStreak: 3, longestHotStreak: 3, roundsSinceHigh: 3, trend: "Haussière" },
+  3: { count: 30, mean: 5.9, median: 2.18, max: 52.4, min: 1.02, volatility: 10.8, under2Ratio: 0.47, mid2to5Ratio: 0.2, high5plusRatio: 0.33, extreme20Ratio: 0.1, longestBlueStreak: 6, longestHotStreak: 3, roundsSinceHigh: 8, trend: "Haussière" },
+};
 
-const fileToDataUrl = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Impossible de lire le fichier"));
-    reader.readAsDataURL(file);
-  });
+const LEVEL_NAMES: Record<LevelId, string> = {
+  1: "Analyse Standard",
+  2: "Double Projection",
+  3: "Frappe Haute",
+};
 
-const AviatorAnalysisFlow = ({ showSeconds, accessStart, accessExpiry, onBack }: Props) => {
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [step, setStep] = useState<Step>("capture");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [multipliers, setMultipliers] = useState<number[] | null>(null);
-  const [stats, setStats] = useState<HistoryStats | null>(null);
-  const [reco, setReco] = useState<LevelRecommendation | null>(null);
+const PREP_STEPS = [
+  { title: "Niveau confirmé", detail: "Le moteur adapté à votre stratégie est chargé.", Icon: Target },
+  { title: "Session sécurisée", detail: "Les paramètres sont calibrés automatiquement.", Icon: ShieldCheck },
+  { title: "Analyse prête", detail: "Aucune capture ni saisie manuelle n’est nécessaire.", Icon: Radar },
+];
+
+const AviatorAnalysisFlow = ({ accessStart, accessExpiry, onBack }: Props) => {
+  const [step, setStep] = useState<Step>("levels");
   const [level, setLevel] = useState<LevelId | null>(null);
+  const [prepIndex, setPrepIndex] = useState(0);
+  const [outcome, setOutcome] = useState<LevelOutcome | null>(null);
+  const [history, setHistory] = useState<StoredAnalysis[]>(() => loadAnalysisHistory());
 
-  const runCapture = useCallback(async (file: File) => {
-    setError(null);
-    setLoading(true);
-    setMultipliers(null);
-    setStats(null);
-    setReco(null);
-    try {
-      const dataUrl = await fileToDataUrl(file);
-      setPreview(dataUrl);
-      const { data, error: fnError } = await supabase.functions.invoke("extract-multipliers", {
-        body: { imageBase64: dataUrl, game: "aviator" },
-      });
-      if (fnError) throw new Error(fnError.message || "Analyse indisponible pour le moment.");
-      const res = data as { valid: boolean; multipliers: number[]; reason?: string };
-      if (!res?.valid || !Array.isArray(res.multipliers) || res.multipliers.length === 0) {
-        setError(
-          res?.reason ||
-            "Capture invalide : l'historique des multiplicateurs n'a pas été détecté. Envoyez une capture nette des 30 derniers tours.",
-        );
-        return;
-      }
-      // Exigence stricte : au minimum les 30 derniers tours doivent être visibles.
-      if (res.multipliers.length < MIN_ROUNDS) {
-        setError(
-          `Capture incomplète : seulement ${res.multipliers.length} tour${res.multipliers.length > 1 ? "s" : ""} détecté${res.multipliers.length > 1 ? "s" : ""}. ` +
-            `Envoyez une capture plus complète affichant au minimum les ${MIN_ROUNDS} derniers tours (${MIN_ROUNDS} ou plus).`,
-        );
-        return;
-      }
-      const s = analyzeHistory(res.multipliers);
-      setMultipliers(res.multipliers.slice(0, MIN_ROUNDS));
-      setStats(s);
-      setReco(recommendLevel(s));
-      setStep("levels");
-    } catch (e) {
-      setError((e as Error).message || "Erreur pendant l'analyse de la capture.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const currentIndex = step === "levels" ? 0 : step === "prepare" ? 1 : step === "analyzing" ? 2 : 3;
 
-  const resetCapture = () => {
-    setPreview(null);
-    setMultipliers(null);
-    setStats(null);
-    setReco(null);
-    setError(null);
-    setLevel(null);
-    setStep("capture");
-    if (fileRef.current) fileRef.current.value = "";
+  const chooseLevel = (selected: LevelId) => {
+    setLevel(selected);
+    setPrepIndex(0);
+    setOutcome(null);
+    setStep("prepare");
   };
 
-  // Niveau 1 conserve son interface historique (double zone), avec le moteur amélioré.
-  if (step === "run" && level === 1 && stats) {
-    return (
-      <AviatorRealtimeMode
-        showSeconds={showSeconds}
-        accessStart={accessStart}
-        accessExpiry={accessExpiry}
-        stats={stats}
-        onBack={() => setStep("levels")}
-        onNewCapture={resetCapture}
-      />
-    );
-  }
+  const startAnalysis = () => setStep("analyzing");
+
+  const completeAnalysis = useCallback(() => {
+    if (!level) return;
+    const now = new Date();
+    const result = runLevel(level, {
+      h: now.getHours(),
+      m: now.getMinutes(),
+      s: now.getSeconds(),
+      coefficient: level === 1 ? 6.25 : level === 2 ? 8.5 : 12.75,
+      stats: SESSION_STATS[level],
+    });
+    setOutcome(result);
+    setHistory(pushAnalysisHistory(result));
+    setStep("result");
+  }, [level]);
+
+  const goBack = () => {
+    if (step === "levels") onBack();
+    else if (step === "prepare") setStep("levels");
+    else if (step === "result") setStep("prepare");
+  };
 
   return (
-    <div className="min-h-screen flex flex-col luxe-page">
-      <div className="px-4 pt-4">
+    <div className="min-h-screen flex flex-col luxe-page text-foreground">
+      {step === "analyzing" && level && (
+        <AnalysisSequence
+          variant={level === 2 ? "balanced" : "premium-realtime"}
+          duration={4600}
+          title={`Niveau ${level} · ${LEVEL_NAMES[level]}`}
+          subtitle="Calcul et vérification des prédictions"
+          onComplete={completeAnalysis}
+        />
+      )}
+
+      <header className="px-4 pt-4">
         <div className="luxe-header luxe-ring flex items-center gap-3">
-          <button
-            onClick={() => (step === "capture" ? onBack() : step === "levels" ? resetCapture() : setStep("levels"))}
-            className="luxe-back"
-            aria-label="Retour"
-          >
+          <Button variant="ghost" size="icon" onClick={goBack} className="luxe-back" aria-label="Retour">
             <ArrowLeft className="w-4 h-4" />
-          </button>
+          </Button>
           <div className="luxe-icon-badge luxe-float relative">
-            <Radar className="w-5 h-5" strokeWidth={2.4} />
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#00D084] ring-2 ring-[#050505] animate-pulse" />
+            <Radar className="w-5 h-5" />
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-background animate-pulse" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg luxe-title leading-tight">Analyse Aviator</h1>
-            <p className="text-[10px] text-white/60 flex items-center gap-1.5 truncate mt-0.5">
-              <Sparkles className="w-3 h-3 luxe-emerald" /> Capture · Analyse · Niveau · Prédiction
-            </p>
+            <p className="text-[9px] uppercase tracking-[0.22em] text-primary font-bold">Aviator Intelligence</p>
+            <h1 className="text-lg luxe-title leading-tight">Centre de prédictions</h1>
           </div>
-          <span className="luxe-badge-premium">PREMIUM</span>
+          <span className="luxe-badge-premium"><Crown className="w-3 h-3" /> PRO</span>
         </div>
 
-        {/* Fil d'étapes */}
-        <div className="mt-3 flex items-center gap-1.5 px-1">
-          {(["Capture", "Niveau", "Prédiction"] as const).map((label, i) => {
-            const idx = step === "capture" ? 0 : step === "levels" ? 1 : 2;
-            const active = i <= idx;
-            return (
-              <div key={label} className="flex-1 flex items-center gap-1.5">
-                <div className="flex-1">
-                  <div
-                    className="h-1 rounded-full transition-all duration-500"
-                    style={{ background: active ? "linear-gradient(90deg,#00D084,#F4C542)" : "rgba(255,255,255,0.1)" }}
-                  />
-                  <p
-                    className={`mt-1 text-[9px] uppercase tracking-widest font-bold ${
-                      active ? "luxe-gold" : "text-white/35"
-                    }`}
-                  >
-                    {label}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+        <div className="mt-4 grid grid-cols-4 gap-1.5" aria-label="Progression">
+          {["Niveau", "Préparation", "Analyse", "Résultat"].map((label, index) => (
+            <div key={label} className="min-w-0">
+              <div className={`h-1 rounded-full transition-all duration-500 ${index <= currentIndex ? "bg-primary" : "bg-muted"}`} />
+              <p className={`mt-1.5 text-[8px] font-bold uppercase truncate ${index <= currentIndex ? "text-primary" : "text-muted-foreground"}`}>{label}</p>
+            </div>
+          ))}
         </div>
-
         {(accessStart || accessExpiry) && (
-          <div className="mt-2 flex gap-3 px-2 text-[10px] text-white/40">
-            {accessStart && <span>Début · {new Date(accessStart).toLocaleDateString("fr-FR")}</span>}
-            {accessExpiry && <span>Expire · {new Date(accessExpiry).toLocaleDateString("fr-FR")}</span>}
+          <div className="mt-2 flex justify-between px-1 text-[9px] text-muted-foreground">
+            {accessStart && <span>Activé le {new Date(accessStart).toLocaleDateString("fr-FR")}</span>}
+            {accessExpiry && <span>Valide jusqu’au {new Date(accessExpiry).toLocaleDateString("fr-FR")}</span>}
           </div>
         )}
-      </div>
+      </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
-        {step === "capture" && (
-          <>
-            <div className="luxe-card luxe-card-emerald relative overflow-hidden p-4">
-              <span
-                className="absolute -top-20 -right-14 w-52 h-52 rounded-full pointer-events-none"
-                style={{ background: "radial-gradient(circle, rgba(0,208,132,0.28), transparent 68%)" }}
-              />
-              <div className="relative flex items-center gap-3">
-                <div className="luxe-icon-badge shrink-0">
-                  <Camera className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[9px] uppercase tracking-[0.22em] luxe-emerald font-bold">Étape obligatoire</p>
-                  <h2 className="text-base font-black text-white leading-tight">Capture des 30 derniers tours</h2>
-                </div>
-              </div>
-              <p className="relative text-[11px] text-white/62 leading-relaxed mt-3">
-                Envoyez une capture d'écran affichant clairement au minimum les 30 derniers coefficients (30 tours ou
-                plus). Une capture incomplète sera refusée. Le moteur
-                analyse automatiquement les données puis détermine le niveau d'analyse le plus adapté. Aucune prédiction
-                n'est possible sans cette capture.
-              </p>
+      <main className="flex-1 overflow-y-auto px-4 py-5 pb-28">
+        {step === "levels" && (
+          <div className="animate-fade-in">
+            <div className="mb-5">
+              <p className="text-primary text-[10px] uppercase tracking-[0.24em] font-bold">Accès immédiat</p>
+              <h2 className="mt-1 text-2xl font-black text-foreground">Choisissez votre niveau</h2>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">Commencez directement. Le moteur prépare automatiquement la session après votre choix.</p>
+            </div>
+            <AviatorLevelSelect onSelect={chooseLevel} />
+          </div>
+        )}
 
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) runCapture(f);
-                }}
-              />
-              <div className="relative mt-4 flex gap-2">
-                <Button className="luxe-btn flex-1 h-12 text-sm" onClick={() => fileRef.current?.click()} disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyse en cours…
-                    </>
-                  ) : (
-                    <>
-                      <Camera className="w-4 h-4 mr-2" /> Capturer l'historique
-                    </>
-                  )}
-                </Button>
-                {(preview || error) && !loading && (
-                  <Button variant="outline" className="h-12 px-3 luxe-btn-outline" onClick={resetCapture} aria-label="Effacer">
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
+        {step === "prepare" && level && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="luxe-card luxe-card-gold p-5">
+              <div className="flex items-center gap-3">
+                <div className="luxe-icon-badge luxe-icon-badge-gold"><Zap className="w-5 h-5" /></div>
+                <div>
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-primary font-bold">Niveau {level}</p>
+                  <h2 className="text-xl font-black text-foreground">{LEVEL_NAMES[level]}</h2>
+                </div>
+                <CircleCheck className="ml-auto w-6 h-6 text-primary" />
               </div>
             </div>
 
-            {loading && (
-              <div className="luxe-card p-4 space-y-2">
-                <div className="flex items-center gap-2 text-[11px] text-white/70 font-semibold">
-                  <Activity className="w-3.5 h-3.5 luxe-emerald animate-pulse" /> Lecture de l'historique et calcul du
-                  niveau recommandé…
-                </div>
-                <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
-                  <div
-                    className="h-full w-1/2 rounded-full animate-pulse"
-                    style={{ background: "linear-gradient(90deg,#00D084,#F4C542)" }}
-                  />
-                </div>
-              </div>
-            )}
+            <div className="space-y-2.5">
+              {PREP_STEPS.map((item, index) => {
+                const active = index === prepIndex;
+                const done = index < prepIndex;
+                return (
+                  <div key={item.title} className={`luxe-card p-4 transition-all duration-300 ${active ? "luxe-card-emerald" : done ? "opacity-70" : "opacity-45"}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/25 flex items-center justify-center">
+                        {done ? <Check className="w-5 h-5 text-primary" /> : <item.Icon className="w-5 h-5 text-primary" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground">{item.title}</p>
+                        <p className="text-[11px] text-muted-foreground leading-snug">{item.detail}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-            {preview && (
-              <div className="luxe-card p-3">
-                <div className="flex items-center gap-2 mb-2 text-[10px] uppercase tracking-widest text-white/45 font-bold">
-                  <ImageIcon className="w-3.5 h-3.5" /> Capture envoyée
-                </div>
-                <img
-                  src={preview}
-                  alt="Historique capturé"
-                  className="w-full max-h-52 object-contain rounded-xl border border-white/10"
-                />
-              </div>
+            {prepIndex < PREP_STEPS.length - 1 ? (
+              <Button className="luxe-btn w-full h-13" onClick={() => setPrepIndex((value) => value + 1)}>
+                Continuer <ChevronRight className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button className="luxe-btn w-full h-14 text-base" onClick={startAnalysis}>
+                <Sparkles className="w-5 h-5" /> Lancer l’analyse
+              </Button>
             )}
-
-            {error && !loading && (
-              <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
-                <div>
-                  <p className="font-bold text-destructive text-sm">Capture invalide</p>
-                  <p className="text-[11px] text-white/60 mt-1 leading-relaxed">{error}</p>
-                </div>
-              </div>
-            )}
-          </>
+            <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setStep("levels")}>Changer de niveau</Button>
+          </div>
         )}
 
-        {step === "levels" && reco && stats && (
-          <>
-            <CaptureSummary stats={stats} multipliers={multipliers ?? []} onNewCapture={resetCapture} />
-            <AviatorLevelSelect
-              recommendation={reco}
-              onSelect={(l) => {
-                setLevel(l);
-                setStep("run");
-              }}
-            />
-          </>
+        {step === "result" && outcome && (
+          <ResultView outcome={outcome} history={history} onRestart={() => { setPrepIndex(0); setStep("levels"); }} />
         )}
-
-        {step === "run" && level && level !== 1 && stats && (
-          <AviatorLevelRunner
-            level={level}
-            stats={stats}
-            onBack={() => setStep("levels")}
-            onNewCapture={resetCapture}
-          />
-        )}
-      </div>
+      </main>
     </div>
   );
 };
 
-const CaptureSummary = ({
-  stats,
-  multipliers,
-  onNewCapture,
-}: {
-  stats: HistoryStats;
-  multipliers: number[];
-  onNewCapture: () => void;
-}) => (
-  <div className="luxe-card p-4">
-    <div className="flex items-center gap-2 mb-3">
-      <CheckCircle2 className="w-4 h-4 luxe-emerald" />
-      <p className="text-[10px] uppercase tracking-[0.2em] text-white/55 font-bold">
-        Historique analysé · {stats.count} tours
-      </p>
-      <button
-        onClick={onNewCapture}
-        className="ml-auto text-[10px] font-bold luxe-gold hover:underline"
-        aria-label="Nouvelle capture"
-      >
-        Nouvelle capture
-      </button>
-    </div>
-
-    <div className="flex flex-wrap gap-1.5 mb-3">
-      {multipliers.map((m, i) => (
-        <span
-          key={i}
-          className={`px-2 py-1 rounded-lg text-[10.5px] font-mono font-bold border ${
-            m < 2
-              ? "bg-sky-500/10 text-sky-300 border-sky-500/25"
-              : m < 5
-                ? "bg-amber-500/10 text-amber-300 border-amber-500/25"
-                : m < 20
-                  ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/25"
-                  : "bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/25"
-          }`}
-        >
-          {m.toFixed(2)}
-        </span>
-      ))}
-    </div>
-
-    <div className="grid grid-cols-4 gap-2">
-      {[
-        { k: "Moyenne", v: stats.mean.toFixed(2) },
-        { k: "Volatilité", v: stats.volatility.toFixed(2) },
-        { k: "≥ 5.00x", v: `${Math.round(stats.high5plusRatio * 100)}%` },
-        { k: "Tendance", v: stats.trend },
-      ].map((s) => (
-        <div key={s.k} className="rounded-xl border border-white/8 bg-black/30 px-2 py-2 text-center">
-          <p className="text-[8px] uppercase tracking-widest text-white/40 font-bold">{s.k}</p>
-          <p className="text-[11px] font-black text-white tabular-nums">{s.v}</p>
+const ResultView = ({ outcome, history, onRestart }: { outcome: LevelOutcome; history: StoredAnalysis[]; onRestart: () => void }) => {
+  const mainRows = outcome.rows.filter((row) => row.kind === "main");
+  const otherRows = outcome.rows.filter((row) => row.kind !== "main");
+  const created = useMemo(() => outcome.createdAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }), [outcome]);
+  return (
+    <div className="space-y-4 animate-fade-in">
+      <div className="luxe-card luxe-card-emerald p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[9px] uppercase tracking-[0.22em] text-primary font-bold">Analyse terminée</p>
+            <h2 className="text-xl font-black text-foreground">Niveau {outcome.level} · Résultat</h2>
+            <p className="text-[10px] text-muted-foreground mt-1">Session calculée à {created}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-3xl font-black text-primary leading-none">{outcome.precision}%</p>
+            <p className="text-[9px] text-muted-foreground mt-1">Précision</p>
+          </div>
         </div>
-      ))}
+        <div className="mt-4 h-2 rounded-full bg-muted overflow-hidden"><div className="h-full bg-primary rounded-full" style={{ width: `${outcome.precision}%` }} /></div>
+      </div>
+
+      <div className="space-y-2.5">
+        {[...mainRows, ...otherRows].map((row, index) => (
+          <div key={`${row.kind}-${index}`} className="luxe-card p-4" style={{ animation: `fade-up .45s ease ${index * 90}ms both` }}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">{row.label}</p>
+                <div className="mt-2 flex items-center gap-2 text-foreground"><Clock3 className="w-4 h-4 text-primary" /><span className="font-mono text-lg font-black">{row.time}</span></div>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-black text-primary">{formatCoeff(row.coefficient)}</p>
+                <p className="text-[9px] text-muted-foreground">Coefficient</p>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <Metric icon={TrendingUp} label="Confiance" value={`${row.confidence}%`} />
+              <Metric icon={ShieldCheck} label="Fiabilité" value={`${row.reliability}%`} />
+              <Metric icon={Gauge} label="Risque" value={row.risk} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {history.length > 1 && (
+        <div className="luxe-card p-4">
+          <div className="flex items-center gap-2 mb-3"><History className="w-4 h-4 text-primary" /><p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Analyses récentes</p></div>
+          {history.slice(1, 4).map((entry) => <div key={entry.id} className="flex justify-between border-t border-border/40 py-2 text-xs"><span>Niveau {entry.level} · {entry.main.time}</span><strong className="text-primary">{formatCoeff(entry.main.coefficient)}</strong></div>)}
+        </div>
+      )}
+
+      <Button className="luxe-btn w-full h-13" onClick={onRestart}><RotateCcw className="w-4 h-4" /> Nouvelle analyse</Button>
     </div>
+  );
+};
+
+const Metric = ({ icon: Icon, label, value }: { icon: typeof Gauge; label: string; value: string }) => (
+  <div className="rounded-lg border border-border/40 bg-background/35 px-2 py-2 text-center">
+    <Icon className="w-3 h-3 text-primary mx-auto mb-1" />
+    <p className="text-[8px] uppercase text-muted-foreground font-bold">{label}</p>
+    <p className="text-[11px] font-black text-foreground truncate">{value}</p>
   </div>
 );
 
