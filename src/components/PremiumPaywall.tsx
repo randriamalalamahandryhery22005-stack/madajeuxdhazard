@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Crown, Lock, Sparkles, ArrowRight, AlertCircle } from "lucide-react";
+import { ArrowLeft, Crown, Lock, Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PremiumPaywallProps {
@@ -40,17 +40,25 @@ const PremiumPaywall = ({ gameName, icon }: PremiumPaywallProps) => {
           </div>
 
           <div className="space-y-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-destructive/10 border border-destructive/30 text-destructive text-[10px] font-bold uppercase tracking-widest">
-              <AlertCircle className="w-3 h-3" /> Service indisponible
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-[10px] font-bold uppercase tracking-widest">
+              <Crown className="w-3 h-3" /> Accès Premium
             </span>
             <h2 className="text-2xl font-black gold-text">{gameName}</h2>
             <p className="text-sm text-foreground/80 leading-relaxed">
-              Veuillez souscrire à un abonnement Premium pour accéder à cette fonctionnalité.
+              Débloquez les trois niveaux d’analyse, les prédictions illimitées et l’accès prioritaire.
             </p>
             <p className="text-xs text-muted-foreground">
-              Utilisez le menu <span className="text-primary font-semibold">Premium</span> afin de finaliser
-              votre abonnement et débloquer l’ensemble des services.
+              Choisissez une offre, payez par Yas Money ou Airtel Money, envoyez votre preuve puis suivez l’activation.
             </p>
+          </div>
+
+          <div className="grid grid-cols-4 gap-1.5">
+            {["Offre", "Paiement", "Preuve", "Activation"].map((label, index) => (
+              <div key={label} className="text-center">
+                <div className="mx-auto w-7 h-7 rounded-full bg-primary/15 border border-primary/30 text-primary flex items-center justify-center text-[10px] font-black">{index + 1}</div>
+                <p className="mt-1 text-[8px] text-muted-foreground font-semibold">{label}</p>
+              </div>
+            ))}
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-left pt-2">
@@ -63,9 +71,9 @@ const PremiumPaywall = ({ gameName, icon }: PremiumPaywallProps) => {
           </div>
 
           <div className="space-y-2 pt-1">
-            <Link to="/premium" className="block">
+            <Link to="/premium#plans" className="block">
               <Button variant="premium" className="w-full h-12 font-bold">
-                <Crown className="w-4 h-4 mr-2" /> Aller au menu Premium <ArrowRight className="w-4 h-4 ml-2" />
+                <CheckCircle2 className="w-4 h-4 mr-2" /> Voir les offres et s’abonner <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
             <button
