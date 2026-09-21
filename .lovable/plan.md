@@ -1,66 +1,34 @@
-# Plan — Refonte v3.0.4
+# Plan — Parcours Aviator Premium
 
-Grande demande multi-volets. Voici la découpe proposée avant implémentation.
+## Objectif
+Créer un parcours direct, moderne et premium depuis Aviator : choix du niveau en premier, préparation guidée, analyse animée, résultat clair et abonnement facile à suivre.
 
-## 1. Messagerie temps réel (Chats Up)
-- Vérifier RLS + `ALTER PUBLICATION supabase_realtime` sur `global_chat_messages`, `chat_messages`, `chat_message_reads`, `conversation_members`
-- S'assurer que `Chat.tsx` s'abonne via `useEffect` (channel unique, cleanup)
-- Conserver l'historique (aucune purge) et charger via pagination descendante
-- Fix: éviter les doublons via `setState` déduplication par `id`
-- Badge non lu déjà en place — validation
+## Modifications
+1. **Entrée directe par le niveau**
+   - Supprimer l’étape de capture d’écran et toute saisie manuelle préalable.
+   - Afficher immédiatement une nouvelle interface de sélection des niveaux 1, 2 et 3.
+   - Conserver les moteurs de calcul et les résultats existants.
 
-## 2. Badge GEN Store
-- Nouveau hook `useUnreadStore(userId)` : compte `gen_store_items` créés après `last_seen_at` stocké dans `profiles.gen_store_last_seen_at` (nouvelle colonne)
-- Subscription Realtime sur `gen_store_items` INSERT
-- Badge rouge animé sur icône Store dans `BottomNav`
-- Reset via UPDATE `last_seen_at = now()` à l'ouverture de `/gen-store`
+2. **Préparation guidée après sélection**
+   - Ajouter de petites étapes successives : confirmation du niveau, préparation de la session, contrôle des paramètres et lancement.
+   - Afficher une progression claire avec retour possible sans perdre le contexte.
+   - Utiliser des valeurs de session automatiques pour alimenter les moteurs existants, sans formulaire utilisateur.
 
-## 3. Version → 3.0.4
-- `package.json`, splash footer, `about`, tout affichage version
+3. **Analyse et résultat**
+   - Réutiliser l’animation d’analyse plein écran, avec textes adaptés au niveau choisi.
+   - Ajouter des transitions fluides entre préparation, analyse et résultat.
+   - Adapter les écrans de résultat afin de ne plus proposer une nouvelle capture.
 
-## 4. Splash Screen Premium (~7s)
-- Progression 0→100% sur 7000ms
-- Étapes de chargement affichées (Préchargement, Authentification, Synchronisation, Prêt)
-- Animations fluides, transition fade+scale
-- Respect `prefers-reduced-motion` (fallback 1.2s)
+4. **Abonnement Premium**
+   - Transformer l’écran d’accès bloqué en parcours clair : avantages, offres, paiement, preuve et activation.
+   - Conserver le paiement Yas Money/Airtel Money et la validation existante.
+   - Ajouter des repères de progression et des appels à l’action explicites.
 
-## 5. Recherche de compte
-- `search-accounts` edge function : requête OR élargie (nom, email, téléphone via `phone` si présent), tolérance accents via `unaccent` si dispo, tri par pertinence, retourne max 15
-- Frontend : loader stable, debounce 200ms, feedback vide, gestion erreur claire
+5. **Fiabilité**
+   - Corriger l’erreur audio de volume hors limites détectée dans l’aperçu.
+   - Vérifier le parcours sur mobile et ordinateur, avec et sans abonnement.
+   - Vérifier les métadonnées de la page Aviator Premium.
 
-## 6. UI Bienvenue / Login / Signup
-- Refonte moderne : hero gradient, glassmorphism, sections claires, responsive mobile-first
-- Cohérence avec design tokens existants
-- Aucune modif de logique auth
-
-## 7. Aviator Premium (Zone A / Zone B)
-- Refonte cartes résultats : gradient premium, badges statuts, animations d'apparition (framer-motion via CSS), meilleure hiérarchie visuelle
-- Aucun changement d'algo prédiction
-
-## 8. GEN Store admin
-- Panneau admin : formulaire unifié pour publier {annonce, image, fichier, mise à jour, lien}
-- Utilise colonnes existantes (`post_type`, `link_url`, `body`, `file_url`, `image_url`)
-- Aperçu instant + apparition Realtime côté client
-
-## 9. Admin Dashboard
-- Audit rapide de chaque panneau (coins, users, gen store, IA config, bonus premium)
-- Correction erreurs runtime détectées
-
-## 10. Audit global
-- `tsgo --noEmit`
-- Cleanup imports morts, warnings console
-- Vérif routes + guards
-
-## Migrations DB nécessaires
-1. `profiles.gen_store_last_seen_at TIMESTAMPTZ`
-2. `ALTER PUBLICATION supabase_realtime ADD TABLE ...` (idempotent) pour tables chat + gen_store_items si absent
-
-## Livrables
-Modifications concentrées sur frontend + 1 migration légère. Zéro suppression de données, zéro changement de logique métier.
-
-## Question
-Le périmètre est très large (10 chantiers). Je peux :
-- **A)** Tout livrer d'un coup dans un gros patch (long, risque plus élevé)
-- **B)** Livrer en 2-3 lots priorisés (ex: lot 1 = messagerie + badge store + version + splash ; lot 2 = auth UI + Aviator Premium ; lot 3 = admin/store + audit final)
-
-Quelle option préférez-vous ?
+## Limites
+- Aucun changement des données, droits Premium, tarifs, paiements ou algorithmes de prédiction.
+- Aucun menu ni autre page ne sera ajouté ou supprimé.
