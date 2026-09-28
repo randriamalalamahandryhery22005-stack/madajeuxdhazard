@@ -9,6 +9,8 @@ export const Route = createFileRoute("/cosmox")({
       { name: "description", content: "Prédictions et analyses CosmoX sur Jeux d'Hazard." },
       { property: "og:title", content: "CosmoX — Jeux d'Hazard" },
       { property: "og:description", content: "Prédictions et analyses CosmoX sur Jeux d'Hazard." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: RouteComponent,

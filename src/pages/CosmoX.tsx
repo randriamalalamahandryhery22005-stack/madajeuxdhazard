@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Play, BarChart3, Sparkles, Radar, Brain, Signal, Target } from "lucide-react";
+import { Play, Sparkles, Radar, Orbit, Timer, Gauge, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import AnalysisSequence from "@/components/AnalysisSequence";
 import { PREMIUM_GAME_MODES, computeTrial } from "@/lib/premiumAccess";
 
 import type { PredictionResult } from "@/lib/predictions";
+import GameControlHeader from "@/components/game/GameControlHeader";
 
 const CosmoX = () => {
   const navigate = useNavigate();
@@ -79,7 +80,7 @@ const CosmoX = () => {
   if (!user) { navigate("/login"); return null; }
 
   if (hasAccess === null) {
-    return <div className="min-h-screen flex items-center justify-center luxe-page"><div className="w-8 h-8 border-2 border-[#00D084]/30 border-t-[#00D084] rounded-full animate-spin" /></div>;
+    return <div className="game-console game-tone-cosmox min-h-screen flex items-center justify-center"><div className="game-console-loader" /></div>;
   }
 
   if (!hasAccess && subEnabled) {
@@ -87,79 +88,58 @@ const CosmoX = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col luxe-page">
+    <div className="game-console game-tone-cosmox min-h-screen flex flex-col">
       {showSplash && (
         <AnalysisSequence variant="cosmox" duration={5000} onComplete={handleSplashComplete} />
       )}
-      <div className="px-4 pt-4">
-        <div className="luxe-header luxe-ring flex items-center gap-3">
-          <button onClick={() => navigate("/games")} className="luxe-back" aria-label="Retour">
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div className="luxe-icon-badge luxe-float">
-            <Sparkles className="w-5 h-5" strokeWidth={2.4} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-lg luxe-title leading-tight flex items-center gap-2">
-              CosmoX <span className="luxe-badge-premium">Premium</span>
-            </h1>
-            <p className="text-[10px] luxe-emerald uppercase tracking-widest mt-0.5 opacity-80">Prédictions cosmiques</p>
-          </div>
-          <span className="luxe-badge-live">LIVE</span>
-        </div>
+      <div className="game-console-wrap">
+        <GameControlHeader game="CosmoX" eyebrow="Console orbitale" status="Orbite stable" icon={Orbit} tone="cosmox" onBack={() => navigate("/games")} />
       </div>
 
-      <div className="flex-1 overflow-y-auto py-5 space-y-5">
-        <div className="px-4 space-y-5">
+      <div className="flex-1 overflow-y-auto">
+        <div className="game-console-wrap game-console-layout">
+        <aside className="game-console-rail">
+          <div className="game-console-rail-title"><ScanLine /> Télémétrie</div>
+          <div className="game-console-metric"><span>Plage moteur</span><strong>1.00–50.00x</strong></div>
+          <div className="game-console-metric"><span>Précision horaire</span><strong>HH:MM:SS</strong></div>
+          <div className="game-console-metric"><span>Sortie</span><strong>{showSeconds ? "Secondes actives" : "Minute"}</strong></div>
+        </aside>
+        <main className="game-console-main">
 
         <button
           onClick={() => navigate("/analyse/cosmox")}
-          className="w-full flex items-center gap-3 p-4 luxe-card luxe-card-emerald transition-transform active:scale-[0.98]"
+          className="game-console-action-card"
         >
-          <div className="luxe-icon-badge shrink-0">
+          <div className="game-console-action-icon">
             <Radar className="w-5 h-5" />
           </div>
           <div className="flex-1 text-left min-w-0">
-            <p className="font-bold text-sm text-white">Analyse du tour actuel</p>
-            <p className="text-[10px] text-white/55 leading-snug">Verdict IA à partir d'une capture</p>
+            <p className="font-bold text-sm text-foreground">Analyse visuelle du tour</p>
+            <p className="text-[11px] text-muted-foreground leading-snug">Ouvrir le module de lecture d’une capture CosmoX</p>
           </div>
-          <span className="luxe-badge-premium shrink-0">Lancer</span>
+          <span className="game-console-chip shrink-0">Ouvrir</span>
         </button>
 
         {!results ? (
-          <div className="luxe-card luxe-card-lg luxe-card-emerald p-5 space-y-4" style={{ animation: "fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
-            <div className="flex items-center gap-2.5">
-              <div className="luxe-icon-badge"><BarChart3 className="w-4 h-4" /></div>
-              <h2 className="font-bold text-sm luxe-emerald-text">Paramètres CosmoX</h2>
+          <div className="game-console-panel animate-fade-in">
+            <div className="game-console-panel-heading">
+              <div className="game-console-action-icon"><Orbit /></div>
+              <div><p className="game-console-eyebrow">Vecteur d’entrée</p><h2>Paramètres CosmoX</h2></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-[10px] text-white/55 uppercase tracking-widest font-semibold">Heure (HH:MM:SS)</Label>
-                <Input type="time" step="1" value={timeInput} onChange={(e) => setTimeInput(e.target.value)} className="luxe-input h-12 text-center font-mono text-base" />
+                <Label className="game-console-label"><Timer /> Heure observée</Label>
+                <Input type="time" step="1" value={timeInput} onChange={(e) => setTimeInput(e.target.value)} className="game-console-input" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] text-white/55 uppercase tracking-widest font-semibold">Coefficient</Label>
-                <Input type="number" step="0.01" min="1" max="50" placeholder="3.50" value={coeffInput} onChange={(e) => setCoeffInput(e.target.value)} className="luxe-input h-12 text-center font-mono text-base" />
+                <Label className="game-console-label"><Gauge /> Coefficient observé</Label>
+                <Input type="number" step="0.01" min="1" max="50" placeholder="3.50" value={coeffInput} onChange={(e) => setCoeffInput(e.target.value)} className="game-console-input" />
               </div>
             </div>
             {error && <p className="text-destructive text-xs text-center font-medium">{error}</p>}
-            <Button className="luxe-btn w-full h-12 text-sm" onClick={handlePredict}>
-              <Play className="w-4 h-4 mr-2" /> Générer les prédictions
+            <Button className="game-console-launch" onClick={handlePredict}>
+              <Play /> Initialiser l’analyse orbitale
             </Button>
-
-            <div className="grid grid-cols-3 gap-2 pt-2">
-              {[
-                { icon: Brain, label: "IA cosmique", d: "Avancée" },
-                { icon: Target, label: "Précis", d: "Haute fiabilité" },
-                { icon: Signal, label: "Temps réel", d: "Données live" },
-              ].map(({ icon: Icon, label, d }) => (
-                <div key={label} className="luxe-stat">
-                  <Icon className="w-4 h-4 luxe-gold mx-auto mb-1" />
-                  <p className="text-[11px] font-bold luxe-emerald-text leading-none">{label}</p>
-                  <p className="text-[9px] text-white/50 mt-1">{d}</p>
-                </div>
-              ))}
-            </div>
           </div>
         ) : (
           <div className="space-y-5">
@@ -172,6 +152,7 @@ const CosmoX = () => {
             <PredictionResults results={results} title="Résultats CosmoX" variant="cosmox" onBack={() => setResults(null)} />
           </div>
         )}
+        </main>
         </div>
       </div>
       <div className="h-20" />
