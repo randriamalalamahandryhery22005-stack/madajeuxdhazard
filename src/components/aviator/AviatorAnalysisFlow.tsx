@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AnalysisSequence from "@/components/AnalysisSequence";
+import GameControlHeader from "@/components/game/GameControlHeader";
 import AviatorLevelSelect from "@/components/aviator/AviatorLevelSelect";
 import {
   formatCoeff,
@@ -158,7 +159,7 @@ const AviatorAnalysisFlow = ({ accessStart, accessExpiry, onBack }: Props) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col luxe-page text-foreground">
+    <div className="game-console game-tone-aviator min-h-screen flex flex-col text-foreground">
       {step === "analyzing" && level && (
         <AnalysisSequence
           variant={level === 2 ? "balanced" : "premium-realtime"}
@@ -169,21 +170,8 @@ const AviatorAnalysisFlow = ({ accessStart, accessExpiry, onBack }: Props) => {
         />
       )}
 
-      <header className="px-4 pt-4">
-        <div className="luxe-header luxe-ring flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={goBack} className="luxe-back" aria-label="Retour">
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div className="luxe-icon-badge luxe-float relative">
-            <Radar className="w-5 h-5" />
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-background animate-pulse" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[9px] uppercase tracking-[0.22em] text-primary font-bold">Aviator Intelligence</p>
-            <h1 className="text-lg luxe-title leading-tight">Jeux & Analyse</h1>
-          </div>
-          <span className="luxe-badge-premium"><Crown className="w-3 h-3" /> PRO</span>
-        </div>
+      <header className="game-console-wrap">
+        <GameControlHeader game="Aviator" eyebrow="Aviator Intelligence" status="Système prêt" icon={Radar} tone="aviator" onBack={goBack} accessStart={accessStart} accessExpiry={accessExpiry} />
 
         <div className="mt-4 grid grid-cols-5 gap-1.5" aria-label="Progression">
           {["Niveau", "Mode", "Préparation", "Analyse", "Indices"].map((label, index) => (
@@ -193,15 +181,17 @@ const AviatorAnalysisFlow = ({ accessStart, accessExpiry, onBack }: Props) => {
             </div>
           ))}
         </div>
-        {(accessStart || accessExpiry) && (
-          <div className="mt-2 flex justify-between px-1 text-[9px] text-muted-foreground">
-            {accessStart && <span>Activé le {new Date(accessStart).toLocaleDateString("fr-FR")}</span>}
-            {accessExpiry && <span>Valide jusqu’au {new Date(accessExpiry).toLocaleDateString("fr-FR")}</span>}
-          </div>
-        )}
       </header>
 
-      <main className="flex-1 overflow-y-auto px-4 py-5 pb-28">
+      <main className="game-console-wrap flex-1 overflow-y-auto pb-28">
+        <div className="game-console-layout">
+        <aside className="game-console-rail">
+          <div className="game-console-rail-title"><Crown /> Console Premium</div>
+          <div className="game-console-metric"><span>Étape active</span><strong>{currentIndex + 1} / 5</strong></div>
+          <div className="game-console-metric"><span>Niveau</span><strong>{level ? `Niveau ${level}` : "À sélectionner"}</strong></div>
+          <div className="game-console-metric"><span>Mode</span><strong>{mode === "manual" ? "Manuel" : mode === "automatic" ? "Automatique" : "À sélectionner"}</strong></div>
+        </aside>
+        <section className="game-console-main">
         {step === "levels" && (
           <div className="animate-fade-in">
             <div className="mb-5">
@@ -299,6 +289,8 @@ const AviatorAnalysisFlow = ({ accessStart, accessExpiry, onBack }: Props) => {
         )}
 
         {step === "result" && outcome && <ResultView outcome={outcome} mode={mode ?? "automatic"} onRestart={restart} />}
+        </section>
+        </div>
       </main>
     </div>
   );

@@ -715,6 +715,88 @@
   }
 }
 
+/* Game control centers: shared charcoal shell with one signal color per game. */
+@layer components {
+  .game-console {
+    --game-signal: oklch(0.62 0.2 25);
+    --game-signal-soft: color-mix(in oklab, var(--game-signal) 18%, transparent);
+    background: oklch(0.15 0.005 250);
+    color: oklch(0.96 0.005 90);
+  }
+  .game-tone-aviator { --game-signal: oklch(0.62 0.2 25); }
+  .game-tone-cosmox { --game-signal: oklch(0.72 0.13 205); }
+  .game-tone-jetx { --game-signal: oklch(0.76 0.15 75); }
+  .game-console::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background-image: linear-gradient(color-mix(in oklab, var(--game-signal) 5%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--game-signal) 5%, transparent) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(to bottom, black, transparent 70%);
+  }
+  .game-console > * { position: relative; z-index: 1; }
+  .game-console-wrap { width: min(100%, 1180px); margin-inline: auto; padding-inline: 16px; }
+  .game-console-header {
+    margin-top: 16px; min-height: 76px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    background: oklch(0.19 0.006 250 / 0.94); border: 1px solid color-mix(in oklab, var(--game-signal) 30%, transparent); border-radius: 8px;
+    box-shadow: 0 18px 44px -30px var(--game-signal), inset 0 1px color-mix(in oklab, var(--game-signal) 14%, transparent);
+  }
+  .game-console-header__identity, .game-console-header__status { display: flex; align-items: center; gap: 12px; }
+  .game-console-header__status { justify-content: flex-end; }
+  .game-console-back, .game-console-emblem, .game-console-action-icon {
+    width: 42px; height: 42px; min-width: 42px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;
+    color: var(--game-signal); background: var(--game-signal-soft); border: 1px solid color-mix(in oklab, var(--game-signal) 36%, transparent);
+  }
+  .game-console-back:hover { color: var(--game-signal); background: color-mix(in oklab, var(--game-signal) 26%, transparent); }
+  .game-console-emblem svg, .game-console-action-icon svg { width: 20px; height: 20px; }
+  .game-console-eyebrow { color: var(--game-signal); font-size: 9px; line-height: 1.2; text-transform: uppercase; font-weight: 800; letter-spacing: 0; }
+  .game-console-title { margin-top: 3px; font-family: "Sora", sans-serif; font-size: 20px; line-height: 1; font-weight: 800; letter-spacing: 0; }
+  .game-console-status, .game-console-chip {
+    display: inline-flex; align-items: center; gap: 6px; color: var(--game-signal); border: 1px solid color-mix(in oklab, var(--game-signal) 35%, transparent);
+    background: var(--game-signal-soft); border-radius: 4px; padding: 6px 9px; font-size: 9px; line-height: 1; font-weight: 800; text-transform: uppercase; white-space: nowrap;
+  }
+  .game-console-status svg { width: 12px; height: 12px; animation: pulse 1.8s ease-in-out infinite; }
+  .game-console-access { display: flex; flex-direction: column; text-align: right; color: oklch(0.68 0.01 250); font-size: 9px; line-height: 1.45; }
+  .game-console-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 18px; padding-top: 18px; padding-bottom: 24px; }
+  .game-console-rail, .game-console-panel, .game-console-action-card {
+    background: oklch(0.19 0.006 250 / 0.92); border: 1px solid oklch(1 0 0 / 0.08); border-radius: 8px;
+  }
+  .game-console-rail { align-self: start; position: sticky; top: 16px; overflow: hidden; }
+  .game-console-rail-title { padding: 14px; display: flex; gap: 8px; align-items: center; color: var(--game-signal); border-bottom: 1px solid oklch(1 0 0 / 0.07); font-size: 10px; font-weight: 800; text-transform: uppercase; }
+  .game-console-rail-title svg { width: 15px; height: 15px; }
+  .game-console-metric { padding: 13px 14px; border-bottom: 1px solid oklch(1 0 0 / 0.055); }
+  .game-console-metric:last-child { border-bottom: 0; }
+  .game-console-metric span { display: block; color: oklch(0.63 0.01 250); font-size: 9px; text-transform: uppercase; font-weight: 700; }
+  .game-console-metric strong { display: block; margin-top: 5px; color: oklch(0.94 0.005 90); font-family: "JetBrains Mono", monospace; font-size: 12px; }
+  .game-console-main { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+  .game-console-action-card { width: 100%; padding: 14px; display: flex; align-items: center; gap: 12px; text-align: left; transition: border-color .2s ease, transform .2s ease; }
+  .game-console-action-card:hover { border-color: color-mix(in oklab, var(--game-signal) 40%, transparent); transform: translateY(-1px); }
+  .game-console-panel { padding: 20px; box-shadow: 0 24px 60px -42px var(--game-signal); }
+  .game-console-panel-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid oklch(1 0 0 / 0.07); }
+  .game-console-panel-heading h2 { margin-top: 3px; font-size: 17px; }
+  .game-console-label { display: flex; align-items: center; gap: 6px; color: oklch(0.68 0.01 250); font-size: 9px; text-transform: uppercase; font-weight: 800; }
+  .game-console-label svg { width: 13px; height: 13px; color: var(--game-signal); }
+  .game-console-input { height: 52px; border-radius: 6px !important; border-color: oklch(1 0 0 / 0.11) !important; background: oklch(0.12 0.005 250) !important; color: oklch(0.96 0.005 90) !important; text-align: center; font-family: "JetBrains Mono", monospace; }
+  .game-console-input:focus { border-color: var(--game-signal) !important; box-shadow: 0 0 0 3px var(--game-signal-soft) !important; }
+  .game-console-launch { width: 100%; height: 50px; border-radius: 6px; background: var(--game-signal) !important; color: oklch(0.13 0.01 250) !important; font-weight: 900; text-transform: uppercase; box-shadow: 0 12px 28px -16px var(--game-signal); }
+  .game-console-launch:hover { filter: brightness(1.08); }
+  .game-console-loader { width: 32px; height: 32px; border-radius: 999px; border: 2px solid var(--game-signal-soft); border-top-color: var(--game-signal); animation: spin 1s linear infinite; }
+  .game-console .luxe-card { border-radius: 8px; background: oklch(0.19 0.006 250 / 0.92); border-color: oklch(1 0 0 / 0.08); box-shadow: none; }
+  .game-console .luxe-card::before { background: none; }
+  .game-console .luxe-btn { border-radius: 6px !important; background: var(--game-signal) !important; color: oklch(0.13 0.01 250) !important; box-shadow: 0 12px 28px -16px var(--game-signal) !important; }
+  .game-console .text-primary, .game-console .luxe-gold, .game-console .luxe-emerald { color: var(--game-signal) !important; }
+  .game-console .bg-primary { background-color: var(--game-signal) !important; }
+  @media (max-width: 767px) {
+    .game-console-header { align-items: flex-start; }
+    .game-console-header__status { flex-direction: column-reverse; align-items: flex-end; }
+    .game-console-access { display: none; }
+    .game-console-layout { grid-template-columns: 1fr; gap: 12px; }
+    .game-console-rail { position: static; display: grid; grid-template-columns: repeat(3, 1fr); }
+    .game-console-rail-title { grid-column: 1 / -1; }
+    .game-console-metric { border-bottom: 0; border-right: 1px solid oklch(1 0 0 / 0.055); padding: 11px; }
+    .game-console-metric strong { font-size: 10px; overflow-wrap: anywhere; }
+    .game-console-panel { padding: 16px; }
+  }
+}
+
 #jh-custom-bg-video video,
 #jh-custom-bg {
   transform: translateZ(0);

@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Game analysis screens use one shared charcoal control-center shell with semantic per-game signal colors, preserving each game’s existing calculation logic and access rules.
