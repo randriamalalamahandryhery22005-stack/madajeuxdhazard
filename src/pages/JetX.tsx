@@ -78,7 +78,6 @@ const JetX = () => {
   const { user, isAdmin, profile } = useAuth();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [subEnabled, setSubEnabled] = useState(false);
-  const [showSeconds, setShowSeconds] = useState(true);
   const [timeInput, setTimeInput] = useState("");
   const [coeffInput, setCoeffInput] = useState("");
   const [results, setResults] = useState<PredictionResult[] | null>(null);
@@ -92,8 +91,6 @@ const JetX = () => {
   useEffect(() => {
     if (!user) return;
     checkAccess();
-    supabase.from("activation_codes").select("code_value").eq("code_name", "seconds_jetx").maybeSingle()
-      .then(({ data }) => setShowSeconds(data?.code_value === "enabled"));
     supabase.from("activation_codes").select("code_value").eq("code_name", "sub_jetx").maybeSingle()
       .then(({ data }) => setSubEnabled(data?.code_value === "enabled"));
   }, [user]);
@@ -128,11 +125,11 @@ const JetX = () => {
   const handleSplashComplete = useCallback(() => {
     if (!pending) return;
     const { h, m, coeff } = pending;
-    const r = generateJetXPrediction(h, m, coeff, showSeconds);
+    const r = generateJetXPrediction(h, m, coeff, true);
     setResults(r);
     setHistory((prev) => [...prev, ...r.map((x) => parseFloat(String(x.coefficient).replace(",", ".")))].slice(-100));
     setShowSplash(false);
-  }, [pending, showSeconds]);
+  }, [pending]);
 
 
   if (hasAccess === null) {
@@ -158,7 +155,7 @@ const JetX = () => {
           <div className="game-console-rail-title"><ScanLine /> Télémétrie</div>
           <div className="game-console-metric"><span>Plage d’entrée</span><strong>1.50–100.00x</strong></div>
           <div className="game-console-metric"><span>Projection</span><strong>3.00–10.00x</strong></div>
-          <div className="game-console-metric"><span>Chronométrage</span><strong>{showSeconds ? "Secondes actives" : "Minute"}</strong></div>
+          <div className="game-console-metric"><span>Saisie</span><strong>HH:MM</strong></div>
         </aside>
         <main className="game-console-main">
 

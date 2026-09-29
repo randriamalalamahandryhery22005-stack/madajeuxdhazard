@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Play, BarChart3, ArrowRight } from "lucide-react";
+import { ArrowLeft, Play, BarChart3, ArrowRight, LockKeyhole } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,7 +56,6 @@ const AviatorSpribe = () => {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [subEnabled, setSubEnabled] = useState(true);
   const [timeInput, setTimeInput] = useState("");
-  const [secondsInput, setSecondsInput] = useState("00");
   const [coeffInput, setCoeffInput] = useState("");
   const [result, setResult] = useState<SpribeResult | null>(null);
   const [error, setError] = useState("");
@@ -100,7 +99,7 @@ const AviatorSpribe = () => {
     setError("");
     if (!timeInput || !coeffInput) { setError("Remplissez tous les champs"); return; }
     const [h, m] = timeInput.split(":").map(Number);
-    const s = parseInt(secondsInput) || 0;
+    const s = 0;
     if (isNaN(h) || isNaN(m)) { setError("Format invalide"); return; }
     const coeff = parseFloat(coeffInput);
     if (isNaN(coeff) || coeff < 4 || coeff > 10) { setError("Coefficient entre 4.00 et 10.00"); return; }
@@ -160,9 +159,10 @@ const AviatorSpribe = () => {
                     className="h-12 bg-secondary/80 border-border/40 text-center font-mono text-base" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Secondes</Label>
-                  <Input type="number" min="0" max="59" value={secondsInput} onChange={e => setSecondsInput(e.target.value)}
-                    className="h-12 bg-secondary/80 border-border/40 text-center font-mono text-base" placeholder="00" />
+                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium flex items-center gap-1.5">Secondes <span className="game-console-chip">New</span></Label>
+                  <div className="h-12 rounded-md bg-secondary/50 border border-border/40 flex items-center justify-center gap-2 text-muted-foreground" aria-label="Secondes verrouillées">
+                    <LockKeyhole className="w-4 h-4" /><span className="text-xs font-bold">Verrouillées</span>
+                  </div>
                 </div>
               </div>
               <div className="space-y-1.5">

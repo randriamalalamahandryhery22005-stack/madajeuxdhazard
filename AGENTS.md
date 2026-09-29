@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Game analysis screens use one shared charcoal control-center shell with semantic per-game signal colors, preserving each game’s existing calculation logic and access rules.
+- Game prediction outputs use one shared result renderer; inputs are HH:MM, outputs are HH:MM:SS, and a third row is coefficient-only to prevent divergent game displays.
