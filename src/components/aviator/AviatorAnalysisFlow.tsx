@@ -1,20 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,
   Bot,
   Check,
   CircleCheck,
-  Clock3,
   Crown,
-  Gauge,
   Hand,
-  Info,
   Radar,
   RotateCcw,
   ShieldCheck,
   Sparkles,
   Target,
-  TrendingUp,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AnalysisSequence from "@/components/AnalysisSequence";
 import GameControlHeader from "@/components/game/GameControlHeader";
+import GamePredictionResults from "@/components/game/GamePredictionResults";
 import AviatorLevelSelect from "@/components/aviator/AviatorLevelSelect";
 import {
   formatCoeff,
@@ -130,7 +127,7 @@ const AviatorAnalysisFlow = ({ accessStart, accessExpiry, onBack }: Props) => {
       : {
           h: now.getHours(),
           m: now.getMinutes(),
-          s: now.getSeconds(),
+          s: 0,
           coefficient: level === 1 ? 6.25 : level === 2 ? 8.5 : 12.75,
         };
     const result = runLevel(level, { ...seed, stats: SESSION_STATS[level] });
@@ -243,7 +240,7 @@ const AviatorAnalysisFlow = ({ accessStart, accessExpiry, onBack }: Props) => {
             <div className="luxe-card p-5 space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="manual-time" className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Heure observée</Label>
-                <Input id="manual-time" type="time" step={1} value={timeInput} onChange={(event) => setTimeInput(event.target.value)} className="luxe-input h-12 text-center font-mono text-base" />
+                <Input id="manual-time" type="time" value={timeInput} onChange={(event) => setTimeInput(event.target.value)} className="luxe-input h-12 text-center font-mono text-base" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="manual-coefficient" className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Coefficient observé</Label>
@@ -309,71 +306,22 @@ const ModeCard = ({ Icon, title, description, detail, onClick, featured = false 
   </Button>
 );
 
-const ResultView = ({ outcome, mode, onRestart }: { outcome: LevelOutcome; mode: AnalysisMode; onRestart: () => void }) => {
-  const created = useMemo(() => outcome.createdAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }), [outcome]);
-  return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="luxe-card luxe-card-emerald p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[9px] uppercase tracking-[0.22em] text-primary font-bold">Analyse {mode === "automatic" ? "automatique" : "manuelle"} terminée</p>
-            <h2 className="text-xl font-black text-foreground">Indices du jour</h2>
-            <p className="text-[10px] text-muted-foreground mt-1">Niveau {outcome.level} · session calculée à {created}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-3xl font-black text-primary leading-none">{outcome.precision}%</p>
-            <p className="text-[9px] text-muted-foreground mt-1">Confiance estimée</p>
-          </div>
-        </div>
-        <div className="mt-4 h-2 rounded-full bg-muted overflow-hidden"><div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${outcome.precision}%` }} /></div>
-      </div>
-
-      <div className="luxe-card border-primary/25 p-4 flex items-start gap-3">
-        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Info className="w-4 h-4 text-primary" /></div>
-        <div>
-          <p className="text-xs font-black text-foreground">Indices, sans garantie de résultat</p>
-          <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">Ces indices sont fournis à titre indicatif. Ils ne sont pas obligatoires à suivre et servent uniquement de repères pour observer les éventuels coefficients du jeu aujourd’hui. Aucun résultat n’est garanti.</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {outcome.rows.map((row, index) => (
-          <div key={`${row.kind}-${index}`} className="luxe-card relative overflow-hidden p-4" style={{ animation: `fade-up .45s ease ${index * 110}ms both` }}>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[9px] uppercase tracking-widest text-primary font-black">Indice {index + 1}</span>
-              <Sparkles className="w-4 h-4 text-primary" />
-            </div>
-            <p className="mt-2 text-xs font-bold text-muted-foreground">{row.label}</p>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <div className="rounded-lg border border-border/50 bg-background/35 p-3 text-center">
-                <Clock3 className="w-4 h-4 text-primary mx-auto mb-1" />
-                <p className="font-mono text-sm font-black text-foreground">{row.time}</p>
-              </div>
-              <div className="rounded-lg border border-primary/25 bg-primary/10 p-3 text-center">
-                <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1" />
-                <p className="text-xl font-black text-primary">{formatCoeff(row.coefficient)}</p>
-              </div>
-            </div>
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              <Metric icon={TrendingUp} label="Confiance" value={`${row.confidence}%`} />
-              <Metric icon={ShieldCheck} label="Fiabilité" value={`${row.reliability}%`} />
-              <Metric icon={Gauge} label="Risque" value={row.risk} />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <Button className="luxe-btn w-full h-13" onClick={onRestart}><RotateCcw className="w-4 h-4" /> Nouvelle analyse</Button>
-    </div>
-  );
-};
-
-const Metric = ({ icon: Icon, label, value }: { icon: typeof Gauge; label: string; value: string }) => (
-  <div className="rounded-lg border border-border/40 bg-background/35 px-2 py-2 text-center min-w-0">
-    <Icon className="w-3 h-3 text-primary mx-auto mb-1" />
-    <p className="text-[8px] uppercase text-muted-foreground font-bold truncate">{label}</p>
-    <p className="text-[10px] font-black text-foreground truncate">{value}</p>
-  </div>
+const ResultView = ({ outcome, mode, onRestart }: { outcome: LevelOutcome; mode: AnalysisMode; onRestart: () => void }) => (
+  <GamePredictionResults
+    tone="aviator"
+    title={`Indices Aviator · Niveau ${outcome.level}`}
+    eyebrow={`Analyse ${mode === "automatic" ? "automatique" : "manuelle"} terminée`}
+    rows={outcome.rows.map((row) => ({
+      time: row.time,
+      coefficient: formatCoeff(row.coefficient),
+      confidence: row.confidence,
+      reliability: row.reliability,
+      stability: row.stability,
+      risk: row.risk,
+      label: row.label,
+    }))}
+    onRestart={onRestart}
+  />
 );
 
 export default AviatorAnalysisFlow;

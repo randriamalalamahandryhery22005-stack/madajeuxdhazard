@@ -1273,17 +1273,17 @@ const Admin = () => {
               })}
             </div>
             <div className="p-4 rounded-2xl bg-card/80 border border-border/40 space-y-4">
-              <div className="flex items-center gap-2"><Timer className="w-4 h-4 text-primary" /><h3 className="text-sm font-bold">Secondes (SS) dans les prédictions</h3></div>
-              <p className="text-[10px] text-muted-foreground">Activez pour afficher les secondes dans les résultats de chaque mode.</p>
+              <div className="flex items-center gap-2"><Timer className="w-4 h-4 text-primary" /><h3 className="text-sm font-bold">Secondes (SS)</h3><span className="game-console-chip">New</span></div>
+              <p className="text-[10px] text-muted-foreground">Cette option est verrouillée pour le moment. Les saisies restent en HH:MM et les résultats en HH:MM:SS.</p>
               {SECONDS_MODES.map((mode) => {
                 const isEnabled = getCodeValue(mode.key) === "enabled";
                 return (
-                  <button key={mode.key} onClick={() => toggleSetting(mode.key)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/40 border border-border/20 hover:bg-secondary/60 transition-all active:scale-[0.98]">
+                  <button key={mode.key} disabled
+                    className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/40 border border-border/20 opacity-65 cursor-not-allowed">
                     <span className="text-sm font-medium">{mode.label}</span>
                     <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-semibold ${isEnabled ? "text-emerald-300" : "text-muted-foreground"}`}>{isEnabled ? "Avec SS" : "Sans SS"}</span>
-                      {isEnabled ? <ToggleRight className="w-6 h-6 text-emerald-300" /> : <ToggleLeft className="w-6 h-6 text-muted-foreground" />}
+                      <span className="text-[10px] font-semibold text-muted-foreground">Verrouillé · New</span>
+                      <ToggleLeft className="w-6 h-6 text-muted-foreground" />
                     </div>
                   </button>
                 );

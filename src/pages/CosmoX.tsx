@@ -28,15 +28,12 @@ const CosmoX = () => {
   const [results, setResults] = useState<PredictionResult[] | null>(null);
   const [history, setHistory] = useState<number[]>([]);
   const [error, setError] = useState("");
-  const [showSeconds, setShowSeconds] = useState(true);
   const [showSplash, setShowSplash] = useState(false);
   const [pending, setPending] = useState<{ h: number; m: number; s: number; coeff: number } | null>(null);
 
   useEffect(() => {
     if (!user) return;
     checkAccess();
-    supabase.from("activation_codes").select("code_value").eq("code_name", "seconds_cosmox").maybeSingle()
-      .then(({ data }) => setShowSeconds(data?.code_value === "enabled"));
     supabase.from("activation_codes").select("code_value").eq("code_name", "sub_cosmox").maybeSingle()
       .then(({ data }) => setSubEnabled(data?.code_value === "enabled"));
   }, [user]);
@@ -61,7 +58,7 @@ const CosmoX = () => {
     if (!timeInput || !coeffInput) { setError("Veuillez remplir tous les champs"); return; }
     const parts = timeInput.split(":");
     const h = parseInt(parts[0]), m = parseInt(parts[1]), s = parseInt(parts[2] || "0");
-    if (isNaN(h) || isNaN(m) || isNaN(s)) { setError("Format invalide (HH:MM:SS)"); return; }
+    if (isNaN(h) || isNaN(m)) { setError("Format invalide (HH:MM)"); return; }
     const coeff = parseFloat(coeffInput);
     if (isNaN(coeff) || coeff < 1 || coeff > 50) { setError("Coefficient entre 1.00 et 50.00"); return; }
     setPending({ h, m, s, coeff });
@@ -71,11 +68,11 @@ const CosmoX = () => {
   const handleSplashComplete = useCallback(() => {
     if (!pending) return;
     const { h, m, s, coeff } = pending;
-    const r = generateCosmoXPrediction(h, m, s, coeff, showSeconds);
+    const r = generateCosmoXPrediction(h, m, 0, coeff, true);
     setResults(r);
     setHistory((prev) => [...prev, ...r.map((x) => parseFloat(String(x.coefficient).replace(",", ".")))].slice(-100));
     setShowSplash(false);
-  }, [pending, showSeconds]);
+  }, [pending]);
 
   if (!user) { navigate("/login"); return null; }
 
@@ -101,8 +98,8 @@ const CosmoX = () => {
         <aside className="game-console-rail">
           <div className="game-console-rail-title"><ScanLine /> Télémétrie</div>
           <div className="game-console-metric"><span>Plage moteur</span><strong>1.00–50.00x</strong></div>
-          <div className="game-console-metric"><span>Précision horaire</span><strong>HH:MM:SS</strong></div>
-          <div className="game-console-metric"><span>Sortie</span><strong>{showSeconds ? "Secondes actives" : "Minute"}</strong></div>
+          <div className="game-console-metric"><span>Saisie</span><strong>HH:MM</strong></div>
+          <div className="game-console-metric"><span>Résultat</span><strong>HH:MM:SS</strong></div>
         </aside>
         <main className="game-console-main">
 
@@ -129,7 +126,7 @@ const CosmoX = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="game-console-label"><Timer /> Heure observée</Label>
-                <Input type="time" step="1" value={timeInput} onChange={(e) => setTimeInput(e.target.value)} className="game-console-input" />
+                <Input type="time" value={timeInput} onChange={(e) => setTimeInput(e.target.value)} className="game-console-input" />
               </div>
               <div className="space-y-1.5">
                 <Label className="game-console-label"><Gauge /> Coefficient observé</Label>
