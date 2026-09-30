@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCoefficientPrecise } from "@/lib/predictions";
-import PredictionResults from "@/components/PredictionResults";
+import GamePredictionResults from "@/components/game/GamePredictionResults";
 import PremiumPaywall from "@/components/PremiumPaywall";
 import AnalysisDashboard from "@/components/AnalysisDashboard";
 import AnalysisSequence from "@/components/AnalysisSequence";
@@ -204,7 +204,20 @@ const JetX = () => {
               tone="jetx"
               label="JetX"
             />
-            <PredictionResults results={results} title="🚀 JetX" variant="jetx" onBack={() => { setResults(null); setError(""); }} />
+            <GamePredictionResults
+              tone="jetx"
+              title="Projection JetX"
+              eyebrow="Analyse terminée"
+              rows={results.map((r) => ({
+                time: r.time,
+                coefficient: r.coefficient,
+                confidence: r.confidence,
+                reliability: r.reliability,
+                stability: r.stability,
+                risk: r.risk,
+              }))}
+              onRestart={() => { setResults(null); setError(""); }}
+            />
           </div>
         )}
         </main>

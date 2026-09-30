@@ -29,7 +29,6 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as TmpCaptureRouteImport } from './routes/tmp-capture'
 import { Route as AnalyseGameRouteImport } from './routes/analyse.$game'
 import { Route as ApiAiBackgroundRouteImport } from './routes/api/ai-background'
 import { Route as ApiAiPaletteRouteImport } from './routes/api/ai-palette'
@@ -139,11 +138,6 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TmpCaptureRoute = TmpCaptureRouteImport.update({
-  id: '/tmp-capture',
-  path: '/tmp-capture',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AnalyseGameRoute = AnalyseGameRouteImport.update({
   id: '/analyse/$game',
   path: '/analyse/$game',
@@ -206,7 +200,6 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tmp-capture': typeof TmpCaptureRoute
   '/analyse/$game': typeof AnalyseGameRoute
   '/api/ai-background': typeof ApiAiBackgroundRoute
   '/api/ai-palette': typeof ApiAiPaletteRoute
@@ -237,7 +230,6 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tmp-capture': typeof TmpCaptureRoute
   '/analyse/$game': typeof AnalyseGameRoute
   '/api/ai-background': typeof ApiAiBackgroundRoute
   '/api/ai-palette': typeof ApiAiPaletteRoute
@@ -269,7 +261,6 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tmp-capture': typeof TmpCaptureRoute
   '/analyse/$game': typeof AnalyseGameRoute
   '/api/ai-background': typeof ApiAiBackgroundRoute
   '/api/ai-palette': typeof ApiAiPaletteRoute
@@ -302,7 +293,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/sitemap.xml'
-    | '/tmp-capture'
     | '/analyse/$game'
     | '/api/ai-background'
     | '/api/ai-palette'
@@ -333,7 +323,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/sitemap.xml'
-    | '/tmp-capture'
     | '/analyse/$game'
     | '/api/ai-background'
     | '/api/ai-palette'
@@ -364,7 +353,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/sitemap.xml'
-    | '/tmp-capture'
     | '/analyse/$game'
     | '/api/ai-background'
     | '/api/ai-palette'
@@ -396,7 +384,6 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  TmpCaptureRoute: typeof TmpCaptureRoute
   AnalyseGameRoute: typeof AnalyseGameRoute
   ApiAiBackgroundRoute: typeof ApiAiBackgroundRoute
   ApiAiPaletteRoute: typeof ApiAiPaletteRoute
@@ -549,13 +536,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tmp-capture': {
-      id: '/tmp-capture'
-      path: '/tmp-capture'
-      fullPath: '/tmp-capture'
-      preLoaderRoute: typeof TmpCaptureRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/analyse/$game': {
       id: '/analyse/$game'
       path: '/analyse/$game'
@@ -636,7 +616,6 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  TmpCaptureRoute: TmpCaptureRoute,
   AnalyseGameRoute: AnalyseGameRoute,
   ApiAiBackgroundRoute: ApiAiBackgroundRoute,
   ApiAiPaletteRoute: ApiAiPaletteRoute,

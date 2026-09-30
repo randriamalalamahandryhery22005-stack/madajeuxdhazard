@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { generateCosmoXPrediction } from "@/lib/predictions";
-import PredictionResults from "@/components/PredictionResults";
+import GamePredictionResults from "@/components/game/GamePredictionResults";
 import PremiumPaywall from "@/components/PremiumPaywall";
 import AnalysisDashboard from "@/components/AnalysisDashboard";
 import AnalysisSequence from "@/components/AnalysisSequence";
@@ -146,7 +146,20 @@ const CosmoX = () => {
               tone="cosmox"
               label="CosmoX"
             />
-            <PredictionResults results={results} title="Résultats CosmoX" variant="cosmox" onBack={() => setResults(null)} />
+            <GamePredictionResults
+              tone="cosmox"
+              title="Projection CosmoX"
+              eyebrow="Analyse terminée"
+              rows={results.map((r) => ({
+                time: r.time,
+                coefficient: r.coefficient,
+                confidence: r.confidence,
+                reliability: r.reliability,
+                stability: r.stability,
+                risk: r.risk,
+              }))}
+              onRestart={() => setResults(null)}
+            />
           </div>
         )}
         </main>
