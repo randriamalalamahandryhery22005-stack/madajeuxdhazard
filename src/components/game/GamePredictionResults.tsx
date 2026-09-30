@@ -146,7 +146,6 @@ const GamePredictionResults = ({ title, rows, tone, onRestart, eyebrow = "Projec
       <Button className="game-results__restart" onClick={onRestart}>
         <RefreshCw /> Nouvelle analyse
       </Button>
-      <span className="sr-only"><ArrowLeft /> Retour</span>
     </section>
   );
 };
