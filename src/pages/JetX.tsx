@@ -204,7 +204,20 @@ const JetX = () => {
               tone="jetx"
               label="JetX"
             />
-            <PredictionResults results={results} title="🚀 JetX" variant="jetx" onBack={() => { setResults(null); setError(""); }} />
+            <GamePredictionResults
+              tone="jetx"
+              title="Projection JetX"
+              eyebrow="Analyse terminée"
+              rows={results.map((r) => ({
+                time: r.time,
+                coefficient: r.coefficient,
+                confidence: r.confidence,
+                reliability: r.reliability,
+                stability: r.stability,
+                risk: r.risk,
+              }))}
+              onRestart={() => { setResults(null); setError(""); }}
+            />
           </div>
         )}
         </main>

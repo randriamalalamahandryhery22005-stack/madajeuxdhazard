@@ -146,7 +146,20 @@ const CosmoX = () => {
               tone="cosmox"
               label="CosmoX"
             />
-            <PredictionResults results={results} title="Résultats CosmoX" variant="cosmox" onBack={() => setResults(null)} />
+            <GamePredictionResults
+              tone="cosmox"
+              title="Projection CosmoX"
+              eyebrow="Analyse terminée"
+              rows={results.map((r) => ({
+                time: r.time,
+                coefficient: r.coefficient,
+                confidence: r.confidence,
+                reliability: r.reliability,
+                stability: r.stability,
+                risk: r.risk,
+              }))}
+              onRestart={() => setResults(null)}
+            />
           </div>
         )}
         </main>
