@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock3, Gauge, RefreshCw, ShieldCheck, TrendingUp } from "lucide-react";
+import { Clock3, Gauge, RefreshCw, ShieldCheck, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export type GameResultTone = "aviator" | "cosmox" | "jetx";
