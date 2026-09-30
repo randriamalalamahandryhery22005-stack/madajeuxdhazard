@@ -797,6 +797,220 @@
   }
 }
 
+/* ============================================================
+   Game results — shared precision-HUD renderer
+   (Aviator premium flow, CosmoX, JetX). One datum per cell.
+   Signal color inherits from the enclosing .game-console tone.
+   ============================================================ */
+@layer components {
+  .game-results {
+    --rs-signal: var(--game-signal, oklch(0.62 0.2 25));
+    --rs-signal-soft: color-mix(in oklab, var(--rs-signal) 14%, transparent);
+    --rs-line: oklch(1 0 0 / 0.08);
+    --rs-panel: oklch(0.17 0.005 250 / 0.55);
+    --rs-cell: oklch(0.13 0.005 250 / 0.75);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    color: oklch(0.9 0.005 250);
+  }
+  .game-results__notice {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    padding: 10px 14px 11px 18px;
+    background: var(--rs-signal-soft);
+    border: 1px solid color-mix(in oklab, var(--rs-signal) 24%, transparent);
+  }
+  .game-results__notice::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--rs-signal);
+  }
+  .game-results__notice strong {
+    display: block;
+    font-family: "Sora", sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--rs-signal);
+  }
+  .game-results__notice p {
+    margin-top: 4px;
+    font-size: 10.5px;
+    line-height: 1.55;
+    color: oklch(0.72 0.01 250);
+  }
+  .game-results__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+  .game-results__eyebrow { font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--rs-signal); }
+  .game-results__title {
+    margin-top: 2px;
+    font-family: "Sora", sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: oklch(0.98 0 0);
+  }
+  .game-results__count { margin-top: 2px; font-size: 10px; color: oklch(0.6 0.01 250); }
+  .game-results__state {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--rs-signal) 78%, white);
+    white-space: nowrap;
+  }
+  .game-results__state i { width: 6px; height: 6px; border-radius: 999px; background: var(--rs-signal); animation: rs-pulse 1.8s ease-in-out infinite; }
+  .game-results__list { display: flex; flex-direction: column; gap: 10px; }
+  .game-result-card {
+    border-radius: 14px;
+    border: 1px solid var(--rs-line);
+    background: var(--rs-panel);
+    padding: 5px;
+    animation: result-reveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+  .game-result-card--coefficient {
+    border-style: dashed;
+    background: oklch(0.15 0.005 250 / 0.35);
+  }
+  .game-result-card__topline {
+    display: flex;
+    justify-content: space-between;
+    padding: 7px 10px 6px;
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: oklch(0.55 0.01 250);
+  }
+  .game-result-card__primary { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .game-result-card__primary--solo { grid-template-columns: minmax(112px, auto) 1fr; }
+  .game-result-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border-radius: 10px;
+    border: 1px solid var(--rs-line);
+    background: var(--rs-cell);
+    padding: 12px 10px;
+    text-align: center;
+  }
+  .game-result-cell--coefficient {
+    border-color: color-mix(in oklab, var(--rs-signal) 26%, transparent);
+    background: color-mix(in oklab, var(--rs-signal) 9%, transparent);
+  }
+  .game-result-cell__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: oklch(0.58 0.01 250);
+  }
+  .game-result-cell--coefficient .game-result-cell__label { color: color-mix(in oklab, var(--rs-signal) 85%, white); }
+  .game-result-cell__label svg { width: 11px; height: 11px; }
+  .game-result-cell__value {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: oklch(0.98 0 0);
+  }
+  .game-result-cell--coefficient .game-result-cell__value { color: var(--rs-signal); font-size: 21px; }
+  .game-result-cell__hint { font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.45 0.01 250); }
+  .game-result-card__note {
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+    border: 1px solid var(--rs-line);
+    background: oklch(0.14 0.005 250 / 0.55);
+    padding: 10px 14px;
+    font-size: 10px;
+    line-height: 1.5;
+    font-style: italic;
+    color: oklch(0.62 0.01 250);
+  }
+  .game-result-card__meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 4px; }
+  .game-result-mini {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--rs-line);
+    background: oklch(0.15 0.005 250 / 0.7);
+    padding: 7px 4px;
+    text-align: center;
+  }
+  .game-result-mini span {
+    font-size: 7.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: oklch(0.55 0.01 250);
+    white-space: nowrap;
+  }
+  .game-result-mini strong { font-size: 11px; font-weight: 800; color: oklch(0.92 0.005 250); white-space: nowrap; }
+  .game-result-mini .tone-pos { color: oklch(0.75 0.15 155); }
+  .game-result-mini .tone-mid { color: oklch(0.78 0.13 80); }
+  .game-result-mini .tone-neg { color: oklch(0.68 0.19 25); }
+  .game-result-card__bar {
+    height: 3px;
+    margin: 6px 8px;
+    border-radius: 999px;
+    background: oklch(0 0 0 / 0.5);
+    overflow: hidden;
+  }
+  .game-result-card__bar span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, color-mix(in oklab, var(--rs-signal) 55%, transparent), var(--rs-signal));
+  }
+  .game-results__foot { padding: 2px 10px; text-align: center; }
+  .game-results__foot span {
+    display: inline-block;
+    font-size: 8.5px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: oklch(0.5 0.01 250);
+  }
+  .game-results__foot p { margin-top: 3px; font-size: 10px; line-height: 1.5; color: oklch(0.55 0.01 250); }
+  .game-results__restart {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+    background: oklch(0.97 0 0) !important;
+    color: oklch(0.1 0.005 250) !important;
+    font-family: "Sora", sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .game-results__restart svg { width: 15px; height: 15px; }
+  @keyframes rs-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  @media (max-width: 767px) {
+    .game-result-card__primary--solo { grid-template-columns: 1fr; }
+    .game-result-cell--coefficient .game-result-cell__value { font-size: 19px; }
+  }
+}
+
 #jh-custom-bg-video video,
 #jh-custom-bg {
   transform: translateZ(0);
