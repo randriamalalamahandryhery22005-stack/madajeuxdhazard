@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock3, Gauge, Info, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowLeft, Clock3, Gauge, RefreshCw, ShieldCheck, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export type GameResultTone = "aviator" | "cosmox" | "jetx";
@@ -27,38 +27,55 @@ const ensureResultTime = (value: string) => {
   return parts.slice(0, 3).map((part) => part.padStart(2, "0")).join(":");
 };
 
+const LEVEL_TEXT = (value: string) => {
+  switch (value) {
+    case "Haute":
+    case "Faible":
+      return "pos";
+    case "Moyenne":
+    case "Modéré":
+      return "mid";
+    default:
+      return "neg";
+  }
+};
+
+/** Shared HUD-style result renderer for Aviator, CosmoX and JetX.
+ *  Every datum lives in its own labelled cell; values stay small and scannable. */
 const GamePredictionResults = ({ title, rows, tone, onRestart, eyebrow = "Projection calculée" }: Props) => {
-  const hideLastTime = rows.length >= 3;
+  const coefficientOnlyLast = rows.length >= 3;
   const previousTimes = rows.slice(0, 2).map((row) => ensureResultTime(row.time));
 
   return (
     <section className={`game-results game-tone-${tone}`} aria-labelledby="game-results-title">
-      <header className="game-results__header">
-        <div className="game-results__icon"><Sparkles /></div>
-        <div className="min-w-0 flex-1">
-          <p className="game-console-eyebrow">{eyebrow}</p>
+      <div className="game-results__notice" role="note">
+        <strong>Indices calculés, pas garantis</strong>
+        <p>
+          Ces indices sont des projections calculées, pas des résultats réels. Ils servent uniquement
+          de repères pour observer les éventuels coefficients du jeu aujourd’hui, sans aucune obligation de les suivre.
+        </p>
+      </div>
+
+      <div className="game-results__head">
+        <div className="min-w-0">
+          <p className="game-results__eyebrow">{eyebrow}</p>
           <h2 id="game-results-title" className="game-results__title">{title}</h2>
           <p className="game-results__count">{rows.length} indice{rows.length > 1 ? "s" : ""} calculé{rows.length > 1 ? "s" : ""}</p>
         </div>
-        <span className="game-results__badge">Prédiction</span>
-      </header>
-
-      <div className="game-results__notice">
-        <Info />
-        <div>
-          <strong>Prédictions et calculs</strong>
-          <p>Ces données sont des indices calculés, pas des résultats réels ni garantis. Le résultat réel reste celui affiché par le jeu.</p>
-        </div>
+        <span className="game-results__state" aria-hidden="true">
+          <i />
+          Projection calculée
+        </span>
       </div>
 
-      <div className="game-results__grid">
+      <div className="game-results__list">
         {rows.map((row, index) => {
-          const coefficientOnly = hideLastTime && index === rows.length - 1;
+          const coefficientOnly = coefficientOnlyLast && index === rows.length - 1;
           return (
             <article
               key={`${row.time}-${row.coefficient}-${index}`}
-              className={`game-result-card ${coefficientOnly ? "game-result-card--coefficient" : ""}`}
-              style={{ animationDelay: `${index * 100}ms` }}
+              className={`game-result-card${coefficientOnly ? " game-result-card--coefficient" : ""}`}
+              style={{ animationDelay: `${index * 110}ms` }}
             >
               <div className="game-result-card__topline">
                 <span>Indice {index + 1}</span>
@@ -66,60 +83,72 @@ const GamePredictionResults = ({ title, rows, tone, onRestart, eyebrow = "Projec
               </div>
 
               {!coefficientOnly && (
-                <div className="game-result-card__time">
-                  <Clock3 />
-                  <div>
-                    <span>Heure estimée</span>
-                    <strong>{ensureResultTime(row.time)}</strong>
+                <div className="game-result-card__primary">
+                  <div className="game-result-cell game-result-cell--time">
+                    <span className="game-result-cell__label"><Clock3 /> Heure estimée</span>
+                    <strong className="game-result-cell__value">{ensureResultTime(row.time)}</strong>
+                    <small className="game-result-cell__hint">HH:MM:SS</small>
                   </div>
-                  <small>HH:MM:SS</small>
+                  <div className="game-result-cell game-result-cell--coefficient">
+                    <span className="game-result-cell__label"><TrendingUp /> Coefficient</span>
+                    <strong className="game-result-cell__value">{row.coefficient}</strong>
+                    <small className="game-result-cell__hint">Indicatif</small>
+                  </div>
                 </div>
               )}
-
-              <div className="game-result-card__coefficient">
-                <TrendingUp />
-                <div>
-                  <span>Coefficient indicatif</span>
-                  <strong>{row.coefficient}</strong>
-                </div>
-              </div>
 
               {coefficientOnly && (
-                <p className="game-result-card__hint">
-                  Ce coefficient est susceptible d’apparaître à l’une des heures indiquées précédemment
-                  {previousTimes.length === 2 ? ` : ${previousTimes[0]} ou ${previousTimes[1]}.` : "."}
-                </p>
+                <div className="game-result-card__primary game-result-card__primary--solo">
+                  <div className="game-result-cell game-result-cell--coefficient">
+                    <span className="game-result-cell__label"><TrendingUp /> Coefficient</span>
+                    <strong className="game-result-cell__value">{row.coefficient}</strong>
+                    <small className="game-result-cell__hint">Indicatif</small>
+                  </div>
+                  <p className="game-result-card__note">
+                    Ce coefficient est susceptible d’apparaître à l’une des heures indiquées précédemment
+                    {previousTimes.length === 2 ? ` : ${previousTimes[0]} ou ${previousTimes[1]}.` : "."}
+                  </p>
+                </div>
               )}
 
-              <div className="game-result-card__stats">
-                <ResultStat icon={TrendingUp} label="Confiance" value={`${row.confidence}%`} />
-                <ResultStat icon={ShieldCheck} label="Fiabilité" value={`${row.reliability}%`} />
-                <ResultStat icon={Gauge} label="Risque" value={row.risk} />
+              <div className="game-result-card__meta">
+                <div className="game-result-mini">
+                  <span>Confiance</span>
+                  <strong>{row.confidence}%</strong>
+                </div>
+                <div className="game-result-mini">
+                  <span>Fiabilité</span>
+                  <strong>{row.reliability}%</strong>
+                </div>
+                <div className="game-result-mini">
+                  <span>Stabilité</span>
+                  <strong className={`tone-${LEVEL_TEXT(row.stability)}`}>{row.stability}</strong>
+                </div>
+                <div className="game-result-mini">
+                  <span>Risque</span>
+                  <strong className={`tone-${LEVEL_TEXT(row.risk)}`}>{row.risk}</strong>
+                </div>
               </div>
-              <div className="game-result-card__bar"><span style={{ width: `${row.confidence}%` }} /></div>
+
+              <div className="game-result-card__bar" aria-hidden="true">
+                <span style={{ width: `${Math.max(0, Math.min(100, row.confidence))}%` }} />
+              </div>
             </article>
           );
         })}
       </div>
 
-      <div className="game-results__real">
+      <div className="game-results__foot">
         <span>Résultat réel</span>
         <p>À vérifier uniquement dans l’historique officiel du jeu après le tour.</p>
       </div>
 
-      <Button className="game-console-launch" onClick={onRestart}>
-        <ArrowLeft /> Nouvelle analyse
+      <Button className="game-results__restart" onClick={onRestart}>
+        <RefreshCw /> Nouvelle analyse
       </Button>
+      <span className="sr-only"><ArrowLeft /> Retour</span>
     </section>
   );
 };
-
-const ResultStat = ({ icon: Icon, label, value }: { icon: typeof Gauge; label: string; value: string }) => (
-  <div>
-    <Icon />
-    <span>{label}</span>
-    <strong>{value}</strong>
-  </div>
-);
 
 export default GamePredictionResults;
