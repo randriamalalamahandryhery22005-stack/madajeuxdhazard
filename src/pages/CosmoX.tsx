@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { generateCosmoXPrediction } from "@/lib/predictions";
-import PredictionResults from "@/components/PredictionResults";
+import GamePredictionResults from "@/components/game/GamePredictionResults";
 import PremiumPaywall from "@/components/PremiumPaywall";
 import AnalysisDashboard from "@/components/AnalysisDashboard";
 import AnalysisSequence from "@/components/AnalysisSequence";
